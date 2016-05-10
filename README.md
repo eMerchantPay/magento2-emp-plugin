@@ -27,7 +27,7 @@ Installation (composer)
     * Install Payment Module
 
         ```sh
-        $ composer require eMerchantPay/magento2-emp-plugin:1.0.0@stable
+        $ composer require eMerchantPay/magento2-emp-plugin:1.0.1@stable
         ```
 
     * Enable Payment Module 
@@ -49,7 +49,7 @@ Installation (composer)
 Installation (manual)
 ---------------------
 
-* Upload the contents of the folder (excluding ```README.md```) to the ```<root>``` folder of your Magento 2 installation
+* Upload the contents of the folder (excluding ```README.md```) to a new folder ```<root>/app/code/EMerchantPay/Genesis/``` of your Magento 2 installation
 * Enable Payment Module 
 
     ```sh

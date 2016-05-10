@@ -6,7 +6,7 @@ This is a Payment Module for Magento 2 Community Edition, that gives you the abi
 Requirements
 ------------
 
-* Magento 2 Community Edition* 2.0.x (Tested upto 2.0.2)
+* Magento 2 Community Edition* 2.x (Tested upto 2.0.2)
 * [GenesisPHP v1.4.2](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
 
 *Note: this module has been tested only with Magento 2 __Community Edition__, it may not work
@@ -17,19 +17,29 @@ Installation (composer)
 * Install __Composer__ - [Composer Download Instructions](https://getcomposer.org/doc/00-intro.md)
 
 * Install __eMerchantPay Payment Gateway__
+    
     * Add eMerchantPay Repository
+
         ```sh
         $ composer config repositories.emerchantpay git https://github.com/eMerchantPay/magento2-emp-plugin.git
-        ```
+        ``` 
+
     * Install Payment Module
+
         ```sh
         $ composer require eMerchantPay/magento2-emp-plugin:1.0.0@stable
         ```
-    * Enable Payment Module
+
+    * Enable Payment Module 
+        
         ```sh
         $ php bin/magento module:enable EMerchantPay_Genesis --clear-static-content
+        ```
+
+        ```sh
         $ php bin/magento setup:upgrade
         ```
+
 * Login inside the __Admin Panel__ and go to ```Stores``` -> ```Configuration``` -> ```Sales``` -> ```Payment Methods```
 * If the Payment Module Panel ```eMerchantPay``` is not visible in the list of available Payment Methods, 
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
@@ -40,11 +50,16 @@ Installation (manual)
 ---------------------
 
 * Upload the contents of the folder (excluding ```README.md```) to the ```<root>``` folder of your Magento 2 installation
-* Enable Payment Module
+* Enable Payment Module 
+
     ```sh
     $ php bin/magento module:enable EMerchantPay_Genesis --clear-static-content
+    ```
+
+    ```sh
     $ php bin/magento setup:upgrade
     ```
+
 * Login inside the __Admin Panel__ and go to ```Stores``` -> ```Configuration``` -> ```Sales``` -> ```Payment Methods```
 * If the Payment Module Panel ```eMerchantPay``` is not visible in the list of available Payment Methods, 
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
@@ -61,10 +76,13 @@ You should follow these steps to install the __GenesisGateway__ Library manual i
 
 * Install __GenesisGateway__
     * Add GenesisGateway Repository
+
         ```sh
         $ composer config repositories.genesisgateway git https://github.com/GenesisGateway/genesis_php.git
         ```
+
     * Install GenesisGateway Client Library
+    
         ```sh
         $ composer require GenesisGateway/genesis_php:1.4.2@stable
         ```

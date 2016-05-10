@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../../lib/internal/Magento/Framework/ObjectManager/etc/config.xsd">
+    <virtualType name="EMerchantPay_Genesis\Model\ConfigProvider" type="Magento\Payment\Model\CcGenericConfigProvider">
+        <arguments>
+            <argument name="methodCodes" xsi:type="array">
+                <item name="emerchantpay_checkout" xsi:type="const">EMerchantPay\Genesis\Model\Method\Checkout::CODE</item>
+            </argument>
+        </arguments>
+    </virtualType>
+</config>

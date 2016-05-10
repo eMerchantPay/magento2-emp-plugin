@@ -1,0 +1,20 @@
+{
+    "name": "emerchantpay/genesis",
+    "description": "eMerchantPay Payment Gateway for Magento 2",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "license": [
+        "OSL-3.0"
+    ],
+    "require": {
+        "genesisgateway/genesis_php": "1.4.2"
+    },
+    "extra": {
+        "map": [
+            [
+                "*",
+                "EMerchantPay/Genesis"
+            ]
+        ]
+    }
+}

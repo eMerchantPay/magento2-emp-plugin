@@ -1,0 +1,47 @@
+<!--
+Copyright (C) 2016 eMerchantPay Ltd.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+@author      eMerchantPay
+@copyright   2016 eMerchantPay Ltd.
+@license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
+-->
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+    <div class="payment-method-title field choice">
+        <input type="radio"
+               name="payment[method]"
+               class="radio"
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+        <label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getTitle()"></span></label>
+    </div>
+    <div class="payment-method-content">
+        <!-- ko foreach: getRegion('messages') -->
+        <!-- ko template: getTemplate() --><!-- /ko -->
+        <!--/ko-->
+        <fieldset class="fieldset" data-bind='attr: {id: "payment_form_" + getCode()}'>
+            <div class="payment-method-note">
+                <!-- ko i18n: 'You will be redirected to our partner\'s website, where you can safely pay with your credit card.' --><!-- /ko -->
+            </div>
+        </fieldset>
+
+        <div class="actions-toolbar">
+            <div class="primary">
+                <button class="action primary checkout"
+                        type="submit"
+                        data-bind="click: placeOrder, enable: (getCode() == isChecked())"
+                        disabled>
+                    <span data-bind="i18n: 'Continue to eMerchantPay'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

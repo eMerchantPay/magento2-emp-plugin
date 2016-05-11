@@ -17,10 +17,6 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-if (!class_exists("\\Genesis\\Genesis")) {
-    throw new \Exception ("Genesis Gateway Library is not installed!");
-}
-
 \Magento\Framework\Component\ComponentRegistrar::register(
     \Magento\Framework\Component\ComponentRegistrar::MODULE,
     'EMerchantPay_Genesis',

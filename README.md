@@ -27,7 +27,7 @@ Installation (composer)
     * Install Payment Module
 
         ```sh
-        $ composer require eMerchantPay/magento2-emp-plugin:1.0.1@stable
+        $ composer require eMerchantPay/magento2-emp-plugin
         ```
 
     * Enable Payment Module 

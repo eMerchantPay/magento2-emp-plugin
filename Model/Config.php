@@ -290,7 +290,8 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     public function getTransactionTypes()
     {
         return
-            array_filter(
+            array_map(
+                'trim',
                 explode(
                     ',',
                     $this->getValue('payment_action')
@@ -308,12 +309,23 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     }
 
     /**
+     * Get if specific currencies are allowed
+     * (not all global allowed currencies)
+     * @return array
+     */
+    public function getAreAllowedSpecificCurrencies()
+    {
+        return $this->isFlagChecked($this->_methodCode, 'allow_specific_currency');
+    }
+
+    /**
      * Get Method Allowed Currency array
      * @return array
      */
     public function getAllowedCurrencies()
     {
-        return array_filter(
+        return array_map(
+            'trim',
             explode(
                 ',',
                 $this->getValue('specific_currencies')

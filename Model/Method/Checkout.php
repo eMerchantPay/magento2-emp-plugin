@@ -602,8 +602,13 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      */
     public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
     {
-        return parent::isAvailable($quote) &&
-                $this->getConfigHelper()->isMethodAvailable();
+        return
+            parent::isAvailable($quote) &&
+            $this->getConfigHelper()->isMethodAvailable() &&
+            $this->getModuleHelper()->isQuoteCurrencyAllowed(
+                $this->getCode(),
+                $quote->getQuoteCurrencyCode()
+            );
     }
 
     /**
@@ -614,12 +619,13 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      */
     public function canUseForCurrency($currencyCode)
     {
-        $allowedMethodCurrencies = $this->getConfigHelper()->getAllowedCurrencies();
-        $allowedMethodCurrencies =
-            $this->getModuleHelper()->getFilteredLocalAllowedCurrencies(
-                $allowedMethodCurrencies
-            );
-
-        return in_array($currencyCode, $allowedMethodCurrencies);
+        /**
+         * The Currency Restriction is implemented in
+         * method - isAvailable
+         * Reason: The Currency Code passed to canUseForCurrency is
+         *         not the checkout Currency Code and it will not work,
+         *         when a user changes the Quote Currency
+         */
+        return true;
     }
 }

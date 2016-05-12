@@ -696,7 +696,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             \Magento\Directory\Model\Currency::XML_PATH_CURRENCY_ALLOW
         );
 
-        return array_filter(
+        return array_map(
+            'trim',
             explode(
                 ',',
                 $allowedCurrencyCodes
@@ -794,5 +795,27 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         );
 
         return (!empty($transactionType) && in_array($transactionType, $refundableTransactions));
+    }
+
+    /**
+     * Check is Payment Method available for currency
+     * @param string $methodCode
+     * @param string $currencyCode
+     * @return bool
+     */
+    public function isQuoteCurrencyAllowed($methodCode, $currencyCode)
+    {
+        $methodConfig = $this->getMethodConfig($methodCode);
+
+        if (!$methodConfig->getAreAllowedSpecificCurrencies()) {
+            $allowedMethodCurrencies = $this->getGlobalAllowedCurrencyCodes();
+        } else {
+            $allowedMethodCurrencies =
+                $this->getFilteredLocalAllowedCurrencies(
+                    $methodConfig->getAllowedCurrencies()
+                );
+        }
+
+        return in_array($currencyCode, $allowedMethodCurrencies);
     }
 }

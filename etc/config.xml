@@ -26,6 +26,8 @@ GNU General Public License for more details.
                 <title>Pay safely with eMerchantPay Checkout</title>
                 <test_mode>1</test_mode>
                 <payment_action>sale</payment_action>
+                <allowspecific>0</allowspecific>
+                <allow_specific_currency>0</allow_specific_currency>
                 <group>emerchantpay</group>
             </emerchantpay_checkout>
         </payment>

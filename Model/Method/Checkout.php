@@ -605,6 +605,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         return
             parent::isAvailable($quote) &&
             $this->getConfigHelper()->isMethodAvailable() &&
+            (!is_null($quote)) &&
             $this->getModuleHelper()->isQuoteCurrencyAllowed(
                 $this->getCode(),
                 $quote->getQuoteCurrencyCode()

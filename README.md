@@ -6,7 +6,7 @@ This is a Payment Module for Magento 2 Community Edition, that gives you the abi
 Requirements
 ------------
 
-* Magento 2 Community Edition* 2.x (Tested upto 2.0.4)
+* Magento 2 Community Edition* 2.x (Tested upto 2.1)
 * [GenesisPHP v1.4.2](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
 
 *Note: this module has been tested only with Magento 2 __Community Edition__, it may not work

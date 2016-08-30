@@ -28,6 +28,68 @@ namespace EMerchantPay\Genesis\Helper;
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
     /**
+     * @var array Transaction configuration settings
+     */
+    private $_transactionConfig = [
+        \Genesis\API\Constants\Transaction\Types::AUTHORIZE => [
+        'request'               => 'Financial\Cards\Authorize',
+        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE,
+        'reference'             => false,
+        'should_close'          => false,
+        'should_close_parent'   => true,
+        'is3D'                  => false
+        ],
+        \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D => [
+        'request'               => 'Financial\Cards\Authorize3D',
+        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE,
+        'reference'             => false,
+        'should_close'          => false,
+        'should_close_parent'   => true,
+        'is3D'                  => true
+        ],
+        \Genesis\API\Constants\Transaction\Types::SALE => [
+        'request'               => 'Financial\Cards\Sale',
+        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE_CAPTURE,
+        'reference'             => false,
+        'should_close'          => true,
+        'should_close_parent'   => false,
+        'is3D'                  => false
+        ],
+        \Genesis\API\Constants\Transaction\Types::SALE_3D => [
+        'request'               => 'Financial\Cards\Sale3D',
+        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE_CAPTURE,
+        'reference'             => false,
+        'should_close'          => true,
+        'should_close_parent'   => false,
+        'is3D'                  => true
+        ],
+        \Genesis\API\Constants\Transaction\Types::CAPTURE => [
+        'request'               => 'Financial\Capture',
+        'action'                => null,
+        'reference'             => true,
+        'should_close'          => true,
+        'should_close_parent'   => false,
+        'is3D'                  => false
+        ],
+        \Genesis\API\Constants\Transaction\Types::REFUND => [
+        'request'               => 'Financial\Refund',
+        'action'                => null,
+        'reference'             => true,
+        'should_close'          => true,
+        'should_close_parent'   => false,
+        'is3D'                  => false
+        ],
+        \Genesis\API\Constants\Transaction\Types::VOID => [
+        'request'               => 'Financial\Void',
+        'action'                => null,
+        'reference'             => true,
+        'should_close'          => true,
+        'should_close_parent'   => false,
+        'is3D'                  => false
+        ]
+    ];
+
+    /**
      * @var \Magento\Framework\ObjectManagerInterface
      */
     protected $_objectManager;
@@ -41,10 +103,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected $_storeManager;
     /**
      * @var \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress
-     */
-    protected $_remoteAddress;
-    /**
-     * @var \EMerchantPay\Genesis\Model\ConfigFactory
      */
     protected $_configFactory;
     /**
@@ -61,9 +119,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Framework\App\Helper\Context $context
      * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager,
-     * @param \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress
      * @param \EMerchantPay\Genesis\Model\ConfigFactory $configFactory,
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Framework\Locale\ResolverInterface $localeResolver
      */
     public function __construct(
@@ -71,18 +127,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         \Magento\Framework\App\Helper\Context $context,
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
         \EMerchantPay\Genesis\Model\ConfigFactory $configFactory,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Framework\Locale\ResolverInterface $localeResolver
     ) {
         $this->_objectManager = $objectManager;
         $this->_paymentData   = $paymentData;
         $this->_storeManager  = $storeManager;
-        $this->_remoteAddress = $remoteAddress;
         $this->_configFactory = $configFactory;
-        $this->_scopeConfig   = $scopeConfig;
         $this->_localeResolver = $localeResolver;
+
+        $this->_scopeConfig   = $context->getScopeConfig();
+
         parent::__construct($context);
     }
 
@@ -112,15 +167,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     protected function getStoreManager()
     {
         return $this->_storeManager;
-    }
-
-    /**
-     * Get an Instance of the Magento RemoteAddress Object
-     * @return \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress
-     */
-    public function getRemoteAddressInstance()
-    {
-        return $this->_remoteAddress;
     }
 
     /**
@@ -180,7 +226,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             "_store" => $store,
             "_secure" =>
                 ($secure === null
-                    ? $store->isCurrentlySecure()
+                    ? $this->isStoreSecure($storeId)
                     : $secure
                 )
         ];
@@ -212,7 +258,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             "_store" => $store,
             "_secure" =>
                 ($secure === null
-                    ? $store->isCurrentlySecure()
+                    ? $this->isStoreSecure($storeId)
                     : $secure
                 )
         ];
@@ -412,6 +458,26 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Throws transaction-specific exception
+     *
+     *      - \Magento\Framework\Webapi\Exception for reference transactions
+     *      - \Exception for initial transactions
+     *
+     * @param string $message
+     * @param $isReferenceTransaction
+     * @throws \Magento\Framework\Webapi\Exception
+     * @throws \Exception
+     */
+    public function throwException($message, $isReferenceTransaction)
+    {
+        if ($isReferenceTransaction) {
+            $this->throwWebApiException($message);
+        } else {
+            throw new \Exception(__($message));
+        }
+    }
+
+    /**
      * Find Payment Transaction per Field Value
      * @param string $fieldValue
      * @param string $fieldName
@@ -450,6 +516,17 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             }
         }
         return $transaction_details;
+    }
+
+    /**
+     * Checks if the store is secure
+     * @param $storeId
+     * @return bool
+     */
+    public function isStoreSecure($storeId = null)
+    {
+        $store = $this->getStoreManager()->getStore($storeId);
+        return $store->isCurrentlySecure();
     }
 
     /**
@@ -533,14 +610,21 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Sales\Model\Order $order
      * @param string $status
      * @param string $message
+     * @param string $transactionType
      */
-    public function setOrderState($order, $status, $message = '')
+    public function setOrderState($order, $status, $message = '', $transactionType = '')
     {
         switch ($status) {
             case \Genesis\API\Constants\Transaction\States::APPROVED:
+                $saleTransactions = array(
+                    \Genesis\API\Constants\Transaction\Types::SALE,
+                    \Genesis\API\Constants\Transaction\Types::SALE_3D
+                );
                 $this->setOrderStatusByState(
                     $order,
-                    \Magento\Sales\Model\Order::STATE_PROCESSING
+                    in_array($transactionType, $saleTransactions)
+                    ? \Magento\Sales\Model\Order::STATE_COMPLETE
+                    : \Magento\Sales\Model\Order::STATE_PROCESSING
                 );
                 $order->save();
                 break;
@@ -803,7 +887,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param string $currencyCode
      * @return bool
      */
-    public function isQuoteCurrencyAllowed($methodCode, $currencyCode)
+    public function isCurrencyAllowed($methodCode, $currencyCode)
     {
         $methodConfig = $this->getMethodConfig($methodCode);
 
@@ -817,5 +901,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return in_array($currencyCode, $allowedMethodCurrencies);
+    }
+    
+    /**
+     * Gets transaction configuration settings
+     * @param \Genesis\API\Constants\Transaction\Types $transactionType
+     * @return \stdClass
+     * @throws \Exception
+     */
+    public function getTransactionConfig($transactionType)
+    {
+        if (!array_key_exists($transactionType, $this->_transactionConfig)) {
+            throw new \Exception("Transaction $transactionType not configured");
+        }
+
+        return (object) $this->_transactionConfig[$transactionType];
     }
 }

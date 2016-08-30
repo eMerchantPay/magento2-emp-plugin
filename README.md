@@ -7,7 +7,8 @@ Requirements
 ------------
 
 * Magento 2 Community Edition* 2.x (Tested upto 2.1)
-* [GenesisPHP v1.4.2](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
+* [GenesisPHP v1.4.x](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
+* PCI-certified server in order to use ```eMerchantPay Direct```
 
 *Note: this module has been tested only with Magento 2 __Community Edition__, it may not work
 as intended with Magento 2 __Enterprise Edition__
@@ -41,7 +42,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.4.2@stable
+    $ composer require genesisgateway/genesis_php:1.4.3@stable
     ```
 
 * Enable Payment Module 
@@ -60,7 +61,7 @@ Configuration
 * Login inside the __Admin Panel__ and go to ```Stores``` -> ```Configuration``` -> ```Sales``` -> ```Payment Methods```
 * If the Payment Module Panel ```eMerchantPay``` is not visible in the list of available Payment Methods, 
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
-* Go back to ```Payment Methods``` and click the button ```Configure``` under the payment method ```eMerchantPay Checkout``` to expand the available settings
+* Go back to ```Payment Methods``` and click the button ```Configure``` under the payment method ```eMerchantPay Checkout``` or ```eMerchantPay Direct``` to expand the available settings
 * Set ```Enabled``` to ```Yes```, set the correct credentials, select your prefered transaction types and additional settings and click ```Save config```
 
 GenesisPHP Requirements

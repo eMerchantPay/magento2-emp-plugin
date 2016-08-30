@@ -184,13 +184,16 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     /**
      * Check whether Gateway API credentials are available for this method
      *
+     * @param null $methodCode
+     *
      * @return bool
      */
-    public function isApiAvailable()
+    public function isApiAvailable($methodCode = null)
     {
         return !empty($this->getUserName()) &&
                !empty($this->getPassword()) &&
-               !empty($this->getTransactionTypes());
+               !empty($this->getTransactionTypes()) &&
+               ($methodCode != \EMerchantPay\Genesis\Model\Method\Direct::CODE || !empty($this->getToken()));
     }
 
     /**
@@ -202,10 +205,8 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      */
     public function isMethodAvailable($methodCode = null)
     {
-        $methodCode = $methodCode ?: $this->_methodCode;
-
         return $this->isMethodActive($methodCode) &&
-               $this->isApiAvailable();
+               $this->isApiAvailable($methodCode);
     }
 
     /**

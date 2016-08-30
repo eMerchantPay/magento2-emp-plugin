@@ -37,6 +37,9 @@ GNU General Public License for more details.
                                                                 <item name="emerchantpay" xsi:type="array">
                                                                     <item name="component" xsi:type="string">EMerchantPay_Genesis/js/view/payment/emerchantpay-payments</item>
                                                                     <item name="methods" xsi:type="array">
+                                                                        <item name="emerchantpay_direct" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
                                                                         <item name="emerchantpay_checkout" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>

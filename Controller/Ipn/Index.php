@@ -34,11 +34,21 @@ class Index extends \EMerchantPay\Genesis\Controller\AbstractAction
      */
     protected function getIpnClassName()
     {
-        if ($this->isPostRequestExists('wpf_unique_id')) {
-            return "CheckoutIpn";
-        } else {
-            return null;
+        $className = null;
+
+        switch (true)
+        {
+            case $this->isPostRequestExists('wpf_unique_id'):
+                $className = 'CheckoutIpn';
+                break;
+            case $this->isPostRequestExists('unique_id'):
+                $className = 'DirectIpn';
+                break;
+            default:
+                $className = null;
         }
+
+        return $className;
     }
 
     /**

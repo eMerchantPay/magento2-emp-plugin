@@ -65,7 +65,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Payment\Model\Method\Logger $logger
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \Magento\Framework\UrlInterface $urlBuilder
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
@@ -82,7 +81,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Payment\Model\Method\Logger  $logger,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\UrlInterface $urlBuilder,
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
@@ -103,7 +101,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         );
         $this->_actionContext = $actionContext;
         $this->_storeManager = $storeManager;
-        $this->_urlBuilder = $urlBuilder;
         $this->_checkoutSession = $checkoutSession;
         $this->_moduleHelper = $moduleHelper;
         $this->_configHelper =
@@ -193,17 +190,22 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 ->setBillingAddress2(strval($data['order']['billing']->getStreetLine(2)))
                 ->setBillingZipCode(strval($data['order']['billing']->getPostcode()))
                 ->setBillingCity(strval($data['order']['billing']->getCity()))
-                ->setBillingState(strval($data['order']['billing']->getRegion()))
+                ->setBillingState(strval($data['order']['billing']->getRegionCode()))
                 ->setBillingCountry(strval($data['order']['billing']->getCountryId()))
-                ->setShippingFirstName(strval($data['order']['shipping']->getFirstname()))
-                ->setShippingLastName(strval($data['order']['shipping']->getLastname()))
-                ->setShippingAddress1(strval($data['order']['shipping']->getStreetLine(1)))
-                ->setShippingAddress2(strval($data['order']['shipping']->getStreetLine(2)))
-                ->setShippingZipCode(strval($data['order']['shipping']->getPostcode()))
-                ->setShippingCity(strval($data['order']['shipping']->getCity()))
-                ->setShippingState(strval($data['order']['shipping']->getRegion()))
-                ->setShippingCountry(strval($data['order']['shipping']->getCountryId()))
                 ->setLanguage($data['order']['language']);
+
+        if (!empty($data['order']['shipping'])) {
+            $genesis
+                ->request()
+                    ->setShippingFirstName(strval($data['order']['shipping']->getFirstname()))
+                    ->setShippingLastName(strval($data['order']['shipping']->getLastname()))
+                    ->setShippingAddress1(strval($data['order']['shipping']->getStreetLine(1)))
+                    ->setShippingAddress2(strval($data['order']['shipping']->getStreetLine(2)))
+                    ->setShippingZipCode(strval($data['order']['shipping']->getPostcode()))
+                    ->setShippingCity(strval($data['order']['shipping']->getCity()))
+                    ->setShippingState(strval($data['order']['shipping']->getRegionCode()))
+                    ->setShippingCountry(strval($data['order']['shipping']->getCountryId()));
+        }
 
         foreach ($this->getCheckoutTransactionTypes() as $type) {
             if (is_array($type)) {
@@ -264,7 +266,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             'transaction_types' =>
                 $this->getConfigHelper()->getTransactionTypes(),
             'order' => [
-                'currency' => $order->getOrderCurrencyCode(),
+                'currency' => $order->getBaseCurrencyCode(),
                 'language' => $this->getModuleHelper()->getLocale(),
                 'amount' => $amount,
                 'usage' => $this->getModuleHelper()->buildOrderUsage(),
@@ -443,7 +445,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $errorMessage = sprintf(
                 "Order with transaction type \"%s\" cannot be refunded online." . PHP_EOL .
                 "For further Information please contact your Account Manager." . PHP_EOL .
-                "For more complex workflows/functionallity, please visit our Merchant Portal!",
+                "For more complex workflows/functionality, please visit our Merchant Portal!",
                 $this->getModuleHelper()->getTransactionTypeByTransaction(
                     $captureTransaction
                 )
@@ -595,38 +597,28 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
-     * Determine method availability based on quote amount and config data
+     * Determines method's availability based on config data and quote amount
      *
      * @param \Magento\Quote\Api\Data\CartInterface|null $quote
      * @return bool
      */
     public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
     {
-        return
-            parent::isAvailable($quote) &&
-            $this->getConfigHelper()->isMethodAvailable() &&
-            (!is_null($quote)) &&
-            $this->getModuleHelper()->isQuoteCurrencyAllowed(
-                $this->getCode(),
-                $quote->getQuoteCurrencyCode()
-            );
+        return parent::isAvailable($quote) &&
+            $this->getConfigHelper()->isMethodAvailable();
     }
 
     /**
-     * Get if Method is available for currency
+     * Checks base currency against the allowed currency
      *
      * @param string $currencyCode
      * @return bool
      */
     public function canUseForCurrency($currencyCode)
     {
-        /**
-         * The Currency Restriction is implemented in
-         * method - isAvailable
-         * Reason: The Currency Code passed to canUseForCurrency is
-         *         not the checkout Currency Code and it will not work,
-         *         when a user changes the Quote Currency
-         */
-        return true;
+        return $this->getModuleHelper()->isCurrencyAllowed(
+            $this->getCode(),
+            $currencyCode
+        );
     }
 }

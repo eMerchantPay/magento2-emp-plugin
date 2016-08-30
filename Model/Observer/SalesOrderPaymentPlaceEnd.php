@@ -56,15 +56,28 @@ class SalesOrderPaymentPlaceEnd implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         $payment = $observer->getEvent()->getData('payment');
-
-        $this->updateOrderStatusToNew($payment);
+        
+        switch ($payment->getMethod())
+        {
+            case \EMerchantPay\Genesis\Model\Method\Checkout::CODE:
+                $this->updateOrderStatusToNew($payment);
+                break;
+            case \EMerchantPay\Genesis\Model\Method\Direct::CODE:
+                $this->updateOrderStatus($payment);
+                break;
+            default:
+                // Payment method not implemented. Do nothing.
+        }
     }
 
     /**
      * Update OrderStatus for the new Order
+     *
+     * Used by the Checkout Payment method
+     *
      * @param \Magento\Payment\Model\InfoInterface $payment
      */
-    protected function updateOrderStatusToNew($payment)
+    protected function updateOrderStatusToNew(\Magento\Payment\Model\InfoInterface $payment)
     {
         $order = $payment->getOrder();
 
@@ -78,6 +91,67 @@ class SalesOrderPaymentPlaceEnd implements ObserverInterface
         );
 
         $order->save();
+    }
+
+    /**
+     * Update Order Status
+     *
+     * Used by the Direct Payment method
+     *
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     */
+    protected function updateOrderStatus(\Magento\Payment\Model\InfoInterface $payment)
+    {
+        $additionalInfo = $payment->getTransactionAdditionalInfo();
+
+        $rawDetails = \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS;
+
+        if (array_key_exists($rawDetails, $additionalInfo) &&
+            array_key_exists('status', $additionalInfo[$rawDetails])
+        ) {
+            $status = $additionalInfo[$rawDetails]['status'];
+
+            $order = $payment->getOrder();
+
+            /*
+            $configHelper = $this->getModuleHelper()->getMethodConfig(
+                $payment->getMethod()
+            );
+            */
+
+            switch ($status)
+            {
+                case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
+                    // Redirecting to the 3D secure URL
+                    if (array_key_exists('redirect_url', $additionalInfo[$rawDetails]) &&
+                        !empty($additionalInfo[$rawDetails]['redirect_url'])
+                    ) {
+                        $this->getModuleHelper()->setOrderState(
+                            $order,
+                            \Genesis\API\Constants\Transaction\States::PENDING_ASYNC
+                        );
+                    }
+                    break;
+                case \Genesis\API\Constants\Transaction\States::APPROVED:
+
+                    if (array_key_exists($rawDetails, $additionalInfo) &&
+                        array_key_exists('transaction_type', $additionalInfo[$rawDetails])
+                    ) {
+                        $transactionType = $additionalInfo[$rawDetails]['transaction_type'];
+                    }
+
+                    $this->getModuleHelper()->setOrderStatusByState(
+                        $order,
+                        ($transactionType == \Genesis\API\Constants\Transaction\Types::SALE)
+                        ? \Magento\Sales\Model\Order::STATE_COMPLETE
+                        : \Magento\Sales\Model\Order::STATE_PROCESSING
+                    );
+
+                    break;
+                default:
+                    // Other status. Do nothing.
+            }
+        }
     }
 
     /**

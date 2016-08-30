@@ -16,5 +16,6 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
+.config-heading.EMerchantPayDirect:before { content:url(images/emerchantpay_direct.png);float:right;}
 .config-heading.EMerchantPayCheckout:before { content:url(images/emerchantpay_checkout.png);float:right;}
 .headingEMerchantPay strong { padding-left: 150px;background:url(images/emerchantpay_small.png) no-repeat 0 0;line-height: 50px;}

@@ -31,6 +31,10 @@ define(
             {
                 type: 'emerchantpay_checkout',
                 component: 'EMerchantPay_Genesis/js/view/payment/method-renderer/checkout-method'
+            },
+            {
+                type: 'emerchantpay_direct',
+                component: 'EMerchantPay_Genesis/js/view/payment/method-renderer/direct-method'
             }
         );
 

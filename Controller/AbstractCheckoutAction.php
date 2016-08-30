@@ -110,4 +110,13 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
     {
         $this->_redirect('checkout/onepage/success');
     }
+
+    /**
+     * Does a redirect to the Checkout Cart Page
+     * @return void
+     */
+    protected function redirectToCheckoutCart()
+    {
+        $this->_redirect('checkout/cart');
+    }
 }

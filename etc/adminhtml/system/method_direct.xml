@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<!--
+Copyright (C) 2016 eMerchantPay Ltd.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+@author      eMerchantPay
+@copyright   2016 eMerchantPay Ltd.
+@license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
+-->
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="emerchantpay_direct" translate="label comment" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+        <label>eMerchantPay Direct</label>
+        <frontend_model>EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\DirectPayment</frontend_model>
+        <comment><![CDATA[Direct payment method - allow customers to enter their CreditCard information on your website. Note: You need PCI-DSS certificate in order to enable this payment method.]]></comment>
+        <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Enabled</label>
+            <config_path>payment/emerchantpay_direct/active</config_path>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+        </field>
+        <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Title</label>
+            <config_path>payment/emerchantpay_direct/title</config_path>
+            <validate>required-entry</validate>
+            <can_be_empty>0</can_be_empty>
+        </field>
+
+        <field id="username" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Username</label>
+            <tooltip><![CDATA[Enter your Username, required for accessing the Genesis Gateway]]></tooltip>
+            <config_path>payment/emerchantpay_direct/username</config_path>
+            <validate>required-entry validate-alphanum</validate>
+            <can_be_empty>0</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="password" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Password</label>
+            <tooltip><![CDATA[Enter your Password, required for accessing the Genesis Gateway]]></tooltip>
+            <config_path>payment/emerchantpay_direct/password</config_path>
+            <validate>required-entry validate-alphanum</validate>
+            <can_be_empty>0</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="token" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Token</label>
+            <tooltip><![CDATA[Enter your Token, required for accessing the Genesis Gateway]]></tooltip>
+            <config_path>payment/emerchantpay_direct/token</config_path>
+            <validate>required-entry validate-alphanum</validate>
+            <can_be_empty>0</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="test_mode" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Test Mode</label>
+            <comment><![CDATA[If enabled, your transactions are forwarded to our test (staging) environment.]]></comment>
+            <config_path>payment/emerchantpay_direct/test_mode</config_path>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="payment_action" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Transaction Types</label>
+            <comment><![CDATA[Select the transaction type for the initial transaction.]]></comment>
+            <config_path>payment/emerchantpay_direct/payment_action</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Direct\TransactionType</source_model>
+            <validate>required-entry</validate>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+            <can_be_empty>0</can_be_empty>
+        </field>
+        <field id="order_status" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>New Order Status</label>
+            <comment><![CDATA[Select the default order status for new orders.]]></comment>
+            <config_path>payment/emerchantpay_direct/order_status</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Order\Status\NewStatus</source_model>
+            <validate>required-entry</validate>
+            <can_be_empty>0</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="allowspecific" translate="label" type="allowspecific" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Payment from Applicable Countries</label>
+            <config_path>payment/emerchantpay_direct/allowspecific</config_path>
+            <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="specificcountry" translate="label" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Payment from Specific Countries</label>
+            <config_path>payment/emerchantpay_direct/specificcountry</config_path>
+            <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+            <validate>required-entry</validate>
+            <can_be_empty>0</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+                <field id="allowspecific">1</field>
+            </depends>
+        </field>
+        <field id="allow_specific_currency" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Allow Specific Currencies</label>
+            <comment><![CDATA[Define if you wish to enable the method for some of the global allowed currencies.]]></comment>
+            <config_path>payment/emerchantpay_direct/allow_specific_currency</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Locale\Currency\AllSpecificCurrencies</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="specific_currencies" translate="label" type="multiselect" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Specific Currencies</label>
+            <comment><![CDATA[Select the currencies, for which you would like to enable payment method.]]></comment>
+            <tooltip><![CDATA[Hint: You should have in mind that, you'd better allow only the currencies, which can be processed from your configured Merchant-Terminals.]]></tooltip>
+            <config_path>payment/emerchantpay_direct/specific_currencies</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Locale\Currency\Currency</source_model>
+            <validate>required-entry</validate>
+            <depends>
+                <field id="active">1</field>
+                <field id="allow_specific_currency">1</field>
+            </depends>
+            <can_be_empty>0</can_be_empty>
+        </field>
+        <field id="min_order_total" translate="label" type="text" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Minimum Order Total</label>
+            <config_path>payment/emerchantpay_direct/min_order_total</config_path>
+            <validate>validate-zero-or-greater</validate>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="max_order_total" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Maximum Order Total</label>
+            <config_path>payment/emerchantpay_direct/max_order_total</config_path>
+            <validate>validate-zero-or-greater</validate>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="sort_order" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Sort Order</label>
+            <config_path>payment/emerchantpay_direct/sort_order</config_path>
+            <frontend_class>validate-number</frontend_class>
+            <validate>validate-zero-or-greater</validate>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+    </group>
+</include>

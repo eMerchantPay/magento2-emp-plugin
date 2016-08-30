@@ -23,6 +23,9 @@ GNU General Public License for more details.
         </group>
     </groups>
     <methods>
+        <method name="emerchantpay_direct">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
         <method name="emerchantpay_checkout">
             <allow_multiple_address>1</allow_multiple_address>
         </method>

@@ -289,17 +289,17 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 'return_success' =>
                     $this->getModuleHelper()->getReturnUrl(
                         $this->getCode(),
-                        "success"
+                        'success'
                     ),
                 'return_cancel'  =>
                     $this->getModuleHelper()->getReturnUrl(
                         $this->getCode(),
-                        "cancel"
+                        'cancel'
                     ),
                 'return_failure' =>
                     $this->getModuleHelper()->getReturnUrl(
                         $this->getCode(),
-                        "failure"
+                        'failure'
                     ),
             ]
         ];
@@ -308,6 +308,22 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
 
         try {
             $responseObject = $this->checkout($data);
+
+            $isWpfSuccessful =
+                ($responseObject->status == \Genesis\API\Constants\Transaction\States::NEW_STATUS) &&
+                isset($responseObject->redirect_url);
+
+            if (!$isWpfSuccessful) {
+                $errorMessage = $this->getModuleHelper()->getErrorMessageFromGatewayResponse(
+                    $responseObject
+                );
+
+                $this->getCheckoutSession()->setEmerchantPayLastCheckoutError(
+                    $errorMessage
+                );
+
+                $this->getModuleHelper()->throwWebApiException($errorMessage);
+            }
 
             $payment->setTransactionId($responseObject->unique_id);
             $payment->setIsTransactionPending(true);
@@ -327,6 +343,11 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $this->getLogger()->error(
                 $e->getMessage()
             );
+
+            $this->getCheckoutSession()->setEmerchantPayLastCheckoutError(
+                $e->getMessage()
+            );
+
             $this->getModuleHelper()->maskException($e);
         }
     }
@@ -364,38 +385,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         }
 
         try {
-            $this->getModuleHelper()->setTokenByPaymentTransaction(
-                $authTransaction
-            );
-
-            $data = array(
-                'transaction_id' =>
-                    $this->getModuleHelper()->genTransactionId(),
-                'remote_ip'      =>
-                    $order->getRemoteIp(),
-                'reference_id'   =>
-                    $authTransaction->getTxnId(),
-                'currency'       =>
-                    $order->getBaseCurrencyCode(),
-                'amount'         =>
-                    $amount
-            );
-
-            $responseObject = $this->processReferenceTransaction(
-                \Genesis\API\Constants\Transaction\Types::CAPTURE,
-                $payment,
-                $data
-            );
-
-            if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-                $this->getMessageManager()->addSuccess($responseObject->message);
-            } else {
-                $this->getModuleHelper()->throwWebApiException(
-                    $responseObject->message
-                );
-            }
-
-            unset($data);
+            $this->doCapture($payment, $amount, $authTransaction);
         } catch (\Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()
@@ -441,60 +431,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             );
         }
 
-        if (!$this->getModuleHelper()->canRefundTransaction($captureTransaction)) {
-            $errorMessage = sprintf(
-                "Order with transaction type \"%s\" cannot be refunded online." . PHP_EOL .
-                "For further Information please contact your Account Manager." . PHP_EOL .
-                "For more complex workflows/functionality, please visit our Merchant Portal!",
-                $this->getModuleHelper()->getTransactionTypeByTransaction(
-                    $captureTransaction
-                )
-            );
-
-            $this->getMessageManager()->addError($errorMessage);
-            $this->getModuleHelper()->throwWebApiException($errorMessage);
-        }
-
-        if (!$this->getModuleHelper()->setTokenByPaymentTransaction($captureTransaction)) {
-            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
-                $payment
-            );
-
-            $this->getModuleHelper()->setTokenByPaymentTransaction(
-                $authTransaction
-            );
-        }
-
         try {
-            $data = array(
-                'transaction_id' =>
-                    $this->getModuleHelper()->genTransactionId(),
-                'remote_ip'      =>
-                    $order->getRemoteIp(),
-                'reference_id'   =>
-                    $captureTransaction->getTxnId(),
-                'currency'       =>
-                    $order->getBaseCurrencyCode(),
-                'amount'         =>
-                    $amount
-            );
-
-            $responseObject = $this->processReferenceTransaction(
-                \Genesis\API\Constants\Transaction\Types::REFUND,
-                $payment,
-                $data
-            );
-
-            if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-                $this->getMessageManager()->addSuccess($responseObject->message);
-            } else {
-                $this->getMessageManager()->addError($responseObject->message);
-                $this->getModuleHelper()->throwWebApiException(
-                    $responseObject->message
-                );
-            }
-
-            unset($data);
+            $this->doRefund($payment, $amount, $captureTransaction);
         } catch (\Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()
@@ -558,34 +496,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         }
 
         try {
-            $this->getModuleHelper()->setTokenByPaymentTransaction(
-                $authTransaction
-            );
-
-            $data = array(
-                'transaction_id' =>
-                    $this->getModuleHelper()->genTransactionId(),
-                'remote_ip'      =>
-                    $order->getRemoteIp(),
-                'reference_id'   =>
-                    $referenceTransaction->getTxnId()
-            );
-
-            $responseObject = $this->processReferenceTransaction(
-                \Genesis\API\Constants\Transaction\Types::VOID,
-                $payment,
-                $data
-            );
-
-            if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-                $this->getMessageManager()->addSuccess($responseObject->message);
-            } else {
-                $this->getModuleHelper()->throwWebApiException(
-                    $responseObject->message
-                );
-            }
-
-            unset($data);
+            $this->doVoid($payment, $authTransaction, $referenceTransaction);
         } catch (\Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()

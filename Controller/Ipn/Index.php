@@ -36,8 +36,7 @@ class Index extends \EMerchantPay\Genesis\Controller\AbstractAction
     {
         $className = null;
 
-        switch (true)
-        {
+        switch (true) {
             case $this->isPostRequestExists('wpf_unique_id'):
                 $className = 'CheckoutIpn';
                 break;

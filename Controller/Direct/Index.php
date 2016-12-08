@@ -40,11 +40,8 @@ class Index extends \EMerchantPay\Genesis\Controller\AbstractCheckoutAction
             $redirectUrl = $this->getCheckoutSession()->getEmerchantPayCheckoutRedirectUrl();
 
             if (isset($redirectUrl)) {
-
                 $this->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl(null);
-
                 $this->getResponse()->setRedirect($redirectUrl);
-
             } else {
                 $this->redirectToCheckoutOnePageSuccess();
             }

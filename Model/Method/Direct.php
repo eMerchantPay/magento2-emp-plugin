@@ -19,6 +19,9 @@
 
 namespace EMerchantPay\Genesis\Model\Method;
 
+use Magento\Framework\DataObject;
+use Magento\Quote\Api\Data\PaymentInterface;
+
 /**
  * Direct Payment Method Model Class
  * Class Direct
@@ -48,10 +51,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     protected $_isInitializeNeeded = false;
 
     protected $_canFetchTransactionInfo = true;
-    protected $_canUseForMultishipping = false;
     protected $_canSaveCc = false;
-
-    protected $_transactionType = null;
 
     /**
      * Direct constructor.
@@ -117,21 +117,46 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     }
 
     /**
-     * Gets transaction type
+     * Retrieves the Checkout Payment Action according to the
+     * Module Transaction Type setting
+     *
      * @return string
      */
-    public function getTransactionType()
+    public function getConfigPaymentAction()
     {
-        return $this->_transactionType;
+        $transactionTypeActions = [
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE    =>
+                \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE,
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D =>
+                \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE,
+            \Genesis\API\Constants\Transaction\Types::SALE         =>
+                \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE_CAPTURE,
+            \Genesis\API\Constants\Transaction\Types::SALE_3D      =>
+                \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE_CAPTURE,
+        ];
+
+        $transactionType = $this->getConfigTransactionType();
+
+        if (!array_key_exists($transactionType, $transactionTypeActions)) {
+            $this->getModuleHelper()->throwWebApiException(
+                sprintf(
+                    'Transaction Type (%s) not supported yet',
+                    $transactionType
+                )
+            );
+        }
+
+        return $transactionTypeActions[$transactionType];
     }
 
     /**
-     * Sets transaction type
-     * @param $transactionType
+     * Retrieves the Module Transaction Type Setting
+     *
+     * @return string
      */
-    public function setTransactionType($transactionType)
+    public function getConfigTransactionType()
     {
-        $this->_transactionType = $transactionType;
+        return $this->getConfigData('transaction_type');
     }
 
     /**
@@ -145,16 +170,17 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     }
 
     /**
-     * Gets Default Payment Action On Payment Complete Action
-     * @return string
+     * Check whether we're doing 3D transactions,
+     * based on the module configuration
+     *
+     * @return bool
      */
-    public function getConfigPaymentAction()
+    protected function is3dEnabled()
     {
-        $transactionType = $this->getConfigData('payment_action');
-
-        $config = $this->getModuleHelper()->getTransactionConfig($transactionType);
-
-        return $config->action;
+        return
+            $this->getModuleHelper()->getIsTransaction3dSecure(
+                $this->getConfigTransactionType()
+            );
     }
 
     /**
@@ -166,7 +192,6 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      */
     public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-        $this->setTransactionType($this->getConfigData('payment_action'));  // authorize or authorize3d
         return $this->processTransaction($payment, $amount);
     }
 
@@ -179,15 +204,35 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      */
     public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-        $actionName = $this->getActionContext()->getRequest()->getActionName();
+        $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
+            $payment
+        );
 
-        $transactionType = isset($actionName) ?
-            \Genesis\API\Constants\Transaction\Types::CAPTURE :
-            $this->getConfigData('payment_action'); // sale or sale3d
+        /*
+         * When no Auth then Process Sale / Sale3d
+         * Note: this method is called when:
+         *    - Capturing Payment in Admin Area
+         *    - Doing a purchase when Payment Action is "ACTION_AUTHORIZE_CAPTURE"
+         */
+        if (!isset($authTransaction)) {
+            return $this->processTransaction($payment, $amount);
+        }
 
-        $this->setTransactionType($transactionType);
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $payment->getOrder();
 
-        return $this->processTransaction($payment, $amount);
+        $this->getLogger()->debug('Capture transaction for order #' . $order->getIncrementId());
+
+        try {
+            $this->doCapture($payment, $amount, $authTransaction);
+        } catch (\Exception $e) {
+            $this->getLogger()->error(
+                $e->getMessage()
+            );
+            $this->getModuleHelper()->maskException($e);
+        }
+
+        return $this;
     }
 
     /**
@@ -199,8 +244,46 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      */
     public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-        $this->setTransactionType(\Genesis\API\Constants\Transaction\Types::REFUND);
-        return $this->processTransaction($payment, $amount);
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $payment->getOrder();
+
+        $this->getLogger()->debug('Refund transaction for order #' . $order->getIncrementId());
+
+        $captureTransaction = $this->getModuleHelper()->lookUpCaptureTransaction(
+            $payment
+        );
+
+        if (!isset($captureTransaction)) {
+            $errorMessage = 'Refund transaction for order #' .
+                $order->getIncrementId() .
+                ' cannot be finished (No Capture Transaction exists)';
+
+            $this->getLogger()->error(
+                $errorMessage
+            );
+
+            $this->getMessageManager()->addError($errorMessage);
+
+            $this->getModuleHelper()->throwWebApiException(
+                $errorMessage
+            );
+        }
+
+        try {
+            $this->doRefund($payment, $amount, $captureTransaction);
+        } catch (\Exception $e) {
+            $this->getLogger()->error(
+                $e->getMessage()
+            );
+
+            $this->getMessageManager()->addError(
+                $e->getMessage()
+            );
+
+            $this->getModuleHelper()->maskException($e);
+        }
+
+        return $this;
     }
 
     /**
@@ -211,8 +294,43 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      */
     public function void(\Magento\Payment\Model\InfoInterface $payment)
     {
-        $this->setTransactionType(\Genesis\API\Constants\Transaction\Types::VOID);
-        return $this->processTransaction($payment);
+        /** @var \Magento\Sales\Model\Order $order */
+
+        $order = $payment->getOrder();
+
+        $this->getLogger()->debug('Void transaction for order #' . $order->getIncrementId());
+
+        $referenceTransaction = $this->getModuleHelper()->lookUpVoidReferenceTransaction(
+            $payment
+        );
+
+        if ($referenceTransaction->getTxnType() == \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH) {
+            $authTransaction = $referenceTransaction;
+        } else {
+            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
+                $payment
+            );
+        }
+
+        if (!isset($authTransaction) || !isset($referenceTransaction)) {
+            $errorMessage = 'Void transaction for order #' .
+                $order->getIncrementId() .
+                ' cannot be finished (No Authorize / Capture Transaction exists)';
+
+            $this->getLogger()->error($errorMessage);
+            $this->getModuleHelper()->throwWebApiException($errorMessage);
+        }
+
+        try {
+            $this->doVoid($payment, $authTransaction, $referenceTransaction);
+        } catch (\Exception $e) {
+            $this->getLogger()->error(
+                $e->getMessage()
+            );
+            $this->getModuleHelper()->maskException($e);
+        }
+
+        return $this;
     }
 
     /**
@@ -227,41 +345,76 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     }
 
     /**
-     * Common transactions handler
+     * Assign data to info model instance
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param $amount
+     * @param \Magento\Framework\DataObject|mixed $data
      * @return $this
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
-    protected function processTransaction(\Magento\Payment\Model\InfoInterface $payment, $amount = null)
+    public function assignData(\Magento\Framework\DataObject $data)
     {
-        $transactionType = $this->getTransactionType();
+        parent::assignData($data);
 
-        $config = $this->getModuleHelper()->getTransactionConfig($transactionType);
+        $info = $this->getInfoInstance();
 
-        $order = $payment->getOrder();
-
-        try {
-            if ($config->reference) {
-                $this->processRefTransaction($payment, $amount);
-            } else {
-                $this->processInitialTransaction($payment, $amount);
-            }
-        } catch (\Exception $e) {
-            $logInfo =
-                'Transaction ' . $transactionType .
-                ' for order #' . $order->getIncrementId() .
-                ' failed with message "' . $e->getMessage() . '"';
-
-            $this->getLogger()->error($logInfo);
-
-            $this->getModuleHelper()->throwException(
-                $e->getMessage(),
-                $config->reference
-            );
+        /*
+         * Skip fix if CC Info already assigned (Magento 2.1.x)
+         */
+        if ($this->getInfoInstanceHasCcDetails($info)) {
+            return $this;
         }
 
+        $additionalData = $data->getData(PaymentInterface::KEY_ADDITIONAL_DATA);
+        if (!is_object($additionalData)) {
+            $additionalData = new DataObject($additionalData ?: []);
+        }
+
+        /** @var DataObject $info */
+        $info->addData(
+            [
+                'cc_type'           => $additionalData->getCcType(),
+                'cc_owner'          => $additionalData->getCcOwner(),
+                'cc_last_4'         => substr($additionalData->getCcNumber(), -4),
+                'cc_number'         => $additionalData->getCcNumber(),
+                'cc_cid'            => $additionalData->getCcCid(),
+                'cc_exp_month'      => $additionalData->getCcExpMonth(),
+                'cc_exp_year'       => $additionalData->getCcExpYear(),
+                'cc_ss_issue'       => $additionalData->getCcSsIssue(),
+                'cc_ss_start_month' => $additionalData->getCcSsStartMonth(),
+                'cc_ss_start_year'  => $additionalData->getCcSsStartYear()
+            ]
+        );
+
         return $this;
+    }
+
+    /**
+     * Determines if the CC Details are supplied to the Payment Info Instance
+     *
+     * @param \Magento\Payment\Model\InfoInterface $info
+     * @return bool
+     */
+    protected function getInfoInstanceHasCcDetails(\Magento\Payment\Model\InfoInterface $info)
+    {
+        return
+            !empty($info->getCcNumber()) &&
+            !empty($info->getCcCid()) &&
+            !empty($info->getCcExpMonth()) &&
+            !empty($info->getCcExpYear());
+    }
+
+    /**
+     * Builds full Request Class Name by Transaction Type
+     * @param string $transactionType
+     * @return string
+     */
+    protected function getTransactionTypeRequestClassName($transactionType)
+    {
+        $requestClassName = ucfirst(
+            str_replace('3d', '3D', $transactionType)
+        );
+
+        return "Financial\\Cards\\{$requestClassName}";
     }
 
     /**
@@ -277,15 +430,13 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      * @throws \Exception
      * @throws \Genesis\Exceptions\ErrorAPI
      */
-    protected function processInitialTransaction(\Magento\Payment\Model\InfoInterface $payment, $amount)
+    protected function processTransaction(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
-        $transactionType = $this->getTransactionType();
+        $transactionType = $this->getConfigTransactionType();
 
         $order = $payment->getOrder();
 
         $helper = $this->getModuleHelper();
-
-        $config = $helper->getTransactionConfig($transactionType);
 
         $this->getConfigHelper()->initGatewayClient();
 
@@ -296,80 +447,171 @@ class Direct extends \Magento\Payment\Model\Method\Cc
 
         $shipping = $order->getShippingAddress();
 
-        $genesis = new \Genesis\Genesis($config->request);
+        $genesis = new \Genesis\Genesis(
+            $this->getTransactionTypeRequestClassName(
+                $transactionType
+            )
+        );
+
+        $orderId = ltrim(
+            $order->getIncrementId(),
+            '0'
+        );
 
         $genesis
             ->request()
-            ->setTransactionId($helper->genTransactionId($order->getIncrementId()))
-            ->setRemoteIp($order->getRemoteIp())
-            ->setUsage($helper->buildOrderDescriptionText($order))
-            ->setLanguage($helper->getLocale())
-            ->setCurrency(
-                $order->getBaseCurrencyCode()
-            )
-            ->setAmount($amount);
+                ->setTransactionId(
+                    $helper->genTransactionId($orderId)
+                )
+                ->setRemoteIp(
+                    $order->getRemoteIp()
+                )
+                ->setUsage(
+                    $helper->buildOrderDescriptionText($order)
+                )
+                ->setLanguage(
+                    $helper->getLocale()
+                )
+                ->setCurrency(
+                    $order->getBaseCurrencyCode()
+                )
+                ->setAmount(
+                    $amount
+                );
 
         if (!empty($payment->getCcOwner())) {
             $genesis
                 ->request()
-                ->setCardHolder($payment->getCcOwner());
+                    ->setCardHolder(
+                        $payment->getCcOwner()
+                    );
         } else {
             $genesis
                 ->request()
-                ->setCardHolder($billing->getFirstname() . ' ' . $billing->getLastname());
+                    ->setCardHolder(
+                        $billing->getFirstname() . ' ' . $billing->getLastname()
+                    );
         }
 
         $genesis
             ->request()
-            ->setCardNumber($payment->getCcNumber())
-            ->setExpirationYear($payment->getCcExpYear())
-            ->setExpirationMonth($payment->getCcExpMonth())
-            ->setCvv($payment->getCcCid())
-            ->setCustomerEmail($order->getCustomerEmail())
-            ->setCustomerPhone($billing->getTelephone())
-            ->setBillingFirstName($billing->getFirstname())
-            ->setBillingLastName($billing->getLastname())
-            ->setBillingAddress1($billing->getStreetLine(1))
-            ->setBillingAddress2($billing->getStreetLine(2))
-            ->setBillingZipCode($billing->getPostcode())
-            ->setBillingCity($billing->getCity())
-            ->setBillingState($billing->getRegionCode())
-            ->setBillingCountry($billing->getCountryId());
+                ->setCardNumber(
+                    $payment->getCcNumber()
+                )
+                ->setExpirationYear(
+                    $payment->getCcExpYear()
+                )
+                ->setExpirationMonth(
+                    $payment->getCcExpMonth()
+                )
+                ->setCvv(
+                    $payment->getCcCid()
+                )
+                ->setCustomerEmail(
+                    $order->getCustomerEmail()
+                )
+                ->setCustomerPhone(
+                    $billing->getTelephone()
+                )
+                //Billing
+                ->setBillingFirstName(
+                    $billing->getFirstname()
+                )
+                ->setBillingLastName(
+                    $billing->getLastname()
+                )
+                ->setBillingAddress1(
+                    $billing->getStreetLine(1)
+                )
+                ->setBillingAddress2(
+                    $billing->getStreetLine(2)
+                )
+                ->setBillingZipCode(
+                    $billing->getPostcode()
+                )
+                ->setBillingCity(
+                    $billing->getCity()
+                )
+                ->setBillingState(
+                    $billing->getRegionCode()
+                )
+                ->setBillingCountry(
+                    $billing->getCountryId()
+                );
 
         if (!empty($shipping)) {
             $genesis
                 ->request()
-                ->setShippingFirstName($shipping->getFirstname())
-                ->setShippingLastName($shipping->getLastname())
-                ->setShippingAddress1($shipping->getStreetLine(1))
-                ->setShippingAddress2($shipping->getStreetLine(2))
-                ->setShippingZipCode($shipping->getPostcode())
-                ->setShippingCity($shipping->getCity())
-                ->setShippingState($shipping->getRegionCode())
-                ->setShippinCountry($shipping->getCountryId());
+                    ->setShippingFirstName(
+                        $shipping->getFirstname()
+                    )
+                    ->setShippingLastName(
+                        $shipping->getLastname()
+                    )
+                    ->setShippingAddress1(
+                        $shipping->getStreetLine(1)
+                    )
+                    ->setShippingAddress2(
+                        $shipping->getStreetLine(2)
+                    )
+                    ->setShippingZipCode(
+                        $shipping->getPostcode()
+                    )
+                    ->setShippingCity(
+                        $shipping->getCity()
+                    )
+                    ->setShippingState(
+                        $shipping->getRegionCode()
+                    )
+                    ->setShippinCountry(
+                        $shipping->getCountryId()
+                    );
         }
 
-        if ($config->is3D) {
+        if ($this->is3dEnabled()) {
             $genesis
                 ->request()
-                ->setNotificationUrl($helper->getNotificationUrl(
-                    $this->getCode()
-                ))
-                ->setReturnSuccessUrl($helper->getReturnUrl(
-                    $this->getCode(),
-                    "success"
-                ))
-                ->setReturnCancelUrl($helper->getReturnUrl(
-                    $this->getCode(),
-                    "cancel"
-                ))
-                ->setReturnFailureUrl($helper->getReturnUrl(
-                    $this->getCode(),
-                    "failure"
-                ));
+                    ->setNotificationUrl(
+                        $helper->getNotificationUrl(
+                            $this->getCode()
+                        )
+                    )
+                    ->setReturnSuccessUrl(
+                        $helper->getReturnUrl(
+                            $this->getCode(),
+                            "success"
+                        )
+                    )
+                    ->setReturnCancelUrl(
+                        $helper->getReturnUrl(
+                            $this->getCode(),
+                            "cancel"
+                        )
+                    )
+                    ->setReturnFailureUrl(
+                        $helper->getReturnUrl(
+                            $this->getCode(),
+                            "failure"
+                        )
+                    );
         }
 
-        $genesis->execute();
+        try {
+            $genesis->execute();
+        } catch (\Exception $e) {
+            $logInfo =
+                'Transaction ' . $transactionType .
+                ' for order #' . $order->getIncrementId() .
+                ' failed with message "' . $e->getMessage() . '"';
+
+            $this->getLogger()->error($logInfo);
+
+            $this->getCheckoutSession()->setEmerchantPayLastCheckoutError(
+                $e->getMessage()
+            );
+
+            $this->getModuleHelper()->maskException($e);
+        }
 
         $this->setGenesisResponse(
             $genesis->response()->getResponseObject()
@@ -384,235 +626,44 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                 $this->getGenesisResponse()->unique_id
             )
             ->setIsTransactionClosed(
-                $config->should_close
+                false
             )
             ->setIsTransactionPending(
-                $config->is3D
+                $this->is3dEnabled()
             )
             ->setTransactionAdditionalInfo(
                 \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,
                 $genesis_response
             );
 
-        $status = $this->getGenesisResponse()->status;
-
-        $statusList = array(
-            \Genesis\API\Constants\Transaction\States::DECLINED,
-            \Genesis\API\Constants\Transaction\States::ERROR,
-            \Genesis\API\Constants\Transaction\States::UNSUCCESSFUL
+        $status = new \Genesis\API\Constants\Transaction\States(
+            $this->getGenesisResponse()->status
         );
 
-        if (in_array($status, $statusList)) {
-            throw new \Genesis\Exceptions\ErrorAPI(
-                $this->getGenesisResponse()->message
+        $isTransactionFailed =
+            !$status->isApproved() &&
+            (!$status->isPendingAsync() || !isset($this->getGenesisResponse()->redirect_url));
+
+        if ($isTransactionFailed) {
+            $errorMessage = $this->getModuleHelper()->getErrorMessageFromGatewayResponse(
+                $this->getGenesisResponse()
             );
+
+            $this->getCheckoutSession()->setEmerchantPayLastCheckoutError(
+                $errorMessage
+            );
+
+            $this->getModuleHelper()->throwWebApiException($errorMessage);
         }
 
-        if ($config->is3D) {
-            $this->setRedirectUrl($this->getGenesisResponse()->redirect_url);
+        if ($this->is3dEnabled() && $status->isPendingAsync()) {
+            $this->setRedirectUrl(
+                $this->getGenesisResponse()->redirect_url
+            );
             $payment->setPreparedMessage('3D-Secure: Redirecting customer to a verification page.');
         } else {
             $this->unsetRedirectUrl();
         }
-    }
-
-    /**
-     * Processes reference transactions
-     *      - Capture
-     *      - Refund
-     *      - Void
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param $amount
-     * @throws \Exception
-     */
-    protected function processRefTransaction(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-        $transactionType = $this->getTransactionType();
-
-        $order = $payment->getOrder();
-
-        switch ($transactionType) {
-            case \Genesis\API\Constants\Transaction\Types::CAPTURE:
-                $data = array(
-                    'transaction_id' =>
-                        $this->getModuleHelper()->genTransactionId(),
-                    'remote_ip' =>
-                        $order->getRemoteIp(),
-                    'reference_id' =>
-                        $this->getReferenceCaptureTxnId($payment),
-                    'currency' =>
-                        $order->getBaseCurrencyCode(),
-                    'amount' =>
-                        $amount
-                );
-                break;
-            case \Genesis\API\Constants\Transaction\Types::REFUND:
-                $data = array(
-                    'transaction_id' =>
-                        $this->getModuleHelper()->genTransactionId(),
-                    'remote_ip' =>
-                        $order->getRemoteIp(),
-                    'reference_id' =>
-                        $this->getReferenceRefundTxnId($payment),
-                    'currency' =>
-                        $order->getBaseCurrencyCode(),
-                    'amount' =>
-                        $amount
-                );
-                break;
-            case \Genesis\API\Constants\Transaction\Types::VOID:
-                $data = array(
-                    'transaction_id' =>
-                        $this->getModuleHelper()->genTransactionId(),
-                    'remote_ip' =>
-                        $order->getRemoteIp(),
-                    'reference_id' =>
-                        $this->getReferenceVoidTxnId($payment)
-                );
-                break;
-            default:
-                throw new \Exception(__('Unsupported transaction (' . $transactionType . ').'));
-        }
-
-        $responseObject = $this->processReferenceTransaction(
-            $transactionType,
-            $payment,
-            $data
-        );
-
-        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-            $this->getMessageManager()->addSuccess($responseObject->message);
-        } else {
-            throw new \Exception(__($responseObject->message));
-        }
-    }
-
-    /**
-     * Gets Capture transaction reference transaction ID
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return array
-     * @throws \Exception
-     */
-    protected function getReferenceCaptureTxnId(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
-            $payment
-        );
-
-        if (!isset($authTransaction)) {
-            $captureTransaction = $this->getModuleHelper()->lookUpCaptureTransaction(
-                $payment
-            );
-
-            $order = $payment->getOrder();
-
-            if (isset($captureTransaction)) {
-                $errorMessage = 'Capture transaction for order #' .
-                    $order->getIncrementId() .
-                    ' in progress (Expecting Notification from the Payment Gateway)';
-            } else {
-                $errorMessage = 'Capture transaction for order #' .
-                    $order->getIncrementId() .
-                    ' cannot be finished (No Authorize Transaction exists)';
-            }
-
-            throw new \Exception(__($errorMessage));
-        }
-
-        $this->getModuleHelper()->setTokenByPaymentTransaction(
-            $authTransaction
-        );
-
-        return $authTransaction->getTxnId();
-    }
-
-    /**
-     * Gets Refund transaction reference transaction ID
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return array
-     * @throws \Exception
-     */
-    protected function getReferenceRefundTxnId(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        $captureTransaction = $this->getModuleHelper()->lookUpCaptureTransaction(
-            $payment
-        );
-
-        if (!isset($captureTransaction)) {
-            $order = $payment->getOrder();
-
-            $errorMessage = 'Refund transaction for order #' .
-                $order->getIncrementId() .
-                ' cannot be finished (No Capture Transaction exists)';
-
-            throw new \Exception(__($errorMessage));
-        }
-
-        if (!$this->getModuleHelper()->canRefundTransaction($captureTransaction)) {
-            $errorMessage = sprintf(
-                "Order with transaction type \"%s\" cannot be refunded online." . PHP_EOL .
-                "For further Information please contact your Account Manager." . PHP_EOL .
-                "For more complex workflows/functionality, please visit our Merchant Portal!",
-                $this->getModuleHelper()->getTransactionTypeByTransaction(
-                    $captureTransaction
-                )
-            );
-
-            throw new \Exception(__($errorMessage));
-        }
-
-        if (!$this->getModuleHelper()->setTokenByPaymentTransaction($captureTransaction)) {
-            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
-                $payment
-            );
-
-            $this->getModuleHelper()->setTokenByPaymentTransaction(
-                $authTransaction
-            );
-        }
-
-        return $captureTransaction->getTxnId();
-    }
-
-    /**
-     * Gets Void transaction reference transaction ID
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return array
-     * @throws \Exception
-     */
-    protected function getReferenceVoidTxnId(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        $referenceTransaction = $this->getModuleHelper()->lookUpVoidReferenceTransaction(
-            $payment
-        );
-
-        if ($referenceTransaction->getTxnType() == \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH) {
-            $authTransaction = $referenceTransaction;
-        } else {
-            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
-                $payment
-            );
-        }
-
-        if (!isset($authTransaction) || !isset($referenceTransaction)) {
-            $order = $payment->getOrder();
-
-            $errorMessage = 'Void transaction for order #' .
-                $order->getIncrementId() .
-                ' cannot be finished (No Authorize / Capture Transaction exists)';
-
-            throw new \Exception(__($errorMessage));
-        }
-
-        $this->getModuleHelper()->setTokenByPaymentTransaction(
-            $authTransaction
-        );
-
-        return $referenceTransaction->getTxnId();
     }
 
     /**

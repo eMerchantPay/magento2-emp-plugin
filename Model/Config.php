@@ -131,7 +131,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
         switch ($key) {
             default:
                 $underscored = strtolower(preg_replace('/(.)([A-Z])/', "$1_$2", $key));
-                $path = $this->_getSpecificConfigPath($underscored);
+                $path = $this->getSpecificConfigPath($underscored);
                 if ($path !== null) {
                     $value = $this->getScopeConfig()->getValue(
                         $path,
@@ -172,7 +172,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * @param string $fieldName
      * @return string|null
      */
-    protected function _getSpecificConfigPath($fieldName)
+    protected function getSpecificConfigPath($fieldName)
     {
         if ($this->pathPattern) {
             return sprintf($this->pathPattern, $this->_methodCode, $fieldName);
@@ -295,7 +295,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
                 'trim',
                 explode(
                     ',',
-                    $this->getValue('payment_action')
+                    $this->getValue('transaction_types')
                 )
             );
     }

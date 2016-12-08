@@ -25,7 +25,7 @@ GNU General Public License for more details.
                 <order_status>payment_review</order_status>
                 <title>eMerchantPay Direct</title>
                 <test_mode>1</test_mode>
-                <payment_action>sale</payment_action>
+                <transaction_type>sale</transaction_type>
                 <allowspecific>0</allowspecific>
                 <allow_specific_currency>0</allow_specific_currency>
                 <cctypes>AE,VI,MC,DI,JCB</cctypes>
@@ -37,7 +37,7 @@ GNU General Public License for more details.
                 <order_status>payment_review</order_status>
                 <title>eMerchantPay Checkout</title>
                 <test_mode>1</test_mode>
-                <payment_action>sale</payment_action>
+                <transaction_types>sale</transaction_types>
                 <allowspecific>0</allowspecific>
                 <allow_specific_currency>0</allow_specific_currency>
                 <group>emerchantpay</group>

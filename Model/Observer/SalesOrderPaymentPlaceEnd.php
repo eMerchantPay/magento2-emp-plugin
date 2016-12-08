@@ -57,8 +57,7 @@ class SalesOrderPaymentPlaceEnd implements ObserverInterface
     {
         $payment = $observer->getEvent()->getData('payment');
         
-        switch ($payment->getMethod())
-        {
+        switch ($payment->getMethod()) {
             case \EMerchantPay\Genesis\Model\Method\Checkout::CODE:
                 $this->updateOrderStatusToNew($payment);
                 break;
@@ -102,30 +101,23 @@ class SalesOrderPaymentPlaceEnd implements ObserverInterface
      */
     protected function updateOrderStatus(\Magento\Payment\Model\InfoInterface $payment)
     {
-        $additionalInfo = $payment->getTransactionAdditionalInfo();
+        $transactionStatus = $this->getModuleHelper()->getPaymentAdditionalInfoValue(
+            $payment,
+            \EMerchantPay\Genesis\Helper\Data::ADDITIONAL_INFO_KEY_STATUS
+        );
 
-        $rawDetails = \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS;
-
-        if (array_key_exists($rawDetails, $additionalInfo) &&
-            array_key_exists('status', $additionalInfo[$rawDetails])
-        ) {
-            $status = $additionalInfo[$rawDetails]['status'];
-
+        if (!$transactionStatus) {
             $order = $payment->getOrder();
 
-            /*
-            $configHelper = $this->getModuleHelper()->getMethodConfig(
-                $payment->getMethod()
-            );
-            */
 
-            switch ($status)
-            {
+            switch ($transactionStatus) {
                 case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
-                    // Redirecting to the 3D secure URL
-                    if (array_key_exists('redirect_url', $additionalInfo[$rawDetails]) &&
-                        !empty($additionalInfo[$rawDetails]['redirect_url'])
-                    ) {
+                    $redirectUrl = $this->getModuleHelper()->getPaymentAdditionalInfoValue(
+                        $payment,
+                        \EMerchantPay\Genesis\Helper\Data::ADDITIONAL_INFO_KEY_REDIRECT_URL
+                    );
+
+                    if ($redirectUrl) {
                         $this->getModuleHelper()->setOrderState(
                             $order,
                             \Genesis\API\Constants\Transaction\States::PENDING_ASYNC
@@ -133,18 +125,9 @@ class SalesOrderPaymentPlaceEnd implements ObserverInterface
                     }
                     break;
                 case \Genesis\API\Constants\Transaction\States::APPROVED:
-
-                    if (array_key_exists($rawDetails, $additionalInfo) &&
-                        array_key_exists('transaction_type', $additionalInfo[$rawDetails])
-                    ) {
-                        $transactionType = $additionalInfo[$rawDetails]['transaction_type'];
-                    }
-
                     $this->getModuleHelper()->setOrderStatusByState(
                         $order,
-                        ($transactionType == \Genesis\API\Constants\Transaction\Types::SALE)
-                        ? \Magento\Sales\Model\Order::STATE_COMPLETE
-                        : \Magento\Sales\Model\Order::STATE_PROCESSING
+                        \Magento\Sales\Model\Order::STATE_PROCESSING
                     );
 
                     break;

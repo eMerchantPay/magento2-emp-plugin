@@ -43,7 +43,8 @@ define(
         customer,
         checkoutData,
         additionalValidators,
-        url) {
+        url
+    ) {
         'use strict';
 
         return Component.extend({
@@ -77,7 +78,7 @@ define(
                 return false;
             },
 
-            selectPaymentMethod: function() {
+            selectPaymentMethod: function () {
                 selectPaymentMethodAction(this.getData());
                 checkoutData.setSelectedPaymentMethod(this.item.method);
                 return true;

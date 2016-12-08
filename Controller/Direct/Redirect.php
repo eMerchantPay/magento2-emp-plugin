@@ -25,37 +25,8 @@ namespace EMerchantPay\Genesis\Controller\Direct;
  * Class Redirect
  * @package EMerchantPay\Genesis\Controller\Direct
  */
-class Redirect extends \EMerchantPay\Genesis\Controller\AbstractCheckoutAction
+class Redirect extends \EMerchantPay\Genesis\Controller\AbstractCheckoutRedirectAction
 {
-    /**
-     * @var \EMerchantPay\Genesis\Helper\Checkout
-     */
-    private $_checkoutHelper;
-
-    public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Checkout\Model\Session $checkoutSession,
-        \Magento\Sales\Model\OrderFactory $orderFactory,
-        \EMerchantPay\Genesis\Helper\Checkout $checkoutHelper
-    ) {
-        parent::__construct($context, $logger, $checkoutSession, $orderFactory);
-        $this->_checkoutHelper = $checkoutHelper;
-    }
-
-    /**
-     * Get the redirect action
-     *      - success
-     *      - cancel
-     *      - failure
-     *
-     * @return string
-     */
-    protected function getReturnAction()
-    {
-        return $this->getRequest()->getParam('action');
-    }
-
     /**
      * Handle the result from the Payment Gateway
      *
@@ -76,45 +47,24 @@ class Redirect extends \EMerchantPay\Genesis\Controller\AbstractCheckoutAction
                 break;
 
             case 'failure':
+                /**
+                 * If the customer is redirected here after processing Server to Server 3D-Secure transaction
+                 * this mean the Payment Transaction Status has been set to "Pending Async".
+                 * So there should be a problem with the 3D Secure Code Authentication, but the
+                 * exact error message from the payment gateway will be delivered after processing the
+                 * notification from the gateway
+                 */
                 $this->getMessageManager()->addError(
-                    __("Please, check your input and try again!")
+                    __('Please, check if the used card supports 3D Secure and you have entered ' .
+                       'a valid 3D Secure code! Please try again!')
                 );
                 $this->executeCancelAction();
                 break;
 
             default:
-                $this->getResponse()->setHttpResponseCode(401);
+                $this->getResponse()->setHttpResponseCode(
+                    \Magento\Framework\Webapi\Exception::HTTP_UNAUTHORIZED
+                );
         }
-    }
-
-    /**
-     * Handle Success Action
-     * @return void
-     */
-    protected function executeSuccessAction()
-    {
-        if ($this->getCheckoutSession()->getLastRealOrderId()) {
-            $this->getMessageManager()->addSuccess(__("Your payment is complete"));
-            $this->redirectToCheckoutOnePageSuccess();
-        }
-    }
-
-    /**
-     * Handle Cancel Action from Payment Gateway
-     */
-    protected function executeCancelAction()
-    {
-        $this->getCheckoutHelper()->cancelCurrentOrder('');
-        $this->getCheckoutHelper()->restoreQuote();
-        $this->redirectToCheckoutCart();
-    }
-
-    /**
-     * Get an Instance of the Magento Checkout Helper
-     * @return \EMerchantPay\Genesis\Helper\Checkout
-     */
-    protected function getCheckoutHelper()
-    {
-        return $this->_checkoutHelper;
     }
 }

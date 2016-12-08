@@ -72,10 +72,10 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="payment_action" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="transaction_type" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Transaction Types</label>
             <comment><![CDATA[Select the transaction type for the initial transaction.]]></comment>
-            <config_path>payment/emerchantpay_direct/payment_action</config_path>
+            <config_path>payment/emerchantpay_direct/transaction_type</config_path>
             <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Direct\TransactionType</source_model>
             <validate>required-entry</validate>
             <depends>

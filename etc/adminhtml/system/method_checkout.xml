@@ -17,7 +17,7 @@ GNU General Public License for more details.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
-    <group id="emerchantpay_checkout" translate="label comment" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+    <group id="emerchantpay_checkout" translate="label comment" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
         <label>eMerchantPay Checkout</label>
         <frontend_model>EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\CheckoutPayment</frontend_model>
         <comment><![CDATA[Checkout payment method - receive credit-card payments, without the need of PCI-DSS certificate or HTTPS. Note: Upon checkout, the customer will be redirected to a secure payment form, located on our servers and we will notify you, once the payment reached a final status]]></comment>
@@ -62,11 +62,11 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="payment_action" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="transaction_types" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Transaction Types</label>
             <comment><![CDATA[Select the transaction types that must be attempted during the customer's Checkout session.]]></comment>
             <tooltip><![CDATA[The first transaction type that is available will be selected by the gateway.]]></tooltip>
-            <config_path>payment/emerchantpay_checkout/payment_action</config_path>
+            <config_path>payment/emerchantpay_checkout/transaction_types</config_path>
             <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType</source_model>
             <validate>required-entry</validate>
             <depends>

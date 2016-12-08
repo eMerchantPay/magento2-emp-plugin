@@ -43,15 +43,15 @@ define(
                 template: 'EMerchantPay_Genesis/payment/method/direct/form'
             },
 
-            getCode: function() {
+            getCode: function () {
                 return 'emerchantpay_direct';
             },
 
-            isActive: function() {
+            isActive: function () {
                 return true;
             },
 
-            validate: function() {
+            validate: function () {
                 var $form = $('#' + this.getCode() + '-form');
                 return $form.validation() && $form.validation('isValid');
             },

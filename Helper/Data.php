@@ -27,67 +27,12 @@ namespace EMerchantPay\Genesis\Helper;
  */
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
-    /**
-     * @var array Transaction configuration settings
-     */
-    private $_transactionConfig = [
-        \Genesis\API\Constants\Transaction\Types::AUTHORIZE => [
-        'request'               => 'Financial\Cards\Authorize',
-        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE,
-        'reference'             => false,
-        'should_close'          => false,
-        'should_close_parent'   => true,
-        'is3D'                  => false
-        ],
-        \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D => [
-        'request'               => 'Financial\Cards\Authorize3D',
-        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE,
-        'reference'             => false,
-        'should_close'          => false,
-        'should_close_parent'   => true,
-        'is3D'                  => true
-        ],
-        \Genesis\API\Constants\Transaction\Types::SALE => [
-        'request'               => 'Financial\Cards\Sale',
-        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE_CAPTURE,
-        'reference'             => false,
-        'should_close'          => true,
-        'should_close_parent'   => false,
-        'is3D'                  => false
-        ],
-        \Genesis\API\Constants\Transaction\Types::SALE_3D => [
-        'request'               => 'Financial\Cards\Sale3D',
-        'action'                => \Magento\Payment\Model\Method\AbstractMethod::ACTION_AUTHORIZE_CAPTURE,
-        'reference'             => false,
-        'should_close'          => true,
-        'should_close_parent'   => false,
-        'is3D'                  => true
-        ],
-        \Genesis\API\Constants\Transaction\Types::CAPTURE => [
-        'request'               => 'Financial\Capture',
-        'action'                => null,
-        'reference'             => true,
-        'should_close'          => true,
-        'should_close_parent'   => false,
-        'is3D'                  => false
-        ],
-        \Genesis\API\Constants\Transaction\Types::REFUND => [
-        'request'               => 'Financial\Refund',
-        'action'                => null,
-        'reference'             => true,
-        'should_close'          => true,
-        'should_close_parent'   => false,
-        'is3D'                  => false
-        ],
-        \Genesis\API\Constants\Transaction\Types::VOID => [
-        'request'               => 'Financial\Void',
-        'action'                => null,
-        'reference'             => true,
-        'should_close'          => true,
-        'should_close_parent'   => false,
-        'is3D'                  => false
-        ]
-    ];
+    const SECURE_TRANSACTION_TYPE_SUFFIX = '3D';
+
+    const ADDITIONAL_INFO_KEY_STATUS           = 'status';
+    const ADDITIONAL_INFO_KEY_TRANSACTION_TYPE = 'transaction_type';
+    const ADDITIONAL_INFO_KEY_TERMINAL_TOKEN   = 'terminal_token';
+    const ADDITIONAL_INFO_KEY_REDIRECT_URL     = 'redirect_url';
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
@@ -333,6 +278,31 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get Transaction Additional Parameter Value
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param string $paramName
+     * @return null|string
+     */
+    public function getPaymentAdditionalInfoValue(
+        \Magento\Payment\Model\InfoInterface $payment,
+        $paramName
+    ) {
+        $paymentAdditionalInfo = $payment->getTransactionAdditionalInfo();
+
+        $rawDetailsKey = \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS;
+
+        if (!array_key_exists($rawDetailsKey, $paymentAdditionalInfo)) {
+            return null;
+        }
+
+        if (!array_key_exists($paramName, $paymentAdditionalInfo[$rawDetailsKey])) {
+            return null;
+        }
+
+        return $paymentAdditionalInfo[$rawDetailsKey][$paramName];
+    }
+
+    /**
      * Get Transaction Terminal Token Value
      * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
      * @return null|string
@@ -341,7 +311,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->getTransactionAdditionalInfoValue(
             $transaction,
-            'terminal_token'
+            self::ADDITIONAL_INFO_KEY_TERMINAL_TOKEN
         );
     }
 
@@ -354,7 +324,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->getTransactionAdditionalInfoValue(
             $transaction,
-            'transaction_type'
+            self::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE
         );
     }
 
@@ -437,44 +407,42 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * Generates WebApiException from Exception Text
-     * @param string $errorMessage
-     * @param int $errorCode
-     * @throws \Magento\Framework\Webapi\Exception
+     * Creates a WebApiException from Message or Phrase
+     *
+     * @param \Magento\Framework\Phrase|string $phrase
+     * @param int $httpCode
+     * @return \Magento\Framework\Webapi\Exception
      */
-    public function throwWebApiException($errorMessage, $errorCode = 0)
-    {
-        $maskedException = new \Magento\Framework\Webapi\Exception(
-            new \Magento\Framework\Phrase($errorMessage),
-            $errorCode,
-            \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR,
+    public function createWebApiException(
+        $phrase,
+        $httpCode = \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR
+    ) {
+        if (is_string($phrase)) {
+            $phrase = new \Magento\Framework\Phrase($phrase);
+        }
+
+        return new \Magento\Framework\Webapi\Exception(
+            $phrase,
+            0,
+            $httpCode,
             [],
             '',
             null,
             null
         );
-
-        throw $maskedException;
     }
 
     /**
-     * Throws transaction-specific exception
-     *
-     *      - \Magento\Framework\Webapi\Exception for reference transactions
-     *      - \Exception for initial transactions
-     *
-     * @param string $message
-     * @param $isReferenceTransaction
+     * Generates WebApiException from Exception Text
+     * @param \Magento\Framework\Phrase|string $errorMessage
+     * @param int $errorCode
      * @throws \Magento\Framework\Webapi\Exception
-     * @throws \Exception
      */
-    public function throwException($message, $isReferenceTransaction)
+    public function throwWebApiException($errorMessage, $errorCode = 0)
     {
-        if ($isReferenceTransaction) {
-            $this->throwWebApiException($message);
-        } else {
-            throw new \Exception(__($message));
-        }
+        $webApiException = $this->createWebApiException($errorMessage, $errorCode);
+
+        throw $webApiException;
     }
 
     /**
@@ -610,21 +578,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param \Magento\Sales\Model\Order $order
      * @param string $status
      * @param string $message
-     * @param string $transactionType
      */
-    public function setOrderState($order, $status, $message = '', $transactionType = '')
+    public function setOrderState($order, $status, $message = '')
     {
         switch ($status) {
             case \Genesis\API\Constants\Transaction\States::APPROVED:
-                $saleTransactions = array(
-                    \Genesis\API\Constants\Transaction\Types::SALE,
-                    \Genesis\API\Constants\Transaction\Types::SALE_3D
-                );
                 $this->setOrderStatusByState(
                     $order,
-                    in_array($transactionType, $saleTransactions)
-                    ? \Magento\Sales\Model\Order::STATE_COMPLETE
-                    : \Magento\Sales\Model\Order::STATE_PROCESSING
+                    \Magento\Sales\Model\Order::STATE_PROCESSING
                 );
                 $order->save();
                 break;
@@ -640,7 +601,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
             case \Genesis\API\Constants\Transaction\States::ERROR:
             case \Genesis\API\Constants\Transaction\States::DECLINED:
-                /** @var Mage_Sales_Model_Order_Invoice $invoice */
                 foreach ($order->getInvoiceCollection() as $invoice) {
                     $invoice->cancel();
                 }
@@ -902,19 +862,45 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         return in_array($currencyCode, $allowedMethodCurrencies);
     }
-    
-    /**
-     * Gets transaction configuration settings
-     * @param \Genesis\API\Constants\Transaction\Types $transactionType
-     * @return \stdClass
-     * @throws \Exception
-     */
-    public function getTransactionConfig($transactionType)
-    {
-        if (!array_key_exists($transactionType, $this->_transactionConfig)) {
-            throw new \Exception("Transaction $transactionType not configured");
-        }
 
-        return (object) $this->_transactionConfig[$transactionType];
+    /**
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     */
+    public function getStringEndsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        if ($length == 0) {
+            return true;
+        }
+        return (substr($haystack, -$length) === $needle);
+    }
+
+    /**
+     * @param string $transactionType
+     * @return bool
+     */
+    public function getIsTransaction3dSecure($transactionType)
+    {
+        return
+            $this->getStringEndsWith(
+                strtoupper($transactionType),
+                self::SECURE_TRANSACTION_TYPE_SUFFIX
+            );
+    }
+
+    /**
+     * Retrieves the complete error message from gateway
+     *
+     * @param \stdClass $response
+     * @return string
+     */
+    public function getErrorMessageFromGatewayResponse($response)
+    {
+        return
+            (isset($response->message) && isset($response->technical_message))
+                ? "{$response->message} {$response->technical_message}"
+                : 'An error has occurred while processing your request to the gateway';
     }
 }

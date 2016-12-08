@@ -119,7 +119,6 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
 
         $this->getModuleHelper()->setOrderState(
             $this->getOrder(),
-            $this->getConfigHelper(),
             isset($payment_transaction)
                 ? $payment_transaction->status
                 : $responseObject->status

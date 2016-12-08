@@ -35,6 +35,11 @@ Installation (composer)
         $ php bin/magento setup:upgrade
         ```
 
+    * Deploy Magento Static Content (__Execute If needed__)
+        ```sh
+        $ sudo -u #WEB-USER-HERE# bin/magento setup:static-content:deploy
+        ```
+
 Installation (manual)
 ---------------------
 
@@ -55,6 +60,11 @@ Installation (manual)
     $ php bin/magento setup:upgrade
     ```
 
+* Deploy Magento Static Content (__Execute If needed__)
+    ```sh
+    $ sudo -u #WEB-USER-HERE# bin/magento setup:static-content:deploy
+    ```
+
 Configuration
 ---------------------
 
@@ -63,6 +73,18 @@ Configuration
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
 * Go back to ```Payment Methods``` and click the button ```Configure``` under the payment method ```eMerchantPay Checkout``` or ```eMerchantPay Direct``` to expand the available settings
 * Set ```Enabled``` to ```Yes```, set the correct credentials, select your prefered transaction types and additional settings and click ```Save config```
+
+Configure Magento over secured HTTPS Connection
+---------------------
+This configuration is needed for ```eMerchantPay Direct``` Method to be usable.
+
+Steps:
+* Ensure you have installed a valid SSL Certificate on your Web Server & you have configured your Virtual Host correctly.
+* Login to Magento 2 Admin Panel
+* Navigate to ```Stores``` -> ```Configuration``` -> ```General``` -> ```Web``` 
+* Expand Tab ```Base URLs (Secure)``` and set ```Use Secure URLs on Storefront``` and ```Use Secure URLs in Admin``` to **Yes**
+* Set your ```Secure Base URL``` and click ```Save Config```
+* It is recommended to add a **Rewrite Rule** from ```http``` to ```https``` or to configure a **Permanent Redirect** to ```https``` in your virtual host
 
 GenesisPHP Requirements
 ------------

@@ -143,7 +143,6 @@ trait OnlinePaymentMethod
         \Magento\Payment\Model\InfoInterface $payment,
         $data
     ) {
-
         $transactionType = ucfirst(
             strtolower(
                 $transactionType
@@ -200,5 +199,173 @@ trait OnlinePaymentMethod
         $payment->save();
 
         return $responseObject;
+    }
+
+    /**
+     * Base Payment Capture Method
+     *
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param float $amount
+     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $authTransaction
+     * @return $this
+     * @throws \Magento\Framework\Webapi\Exception
+     */
+    protected function doCapture(\Magento\Payment\Model\InfoInterface $payment, $amount, $authTransaction)
+    {
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $payment->getOrder();
+
+        $this->getModuleHelper()->setTokenByPaymentTransaction(
+            $authTransaction
+        );
+
+        $data = array(
+            'transaction_id' =>
+                $this->getModuleHelper()->genTransactionId(),
+            'remote_ip'      =>
+                $order->getRemoteIp(),
+            'reference_id'   =>
+                $authTransaction->getTxnId(),
+            'currency'       =>
+                $order->getBaseCurrencyCode(),
+            'amount'         =>
+                $amount
+        );
+
+        $responseObject = $this->processReferenceTransaction(
+            \Genesis\API\Constants\Transaction\Types::CAPTURE,
+            $payment,
+            $data
+        );
+
+        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+            $this->getMessageManager()->addSuccess($responseObject->message);
+        } else {
+            $this->getModuleHelper()->throwWebApiException(
+                $responseObject->message
+            );
+        }
+
+        unset($data);
+
+        return $this;
+    }
+
+    /**
+     * Base Payment Refund Method
+     *
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param float $amount
+     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $captureTransaction
+     * @return $this
+     * @throws \Magento\Framework\Webapi\Exception
+     */
+    public function doRefund(\Magento\Payment\Model\InfoInterface $payment, $amount, $captureTransaction)
+    {
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $payment->getOrder();
+
+        if (!$this->getModuleHelper()->canRefundTransaction($captureTransaction)) {
+            $errorMessage = sprintf(
+                "Order with transaction type \"%s\" cannot be refunded online." . PHP_EOL .
+                "For further Information please contact your Account Manager." . PHP_EOL .
+                "For more complex workflows/functionality, please visit our Merchant Portal!",
+                $this->getModuleHelper()->getTransactionTypeByTransaction(
+                    $captureTransaction
+                )
+            );
+
+            $this->getMessageManager()->addError($errorMessage);
+            $this->getModuleHelper()->throwWebApiException($errorMessage);
+        }
+
+        if (!$this->getModuleHelper()->setTokenByPaymentTransaction($captureTransaction)) {
+            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
+                $payment
+            );
+
+            $this->getModuleHelper()->setTokenByPaymentTransaction(
+                $authTransaction
+            );
+        }
+
+        $data = array(
+            'transaction_id' =>
+                $this->getModuleHelper()->genTransactionId(),
+            'remote_ip'      =>
+                $order->getRemoteIp(),
+            'reference_id'   =>
+                $captureTransaction->getTxnId(),
+            'currency'       =>
+                $order->getBaseCurrencyCode(),
+            'amount'         =>
+                $amount
+        );
+
+        $responseObject = $this->processReferenceTransaction(
+            \Genesis\API\Constants\Transaction\Types::REFUND,
+            $payment,
+            $data
+        );
+
+        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+            $this->getMessageManager()->addSuccess($responseObject->message);
+        } else {
+            $this->getMessageManager()->addError($responseObject->message);
+            $this->getModuleHelper()->throwWebApiException(
+                $responseObject->message
+            );
+        }
+
+        unset($data);
+
+        return $this;
+    }
+
+    /**
+     * Base Payment Void Method
+     *
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $authTransaction
+     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $referenceTransaction
+     * @return $this
+     * @throws \Magento\Framework\Webapi\Exception
+     */
+    public function doVoid(\Magento\Payment\Model\InfoInterface $payment, $authTransaction, $referenceTransaction)
+    {
+        /** @var \Magento\Sales\Model\Order $order */
+
+        $order = $payment->getOrder();
+
+        $this->getModuleHelper()->setTokenByPaymentTransaction(
+            $authTransaction
+        );
+
+        $data = array(
+            'transaction_id' =>
+                $this->getModuleHelper()->genTransactionId(),
+            'remote_ip'      =>
+                $order->getRemoteIp(),
+            'reference_id'   =>
+                $referenceTransaction->getTxnId()
+        );
+
+        $responseObject = $this->processReferenceTransaction(
+            \Genesis\API\Constants\Transaction\Types::VOID,
+            $payment,
+            $data
+        );
+
+        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+            $this->getMessageManager()->addSuccess($responseObject->message);
+        } else {
+            $this->getModuleHelper()->throwWebApiException(
+                $responseObject->message
+            );
+        }
+
+        unset($data);
+
+        return $this;
     }
 }

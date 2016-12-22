@@ -22,7 +22,7 @@ GNU General Public License for more details.
             <group id="emerchantpay_genesis_init" translate="label" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
                 <frontend_model>EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\Init</frontend_model>
             </group>
-            <group id="emerchantpay_genesis" translate="label comment" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="emerchantpay_genesis" translate="label comment" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>eMerchantPay</label>
                 <fieldset_css>complex</fieldset_css>
                 <comment>Accept payments through eMerchantPay's Payment Gateway - Genesis</comment>

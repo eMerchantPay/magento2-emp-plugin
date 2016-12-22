@@ -1,4 +1,4 @@
-Genesis client for Magento 2 CE
+eMerchantPay Gateway Module for Magento 2 CE
 =============================
 
 This is a Payment Module for Magento 2 Community Edition, that gives you the ability to process payments through eMerchantPay's Payment Gateway - Genesis.

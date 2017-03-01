@@ -85,12 +85,7 @@ class DirectIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 break;
         }
 
-        //if (!$this->getOrder()->getEmailSent()) {
-        //    $this->_orderSender->send($this->getOrder());
-        //}
-
         $payment->save();
-
 
         $this->getModuleHelper()->setOrderState(
             $this->getOrder(),

@@ -89,30 +89,10 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 $payment_transaction
             );
 
-            switch ($payment_transaction->transaction_type) {
-                case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-                case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
-                    $payment->registerAuthorizationNotification($payment_transaction->amount);
-                    break;
-                case \Genesis\API\Constants\Transaction\Types::ABNIDEAL:
-                case \Genesis\API\Constants\Transaction\Types::CASHU:
-                case \Genesis\API\Constants\Transaction\Types::NETELLER:
-                case \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE:
-                case \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY:
-                case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
-                case \Genesis\API\Constants\Transaction\Types::PPRO:
-                case \Genesis\API\Constants\Transaction\Types::SALE:
-                case \Genesis\API\Constants\Transaction\Types::SALE_3D:
-                case \Genesis\API\Constants\Transaction\Types::SOFORT:
-                    $payment->registerCaptureNotification($payment_transaction->amount);
-                    break;
-                default:
-                    break;
-            }
-
-            //if (!$this->getOrder()->getEmailSent()) {
-            //    $this->_orderSender->send($this->getOrder());
-            //}
+            $this->registerPaymentNotification(
+                $payment,
+                $payment_transaction
+            );
 
             $payment->save();
         }
@@ -123,5 +103,30 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 ? $payment_transaction->status
                 : $responseObject->status
         );
+    }
+
+    /**
+     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $payment
+     * @param \stdClass $payment_transaction
+     */
+    protected function registerPaymentNotification(
+        \Magento\Sales\Api\Data\OrderPaymentInterface $payment,
+        \stdClass $payment_transaction
+    ) {
+        $transactionType = $payment_transaction->transaction_type;
+
+        if ($this->getModuleHelper()->getShouldCreateAuthNotification($transactionType)) {
+            $payment->registerAuthorizationNotification(
+                $payment_transaction->amount
+            );
+
+            return;
+        }
+
+        if ($this->getModuleHelper()->getShouldCreateCaptureNotification($transactionType)) {
+            $payment->registerCaptureNotification(
+                $payment_transaction->amount
+            );
+        }
     }
 }

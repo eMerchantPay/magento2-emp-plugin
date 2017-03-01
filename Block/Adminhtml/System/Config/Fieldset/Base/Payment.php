@@ -76,7 +76,8 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
      */
     protected function _getHeaderTitleHtml($element)
     {
-        $html = "<div class=\"config-heading {$this->getBlockHeadCssClass()}\" ><div class=\"headingEMerchantPay\"><strong>" . $element->getLegend();
+        $html = "<div class=\"config-heading {$this->getBlockHeadCssClass()}\" >
+                    <div class=\"headingEMerchantPay\"><strong>" . $element->getLegend();
 
         $html .= '</strong>';
 
@@ -129,8 +130,10 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     /**
      * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
      * @return string
+     *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
+    // @codingStandardsIgnoreStart
     protected function _getExtraJs($element)
     {
         $script = "require(['jquery', 'prototype'], function(jQuery){
@@ -141,4 +144,5 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
 
         return $this->_jsHelper->getScript($script);
     }
+    // @codingStandardsIgnoreEnd
 }

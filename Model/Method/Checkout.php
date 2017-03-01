@@ -99,11 +99,12 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $resourceCollection,
             $data
         );
-        $this->_actionContext = $actionContext;
-        $this->_storeManager = $storeManager;
+
+        $this->_actionContext   = $actionContext;
+        $this->_storeManager    = $storeManager;
         $this->_checkoutSession = $checkoutSession;
-        $this->_moduleHelper = $moduleHelper;
-        $this->_configHelper =
+        $this->_moduleHelper    = $moduleHelper;
+        $this->_configHelper    =
             $this->getModuleHelper()->getMethodConfig(
                 $this->getCode()
             );
@@ -124,11 +125,11 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      */
     public function getCheckoutTransactionTypes()
     {
-        $processed_list = array();
+        $processed_list = [];
 
         $selected_types = $this->getConfigHelper()->getTransactionTypes();
 
-        $alias_map = array(
+        $alias_map = [
             \Genesis\API\Constants\Payment\Methods::EPS         =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::GIRO_PAY    =>
@@ -143,20 +144,22 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::TRUST_PAY   =>
                 \Genesis\API\Constants\Transaction\Types::PPRO
-        );
+        ];
 
         foreach ($selected_types as $selected_type) {
-            if (array_key_exists($selected_type, $alias_map)) {
-                $transaction_type = $alias_map[$selected_type];
-
-                $processed_list[$transaction_type]['name'] = $transaction_type;
-
-                $processed_list[$transaction_type]['parameters'][] = array(
-                    'payment_method' => $selected_type
-                );
-            } else {
+            if (!array_key_exists($selected_type, $alias_map)) {
                 $processed_list[] = $selected_type;
+
+                continue;
             }
+
+            $transaction_type = $alias_map[$selected_type];
+
+            $processed_list[$transaction_type]['name'] = $transaction_type;
+
+            $processed_list[$transaction_type]['parameters'][] = [
+                'payment_method' => $selected_type
+            ];
         }
 
         return $processed_list;
@@ -170,76 +173,160 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      */
     protected function checkout($data)
     {
-        $genesis = new \Genesis\Genesis('WPF\Create');
-        $genesis
-            ->request()
-                ->setTransactionId($data['transaction_id'])
-                ->setCurrency($data['order']['currency'])
-                ->setAmount($data['order']['amount'])
-                ->setUsage($data['order']['usage'])
-                ->setDescription($data['order']['description'])
-                ->setCustomerPhone(strval($data['order']['billing']->getTelephone()))
-                ->setCustomerEmail(strval($data['order']['customer']['email']))
-                ->setNotificationUrl($data['urls']['notify'])
-                ->setReturnSuccessUrl($data['urls']['return_success'])
-                ->setReturnFailureUrl($data['urls']['return_failure'])
-                ->setReturnCancelUrl($data['urls']['return_cancel'])
-                ->setBillingFirstName(strval($data['order']['billing']->getFirstname()))
-                ->setBillingLastName(strval($data['order']['billing']->getLastname()))
-                ->setBillingAddress1(strval($data['order']['billing']->getStreetLine(1)))
-                ->setBillingAddress2(strval($data['order']['billing']->getStreetLine(2)))
-                ->setBillingZipCode(strval($data['order']['billing']->getPostcode()))
-                ->setBillingCity(strval($data['order']['billing']->getCity()))
-                ->setBillingState(strval($data['order']['billing']->getRegionCode()))
-                ->setBillingCountry(strval($data['order']['billing']->getCountryId()))
-                ->setLanguage($data['order']['language']);
-
-        if (!empty($data['order']['shipping'])) {
-            $genesis
-                ->request()
-                    ->setShippingFirstName(strval($data['order']['shipping']->getFirstname()))
-                    ->setShippingLastName(strval($data['order']['shipping']->getLastname()))
-                    ->setShippingAddress1(strval($data['order']['shipping']->getStreetLine(1)))
-                    ->setShippingAddress2(strval($data['order']['shipping']->getStreetLine(2)))
-                    ->setShippingZipCode(strval($data['order']['shipping']->getPostcode()))
-                    ->setShippingCity(strval($data['order']['shipping']->getCity()))
-                    ->setShippingState(strval($data['order']['shipping']->getRegionCode()))
-                    ->setShippingCountry(strval($data['order']['shipping']->getCountryId()));
-        }
+        $genesis = $this->prepareGenesisWPFRequest($data);
 
         foreach ($this->getCheckoutTransactionTypes() as $type) {
             if (is_array($type)) {
                 $genesis
                     ->request()
                         ->addTransactionType($type['name'], $type['parameters']);
-            } else {
-                if (\Genesis\API\Constants\Transaction\Types::isPayByVoucher($type)) {
-                    $parameters = [
-                        'card_type' =>
-                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
-                        'redeem_type' =>
-                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT
-                    ];
 
-                    if ($type == \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY) {
-                        $parameters['product_name'] = $data['order']['description'];
-                        $parameters['product_category'] = $data['order']['description'];
-                    }
-
-                    $genesis
-                        ->request()
-                            ->addTransactionType($type, $parameters);
-                } else {
-                    $genesis
-                        ->request()
-                            ->addTransactionType($type);
-                }
+                continue;
             }
+
+            if (\Genesis\API\Constants\Transaction\Types::isPayByVoucher($type)) {
+                $parameters = [
+                    'card_type' =>
+                        \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
+                    'redeem_type' =>
+                        \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT
+                ];
+
+                if ($type == \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY) {
+                    $parameters['product_name'] = $data['order']['description'];
+                    $parameters['product_category'] = $data['order']['description'];
+                }
+
+                $genesis
+                    ->request()
+                        ->addTransactionType($type, $parameters);
+
+                continue;
+            }
+
+            $genesis
+                ->request()
+                    ->addTransactionType($type);
         }
 
-        $genesis->execute();
+        $this->getModuleHelper()->executeGatewayRequest(
+            $genesis
+        );
 
-        return $genesis->response()->getResponseObject();
+        return $this->getModuleHelper()->getGatewayResponseObject(
+            $genesis->response()
+        );
+    }
+
+    /**
+     * Prepares Genesis Request with basic request data
+     *
+     * @param array $data
+     * @return \Genesis\Genesis
+     */
+    protected function prepareGenesisWPFRequest($data)
+    {
+        $genesis = new \Genesis\Genesis('WPF\Create');
+
+        $genesis
+            ->request()
+                ->setTransactionId(
+                    $data['transaction_id']
+                )
+                ->setCurrency(
+                    $data['order']['currency']
+                )
+                ->setAmount(
+                    $data['order']['amount']
+                )
+                ->setUsage(
+                    $data['order']['usage']
+                )
+                ->setDescription(
+                    $data['order']['description']
+                )
+                ->setCustomerPhone(
+                    (string) $data['order']['billing']->getTelephone()
+                )
+                ->setCustomerEmail(
+                    (string) $data['order']['customer']['email']
+                )
+                ->setLanguage(
+                    $data['order']['language']
+                );
+
+        $genesis
+            ->request()
+                ->setNotificationUrl(
+                    $data['urls']['notify']
+                )
+                ->setReturnSuccessUrl(
+                    $data['urls']['return_success']
+                )
+                ->setReturnFailureUrl(
+                    $data['urls']['return_failure']
+                )
+                ->setReturnCancelUrl(
+                    $data['urls']['return_cancel']
+                );
+
+        $genesis
+            ->request()
+                ->setBillingFirstName(
+                    (string) $data['order']['billing']->getFirstname()
+                )
+                ->setBillingLastName(
+                    (string) $data['order']['billing']->getLastname()
+                )
+                ->setBillingAddress1(
+                    (string) $data['order']['billing']->getStreetLine(1)
+                )
+                ->setBillingAddress2(
+                    (string) $data['order']['billing']->getStreetLine(2)
+                )
+                ->setBillingZipCode(
+                    (string) $data['order']['billing']->getPostcode()
+                )
+                ->setBillingCity(
+                    (string) $data['order']['billing']->getCity()
+                )
+                ->setBillingState(
+                    (string) $data['order']['billing']->getRegionCode()
+                )
+                ->setBillingCountry(
+                    (string) $data['order']['billing']->getCountryId()
+                );
+
+        if (!empty($data['order']['shipping'])) {
+            $genesis
+                ->request()
+                    ->setShippingFirstName(
+                        (string) $data['order']['shipping']->getFirstname()
+                    )
+                    ->setShippingLastName(
+                        (string) $data['order']['shipping']->getLastname()
+                    )
+                    ->setShippingAddress1(
+                        (string) $data['order']['shipping']->getStreetLine(1)
+                    )
+                    ->setShippingAddress2(
+                        (string) $data['order']['shipping']->getStreetLine(2)
+                    )
+                    ->setShippingZipCode(
+                        (string) $data['order']['shipping']->getPostcode()
+                    )
+                    ->setShippingCity(
+                        (string) $data['order']['shipping']->getCity()
+                    )
+                    ->setShippingState(
+                        (string) $data['order']['shipping']->getRegionCode()
+                    )
+                    ->setShippingCountry(
+                        (string) $data['order']['shipping']->getCountryId()
+                    );
+        }
+
+        return $genesis;
     }
 
     /**
@@ -258,6 +345,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             '0'
         );
 
+        // @codingStandardsIgnoreStart
         $data = [
             'transaction_id' =>
                 $this->getModuleHelper()->genTransactionId(
@@ -289,20 +377,21 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 'return_success' =>
                     $this->getModuleHelper()->getReturnUrl(
                         $this->getCode(),
-                        'success'
+                        \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_SUCCESS
                     ),
                 'return_cancel'  =>
                     $this->getModuleHelper()->getReturnUrl(
                         $this->getCode(),
-                        'cancel'
+                        \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_CANCEL
                     ),
                 'return_failure' =>
                     $this->getModuleHelper()->getReturnUrl(
                         $this->getCode(),
-                        'failure'
+                        \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_FAILURE
                     ),
             ]
         ];
+        // @codingStandardsIgnoreEnd
 
         $this->getConfigHelper()->initGatewayClient();
 
@@ -334,7 +423,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 $responseObject
             );
 
-            $this->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl(
+            $this->setRedirectUrl(
                 $responseObject->redirect_url
             );
 
@@ -386,117 +475,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
 
         try {
             $this->doCapture($payment, $amount, $authTransaction);
-        } catch (\Exception $e) {
-            $this->getLogger()->error(
-                $e->getMessage()
-            );
-            $this->getModuleHelper()->maskException($e);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Payment refund
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param float $amount
-     * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
-     */
-    public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $payment->getOrder();
-
-        $this->getLogger()->debug('Refund transaction for order #' . $order->getIncrementId());
-
-        $captureTransaction = $this->getModuleHelper()->lookUpCaptureTransaction(
-            $payment
-        );
-
-        if (!isset($captureTransaction)) {
-            $errorMessage = 'Refund transaction for order #' .
-                $order->getIncrementId() .
-                ' cannot be finished (No Capture Transaction exists)';
-
-            $this->getLogger()->error(
-                $errorMessage
-            );
-
-            $this->getMessageManager()->addError($errorMessage);
-
-            $this->getModuleHelper()->throwWebApiException(
-                $errorMessage
-            );
-        }
-
-        try {
-            $this->doRefund($payment, $amount, $captureTransaction);
-        } catch (\Exception $e) {
-            $this->getLogger()->error(
-                $e->getMessage()
-            );
-
-            $this->getMessageManager()->addError(
-                $e->getMessage()
-            );
-
-            $this->getModuleHelper()->maskException($e);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Payment Cancel
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return $this
-     */
-    public function cancel(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        $this->void($payment);
-
-        return $this;
-    }
-
-    /**
-     * Void Payment
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
-     */
-    public function void(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        /** @var \Magento\Sales\Model\Order $order */
-
-        $order = $payment->getOrder();
-
-        $this->getLogger()->debug('Void transaction for order #' . $order->getIncrementId());
-
-        $referenceTransaction = $this->getModuleHelper()->lookUpVoidReferenceTransaction(
-            $payment
-        );
-
-        if ($referenceTransaction->getTxnType() == \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH) {
-            $authTransaction = $referenceTransaction;
-        } else {
-            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
-                $payment
-            );
-        }
-
-        if (!isset($authTransaction) || !isset($referenceTransaction)) {
-            $errorMessage = 'Void transaction for order #' .
-                            $order->getIncrementId() .
-                            ' cannot be finished (No Authorize / Capture Transaction exists)';
-
-            $this->getLogger()->error($errorMessage);
-            $this->getModuleHelper()->throwWebApiException($errorMessage);
-        }
-
-        try {
-            $this->doVoid($payment, $authTransaction, $referenceTransaction);
         } catch (\Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()

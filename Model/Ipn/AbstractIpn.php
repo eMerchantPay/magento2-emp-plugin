@@ -31,27 +31,27 @@ abstract class AbstractIpn
     /**
      * @var \Magento\Framework\App\Action\Context
      */
-    private $_context;
+    protected $_context;
     /**
      * @var \Psr\Log\LoggerInterface
      */
-    private $_logger;
+    protected $_logger;
     /**
      * @var \EMerchantPay\Genesis\Helper\Data
      */
-    private $_moduleHelper;
+    protected $_moduleHelper;
     /**
      * @var \EMerchantPay\Genesis\Model\Config
      */
-    private $_configHelper;
+    protected $_configHelper;
     /**
      * @var \Magento\Sales\Model\OrderFactory
      */
-    private $_orderFactory;
+    protected $_orderFactory;
     /**
      * @var array
      */
-    private $_ipnRequest;
+    protected $_ipnRequest;
     /**
      * @var \Magento\Sales\Model\Order
      */
@@ -134,7 +134,7 @@ abstract class AbstractIpn
     {
         $this->_configHelper->initGatewayClient();
 
-        $notification = new \Genesis\API\Notification(
+        $notification = $this->getModuleHelper()->createNotificationObject(
             $this->getIpnRequestData()
         );
 
@@ -146,19 +146,22 @@ abstract class AbstractIpn
 
         if (!isset($responseObject->unique_id)) {
             return null;
-        } else {
-            $this->setOrderByReconcile($responseObject);
-
-            try {
-                $this->processNotification($responseObject);
-            } catch (\Magento\Framework\Exception\LocalizedException $e) {
-                $comment = $this->createIpnComment(__('Note: %1', $e->getMessage()), true);
-                $comment->save();
-                throw $e;
-            }
-
-            return $notification->generateResponse();
         }
+
+        $this->setOrderByReconcile($responseObject);
+
+        try {
+            $this->processNotification($responseObject);
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+            $comment = $this->createIpnComment(
+                __('Note: %1', $e->getMessage()),
+                true
+            );
+            $comment->save();
+            throw $e;
+        }
+
+        return $notification->generateResponse();
     }
 
     /**
@@ -170,7 +173,9 @@ abstract class AbstractIpn
     protected function getOrder()
     {
         if (!isset($this->_order) || empty($this->_order->getId())) {
-            throw new \Exception('IPN-Order is not set to an instance of an object');
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('IPN-Order is not set to an instance of an object')
+            );
         }
 
         return $this->_order;
@@ -190,18 +195,22 @@ abstract class AbstractIpn
      * Initializes the Order Object from the transaction in the Reconcile response object
      * @param $responseObject
      * @throws \Exception
+     *
+     * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      */
-    private function setOrderByReconcile($responseObject)
+    protected function setOrderByReconcile($responseObject)
     {
         $transaction_id = $responseObject->transaction_id;
         list($incrementId, $hash) = explode('_', $transaction_id);
 
         $this->_order = $this->getOrderFactory()->create()->loadByIncrementId(
-            intval($incrementId)
+            (int) $incrementId
         );
 
         if (!$this->_order->getId()) {
-            throw new \Exception(sprintf('Wrong order ID: "%s".', $incrementId));
+            throw new \Magento\Framework\Exception\LocalizedException(
+                sprintf('Wrong order ID: "%s".', $incrementId)
+            );
         }
     }
 
@@ -288,9 +297,6 @@ abstract class AbstractIpn
             \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D
         ];
 
-        /*
-         *  It the last transaction is closed, it cannot be voided
-         */
         return !in_array($responseObject->transaction_type, $voidableTransactions);
     }
 }

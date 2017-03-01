@@ -19,11 +19,17 @@
 
 namespace EMerchantPay\Genesis\Helper;
 
+use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+
 /**
  * Helper Class for all Payment Methods
  *
  * Class Data
  * @package EMerchantPay\Genesis\Helper
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
  */
 class Data extends \Magento\Framework\App\Helper\AbstractHelper
 {
@@ -33,6 +39,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const ADDITIONAL_INFO_KEY_TRANSACTION_TYPE = 'transaction_type';
     const ADDITIONAL_INFO_KEY_TERMINAL_TOKEN   = 'terminal_token';
     const ADDITIONAL_INFO_KEY_REDIRECT_URL     = 'redirect_url';
+
+    const ACTION_RETURN_SUCCESS = 'success';
+    const ACTION_RETURN_CANCEL  = 'cancel';
+    const ACTION_RETURN_FAILURE = 'failure';
+
+    const GENESIS_GATEWAY_ERROR_MESSAGE_DEFAULT = 'An error has occurred while processing your request to the gateway';
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
@@ -93,7 +105,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public static function getInstance($objectManager)
     {
-        return $objectManager->create(get_class());
+        return $objectManager->create(
+            get_class()
+        );
     }
 
     /**
@@ -164,12 +178,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         list($route, $module) = explode('_', $moduleCode);
 
-        $path = sprintf("%s/%s/%s", $route, $module, $controller);
+        $path = sprintf('%s/%s/%s', $route, $module, $controller);
 
         $store = $this->getStoreManager()->getStore($storeId);
         $params = [
-            "_store" => $store,
-            "_secure" =>
+            '_store' => $store,
+            '_secure' =>
                 ($secure === null
                     ? $this->isStoreSecure($storeId)
                     : $secure
@@ -177,9 +191,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         ];
 
         if (isset($queryParams) && is_array($queryParams)) {
-            foreach ($queryParams as $queryKey => $queryValue) {
-                $params[$queryKey] = $queryValue;
-            }
+            $params = array_merge(
+                $params,
+                $queryParams
+            );
         }
 
         return $this->getUrlBuilder()->getUrl(
@@ -190,18 +205,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Construct Module Notification Url
-     * @param string $moduleCode
      * @param bool|null $secure
      * @param int|null $storeId
      * @return string
-     * @SuppressWarning(PHPMD.UnusedLocalVariable)
      */
-    public function getNotificationUrl($moduleCode, $secure = null, $storeId = null)
+    public function getNotificationUrl($secure = null, $storeId = null)
     {
         $store = $this->getStoreManager()->getStore($storeId);
         $params = [
-            "_store" => $store,
-            "_secure" =>
+            '_store' => $store,
+            '_secure' =>
                 ($secure === null
                     ? $this->isStoreSecure($storeId)
                     : $secure
@@ -209,7 +222,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         ];
 
         return $this->getUrlBuilder()->getUrl(
-            "emerchantpay/ipn",
+            'emerchantpay/ipn',
             $params
         );
     }
@@ -224,9 +237,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return $this->getUrl(
             $moduleCode,
-            "redirect",
+            'redirect',
             [
-                "action" => $returnAction
+                'action' => $returnAction
             ]
         );
     }
@@ -237,7 +250,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     protected function uniqHash()
     {
-        return md5(uniqid(microtime().mt_rand(), true));
+        return sha1(
+            uniqid(
+                microtime() . mt_rand(),
+                true
+            )
+        );
     }
 
     /**
@@ -252,8 +270,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return sprintf(
-            "%s_%s",
-            strval($orderId),
+            '%s_%s',
+            (string) $orderId,
             $this->uniqHash()
         );
     }
@@ -316,6 +334,19 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get Transaction Status Value
+     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
+     * @return null|string
+     */
+    public function getTransactionStatus($transaction)
+    {
+        return $this->getTransactionAdditionalInfoValue(
+            $transaction,
+            self::ADDITIONAL_INFO_KEY_STATUS
+        );
+    }
+
+    /**
      * Get Transaction Type
      * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
      * @return null|string
@@ -351,6 +382,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         if (!empty($transactionTerminalToken)) {
             \Genesis\Config::setToken($transactionTerminalToken);
+
             return true;
         }
 
@@ -395,14 +427,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Hides generated Exception and raises WebApiException in order to
      * display the message to user
-     * @param \Exception $e
+     * @param \Exception $exception
      * @throws \Magento\Framework\Webapi\Exception
      */
-    public function maskException(\Exception $e)
+    public function maskException(\Exception $exception)
     {
         $this->throwWebApiException(
-            $e->getMessage(),
-            $e->getCode()
+            $exception->getMessage(),
+            $exception->getCode()
         );
     }
 
@@ -419,6 +451,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     ) {
         if (is_string($phrase)) {
             $phrase = new \Magento\Framework\Phrase($phrase);
+        }
+
+        /** Only HTTP error codes are allowed. No success or redirect codes must be used. */
+        if ($httpCode < 400 || $httpCode > 599) {
+            $httpCode = \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR;
         }
 
         return new \Magento\Framework\Webapi\Exception(
@@ -474,7 +511,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getArrayFromGatewayResponse($response)
     {
-        $transaction_details = array();
+        $transaction_details = [];
         foreach ($response as $key => $value) {
             if (is_string($value)) {
                 $transaction_details[$key] = $value;
@@ -623,7 +660,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function buildOrderDescriptionText($order, $lineSeparator = PHP_EOL)
     {
-        $orderDescriptionText = "";
+        $orderDescriptionText = '';
 
         $orderItems = $order->getItems();
 
@@ -646,7 +683,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function buildOrderUsage()
     {
-        return __("Magento 2 Transaction");
+        return __('Magento 2 Transaction');
     }
 
     /**
@@ -741,7 +778,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         );
 
         return array_map(
-            'trim',
+            function ($item) {
+                return trim($item);
+            },
             explode(
                 ',',
                 $allowedCurrencyCodes
@@ -823,15 +862,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function canRefundTransaction($transaction)
     {
         $refundableTransactions = [
-            \Genesis\API\Constants\Transaction\Types::CAPTURE,
-            \Genesis\API\Constants\Transaction\Types::SALE,
-            \Genesis\API\Constants\Transaction\Types::SALE_3D,
-            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE,
-            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D,
-            \Genesis\API\Constants\Transaction\Types::RECURRING_SALE,
-            \Genesis\API\Constants\Transaction\Types::CASHU,
-            \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Transaction\Types::ABNIDEAL
+            GenesisTransactionTypes::CAPTURE,
+            GenesisTransactionTypes::SALE,
+            GenesisTransactionTypes::SALE_3D,
+            GenesisTransactionTypes::INIT_RECURRING_SALE,
+            GenesisTransactionTypes::INIT_RECURRING_SALE_3D,
+            GenesisTransactionTypes::RECURRING_SALE,
+            GenesisTransactionTypes::CASHU,
+            GenesisTransactionTypes::PPRO,
+            GenesisTransactionTypes::ABNIDEAL
         ];
 
         $transactionType = $this->getTransactionTypeByTransaction(
@@ -846,6 +885,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param string $methodCode
      * @param string $currencyCode
      * @return bool
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function isCurrencyAllowed($methodCode, $currencyCode)
     {
@@ -881,7 +922,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param string $transactionType
      * @return bool
      */
-    public function getIsTransaction3dSecure($transactionType)
+    public function getIsTransactionThreeDSecure($transactionType)
     {
         return
             $this->getStringEndsWith(
@@ -901,6 +942,77 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         return
             (isset($response->message) && isset($response->technical_message))
                 ? "{$response->message} {$response->technical_message}"
-                : 'An error has occurred while processing your request to the gateway';
+                : self::GENESIS_GATEWAY_ERROR_MESSAGE_DEFAULT;
+    }
+
+    /**
+     * @param \Genesis\API\Response $genesisApiResponse
+     * @return \stdClass
+     */
+    public function getGatewayResponseObject($genesisApiResponse)
+    {
+        return $genesisApiResponse->getResponseObject();
+    }
+
+    /**
+     * Executes a request to the Genesis Payment Gateway
+     *
+     * @param \Genesis\Genesis $genesis
+     * @return \Genesis\Genesis
+     */
+    public function executeGatewayRequest(\Genesis\Genesis $genesis)
+    {
+        $genesis->execute();
+
+        return $genesis;
+    }
+
+    /**
+     * Creates Notification Object
+     *
+     * @param array $data - Incoming notification ($_POST)
+     * @return \Genesis\API\Notification
+     */
+    public function createNotificationObject($data)
+    {
+        $notification = new \Genesis\API\Notification($data);
+
+        return $notification;
+    }
+
+    /**
+     * @param string $transactionType
+     * @return bool
+     */
+    public function getShouldCreateAuthNotification($transactionType)
+    {
+        $authorizeTransactions = [
+            GenesisTransactionTypes::AUTHORIZE,
+            GenesisTransactionTypes::AUTHORIZE_3D
+        ];
+
+        return in_array($transactionType, $authorizeTransactions);
+    }
+
+    /**
+     * @param string $transactionType
+     * @return bool
+     */
+    public function getShouldCreateCaptureNotification($transactionType)
+    {
+        $captureNotificationTransactions = [
+            GenesisTransactionTypes::ABNIDEAL,
+            GenesisTransactionTypes::CASHU,
+            GenesisTransactionTypes::NETELLER,
+            GenesisTransactionTypes::PAYBYVOUCHER_SALE,
+            GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY,
+            GenesisTransactionTypes::PAYSAFECARD,
+            GenesisTransactionTypes::PPRO,
+            GenesisTransactionTypes::SALE,
+            GenesisTransactionTypes::SALE_3D,
+            GenesisTransactionTypes::SOFORT
+        ];
+
+        return in_array($transactionType, $captureNotificationTransactions);
     }
 }

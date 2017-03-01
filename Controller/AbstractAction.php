@@ -29,12 +29,12 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
     /**
      * @var \Magento\Framework\App\Action\Context
      */
-    private $_context;
+    protected $_context;
 
     /**
      * @var \Psr\Log\LoggerInterface
      */
-    private $_logger;
+    protected $_logger;
 
     /**
      * @param \Magento\Framework\App\Action\Context $context
@@ -110,8 +110,8 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
             return $post[$key];
         } elseif (isset($key)) {
             return null;
-        } else {
-            return $post;
         }
+
+        return $post;
     }
 }

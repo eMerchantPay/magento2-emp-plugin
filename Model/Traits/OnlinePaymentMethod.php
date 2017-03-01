@@ -59,7 +59,7 @@ trait OnlinePaymentMethod
      * Get an Instance of the Config Helper Object
      * @return \EMerchantPay\Genesis\Model\Config
      */
-    protected function getConfigHelper()
+    public function getConfigHelper()
     {
         return $this->_configHelper;
     }
@@ -68,7 +68,7 @@ trait OnlinePaymentMethod
      * Get an Instance of the Module Helper Object
      * @return \EMerchantPay\Genesis\Helper\Data
      */
-    protected function getModuleHelper()
+    public function getModuleHelper()
     {
         return $this->_moduleHelper;
     }
@@ -126,6 +126,12 @@ trait OnlinePaymentMethod
     {
         return $this->_transactionManager;
     }
+
+    /**
+     * Get Instance of the Magento Code Logger
+     * @return \Psr\Log\LoggerInterface
+     */
+    abstract protected function getLogger();
 
     /**
      * Initiate a Payment Gateway Reference Transaction
@@ -209,6 +215,8 @@ trait OnlinePaymentMethod
      * @param \Magento\Sales\Model\Order\Payment\Transaction|null $authTransaction
      * @return $this
      * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function doCapture(\Magento\Payment\Model\InfoInterface $payment, $amount, $authTransaction)
     {
@@ -219,7 +227,7 @@ trait OnlinePaymentMethod
             $authTransaction
         );
 
-        $data = array(
+        $data = [
             'transaction_id' =>
                 $this->getModuleHelper()->genTransactionId(),
             'remote_ip'      =>
@@ -230,7 +238,7 @@ trait OnlinePaymentMethod
                 $order->getBaseCurrencyCode(),
             'amount'         =>
                 $amount
-        );
+        ];
 
         $responseObject = $this->processReferenceTransaction(
             \Genesis\API\Constants\Transaction\Types::CAPTURE,
@@ -259,8 +267,10 @@ trait OnlinePaymentMethod
      * @param \Magento\Sales\Model\Order\Payment\Transaction|null $captureTransaction
      * @return $this
      * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    public function doRefund(\Magento\Payment\Model\InfoInterface $payment, $amount, $captureTransaction)
+    protected function doRefund(\Magento\Payment\Model\InfoInterface $payment, $amount, $captureTransaction)
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $payment->getOrder();
@@ -289,7 +299,7 @@ trait OnlinePaymentMethod
             );
         }
 
-        $data = array(
+        $data = [
             'transaction_id' =>
                 $this->getModuleHelper()->genTransactionId(),
             'remote_ip'      =>
@@ -300,7 +310,7 @@ trait OnlinePaymentMethod
                 $order->getBaseCurrencyCode(),
             'amount'         =>
                 $amount
-        );
+        ];
 
         $responseObject = $this->processReferenceTransaction(
             \Genesis\API\Constants\Transaction\Types::REFUND,
@@ -330,8 +340,10 @@ trait OnlinePaymentMethod
      * @param \Magento\Sales\Model\Order\Payment\Transaction|null $referenceTransaction
      * @return $this
      * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    public function doVoid(\Magento\Payment\Model\InfoInterface $payment, $authTransaction, $referenceTransaction)
+    protected function doVoid(\Magento\Payment\Model\InfoInterface $payment, $authTransaction, $referenceTransaction)
     {
         /** @var \Magento\Sales\Model\Order $order */
 
@@ -341,14 +353,14 @@ trait OnlinePaymentMethod
             $authTransaction
         );
 
-        $data = array(
+        $data = [
             'transaction_id' =>
                 $this->getModuleHelper()->genTransactionId(),
             'remote_ip'      =>
                 $order->getRemoteIp(),
             'reference_id'   =>
                 $referenceTransaction->getTxnId()
-        );
+        ];
 
         $responseObject = $this->processReferenceTransaction(
             \Genesis\API\Constants\Transaction\Types::VOID,
@@ -367,5 +379,151 @@ trait OnlinePaymentMethod
         unset($data);
 
         return $this;
+    }
+
+    /**
+     * Payment refund
+     *
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param float $amount
+     * @return $this
+     * @throws \Magento\Framework\Webapi\Exception
+     */
+    public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
+    {
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $payment->getOrder();
+
+        $this->getLogger()->debug('Refund transaction for order #' . $order->getIncrementId());
+
+        $captureTransaction = $this->getModuleHelper()->lookUpCaptureTransaction(
+            $payment
+        );
+
+        if (!isset($captureTransaction)) {
+            $errorMessage = 'Refund transaction for order #' .
+                $order->getIncrementId() .
+                ' cannot be finished (No Capture Transaction exists)';
+
+            $this->getLogger()->error(
+                $errorMessage
+            );
+
+            $this->getMessageManager()->addError($errorMessage);
+
+            $this->getModuleHelper()->throwWebApiException(
+                $errorMessage
+            );
+        }
+
+        try {
+            $this->doRefund($payment, $amount, $captureTransaction);
+        } catch (\Exception $e) {
+            $this->getLogger()->error(
+                $e->getMessage()
+            );
+
+            $this->getMessageManager()->addError(
+                $e->getMessage()
+            );
+
+            $this->getModuleHelper()->maskException($e);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Void Payment
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @return $this
+     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
+    public function void(\Magento\Payment\Model\InfoInterface $payment)
+    {
+        /** @var \Magento\Sales\Model\Order $order */
+
+        $order = $payment->getOrder();
+
+        $orderIncrementId = $order->getIncrementId();
+
+        $this->getLogger()->debug('Void transaction for order #' . $orderIncrementId);
+
+        $referenceTransaction = $this->getModuleHelper()->lookUpVoidReferenceTransaction(
+            $payment
+        );
+
+        if ($referenceTransaction->getTxnType() == \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH) {
+            $authTransaction = $referenceTransaction;
+        } else {
+            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
+                $payment
+            );
+        }
+
+        if (!isset($authTransaction) || !isset($referenceTransaction)) {
+            $errorMessage = 'Void transaction for order #' .
+                $orderIncrementId .
+                ' cannot be finished (No Authorize / Capture Transaction exists)';
+
+            $this->getLogger()->error($errorMessage);
+            $this->getModuleHelper()->throwWebApiException($errorMessage);
+        }
+
+        try {
+            $this->doVoid($payment, $authTransaction, $referenceTransaction);
+        } catch (\Exception $e) {
+            $this->getLogger()->error(
+                $e->getMessage()
+            );
+
+            $this->getModuleHelper()->maskException($e);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Cancel order
+     *
+     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @return $this
+     */
+    public function cancel(\Magento\Payment\Model\InfoInterface $payment)
+    {
+        return $this->void($payment);
+    }
+
+    /**
+     * Sets the 3D-Secure redirect URL or throws an exception on failure
+     *
+     * @param string $redirectUrl
+     * @throws \Exception
+     */
+    public function setRedirectUrl($redirectUrl)
+    {
+        if (!isset($redirectUrl)) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Empty 3D-Secure redirect URL')
+            );
+        }
+
+        if (filter_var($redirectUrl, FILTER_VALIDATE_URL) === false) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Invalid 3D-Secure redirect URL')
+            );
+        }
+
+        $this->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl($redirectUrl);
+    }
+
+    /**
+     * Unsets the 3D-Secure redirect URL
+     */
+    public function unsetRedirectUrl()
+    {
+        $this->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl(null);
     }
 }

@@ -67,23 +67,26 @@ class Index extends \EMerchantPay\Genesis\Controller\AbstractAction
             $ipnClassName = $this->getIpnClassName();
 
             if (!isset($ipnClassName)) {
-                $this->getResponse()->setHttpResponseCode(403);
-            } else {
-                $ipn = $this->getObjectManager()->create(
-                    "EMerchantPay\\Genesis\\Model\\Ipn\\{$ipnClassName}",
-                    ['data' => $postValues]
-                );
+                $this->getResponse()->setHttpResponseCode(\Magento\Framework\Webapi\Exception::HTTP_FORBIDDEN);
 
-                $responseBody = $ipn->handleGenesisNotification();
-                $this->getResponse()
+                return;
+            }
+
+            $ipn = $this->getObjectManager()->create(
+                "EMerchantPay\\Genesis\\Model\\Ipn\\{$ipnClassName}",
+                ['data' => $postValues]
+            );
+
+            $responseBody = $ipn->handleGenesisNotification();
+            $this
+                ->getResponse()
                     ->setHeader('Content-type', 'application/xml')
                     ->setBody($responseBody)
-                    ->setHttpResponseCode(200)
+                    ->setHttpResponseCode(\Magento\Framework\Webapi\Response::HTTP_OK)
                     ->sendResponse();
-            }
         } catch (\Exception $e) {
             $this->getLogger()->critical($e);
-            $this->getResponse()->setHttpResponseCode(500);
+            $this->getResponse()->setHttpResponseCode(\Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR);
         }
     }
 }

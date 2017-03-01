@@ -80,11 +80,13 @@ class ControllerFrontSendResponseBefore implements ObserverInterface
                 $response->setException($maskedException);
                 $this->clearEmerchantPayLastCheckoutError();
             }
+        // @codingStandardsIgnoreStart
         } catch (\Exception $e) {
             /**
              * Just hide any exception (if occurs) when trying to override exception message
              */
         }
+        // @codingStandardsIgnoreEnd
     }
 
     /**

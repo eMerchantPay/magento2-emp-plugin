@@ -66,9 +66,8 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
-     * @param \Magento\Framework\Module\ModuleListInterface $moduleList ,
-     * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate ,
-     * @param \Magento\Directory\Model\CountryFactory $countryFactory ,
+     * @param \Magento\Framework\Module\ModuleListInterface $moduleList
+     * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
@@ -87,10 +86,9 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
         \Magento\Framework\Module\ModuleListInterface $moduleList,
         \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
-        \Magento\Directory\Model\CountryFactory $countryFactory,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        array $data = array()
+        array $data = []
     ) {
         parent::__construct(
             $context,
@@ -106,14 +104,14 @@ class Direct extends \Magento\Payment\Model\Method\Cc
             $resourceCollection,
             $data
         );
-        $this->_actionContext = $actionContext;
-        $this->_storeManager = $storeManager;
+
+        $this->_actionContext   = $actionContext;
+        $this->_storeManager    = $storeManager;
         $this->_checkoutSession = $checkoutSession;
-        $this->_moduleHelper = $moduleHelper;
-        $this->_configHelper =
-            $this->getModuleHelper()->getMethodConfig(
-                $this->getCode()
-            );
+        $this->_moduleHelper    = $moduleHelper;
+        $this->_configHelper    = $this->getModuleHelper()->getMethodConfig(
+            $this->getCode()
+        );
     }
 
     /**
@@ -175,10 +173,10 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      *
      * @return bool
      */
-    protected function is3dEnabled()
+    public function isThreeDEnabled()
     {
         return
-            $this->getModuleHelper()->getIsTransaction3dSecure(
+            $this->getModuleHelper()->getIsTransactionThreeDSecure(
                 $this->getConfigTransactionType()
             );
     }
@@ -233,115 +231,6 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         }
 
         return $this;
-    }
-
-    /**
-     * Refund payment
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param float $amount
-     * @return $this
-     */
-    public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
-    {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $payment->getOrder();
-
-        $this->getLogger()->debug('Refund transaction for order #' . $order->getIncrementId());
-
-        $captureTransaction = $this->getModuleHelper()->lookUpCaptureTransaction(
-            $payment
-        );
-
-        if (!isset($captureTransaction)) {
-            $errorMessage = 'Refund transaction for order #' .
-                $order->getIncrementId() .
-                ' cannot be finished (No Capture Transaction exists)';
-
-            $this->getLogger()->error(
-                $errorMessage
-            );
-
-            $this->getMessageManager()->addError($errorMessage);
-
-            $this->getModuleHelper()->throwWebApiException(
-                $errorMessage
-            );
-        }
-
-        try {
-            $this->doRefund($payment, $amount, $captureTransaction);
-        } catch (\Exception $e) {
-            $this->getLogger()->error(
-                $e->getMessage()
-            );
-
-            $this->getMessageManager()->addError(
-                $e->getMessage()
-            );
-
-            $this->getModuleHelper()->maskException($e);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Void payment
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return $this
-     */
-    public function void(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        /** @var \Magento\Sales\Model\Order $order */
-
-        $order = $payment->getOrder();
-
-        $this->getLogger()->debug('Void transaction for order #' . $order->getIncrementId());
-
-        $referenceTransaction = $this->getModuleHelper()->lookUpVoidReferenceTransaction(
-            $payment
-        );
-
-        if ($referenceTransaction->getTxnType() == \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH) {
-            $authTransaction = $referenceTransaction;
-        } else {
-            $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
-                $payment
-            );
-        }
-
-        if (!isset($authTransaction) || !isset($referenceTransaction)) {
-            $errorMessage = 'Void transaction for order #' .
-                $order->getIncrementId() .
-                ' cannot be finished (No Authorize / Capture Transaction exists)';
-
-            $this->getLogger()->error($errorMessage);
-            $this->getModuleHelper()->throwWebApiException($errorMessage);
-        }
-
-        try {
-            $this->doVoid($payment, $authTransaction, $referenceTransaction);
-        } catch (\Exception $e) {
-            $this->getLogger()->error(
-                $e->getMessage()
-            );
-            $this->getModuleHelper()->maskException($e);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Cancel order
-     *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @return $this
-     */
-    public function cancel(\Magento\Payment\Model\InfoInterface $payment)
-    {
-        return $this->void($payment);
     }
 
     /**
@@ -429,10 +318,16 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      * @return $this
      * @throws \Exception
      * @throws \Genesis\Exceptions\ErrorAPI
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function processTransaction(\Magento\Payment\Model\InfoInterface $payment, $amount)
     {
         $transactionType = $this->getConfigTransactionType();
+
+        $isThreeDEnabled =  $this->isThreeDEnabled();
 
         $order = $payment->getOrder();
 
@@ -441,8 +336,9 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         $this->getConfigHelper()->initGatewayClient();
 
         $billing = $order->getBillingAddress();
+
         if (empty($billing)) {
-            throw new \Exception(__('Billing address is empty.'));
+            throw new \Magento\Framework\Exception\LocalizedException(__('Billing address is empty.'));
         }
 
         $shipping = $order->getShippingAddress();
@@ -468,9 +364,6 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                 )
                 ->setUsage(
                     $helper->buildOrderDescriptionText($order)
-                )
-                ->setLanguage(
-                    $helper->getLocale()
                 )
                 ->setCurrency(
                     $order->getBaseCurrencyCode()
@@ -568,7 +461,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                     );
         }
 
-        if ($this->is3dEnabled()) {
+        if ($isThreeDEnabled) {
             $genesis
                 ->request()
                     ->setNotificationUrl(
@@ -579,19 +472,13 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                     ->setReturnSuccessUrl(
                         $helper->getReturnUrl(
                             $this->getCode(),
-                            "success"
-                        )
-                    )
-                    ->setReturnCancelUrl(
-                        $helper->getReturnUrl(
-                            $this->getCode(),
-                            "cancel"
+                            \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_SUCCESS
                         )
                     )
                     ->setReturnFailureUrl(
                         $helper->getReturnUrl(
                             $this->getCode(),
-                            "failure"
+                            \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_FAILURE
                         )
                     );
         }
@@ -601,7 +488,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         } catch (\Exception $e) {
             $logInfo =
                 'Transaction ' . $transactionType .
-                ' for order #' . $order->getIncrementId() .
+                ' for order #' . $orderId .
                 ' failed with message "' . $e->getMessage() . '"';
 
             $this->getLogger()->error($logInfo);
@@ -614,7 +501,9 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         }
 
         $this->setGenesisResponse(
-            $genesis->response()->getResponseObject()
+            $this->getModuleHelper()->getGatewayResponseObject(
+                $genesis->response()
+            )
         );
 
         $genesis_response = $this->getModuleHelper()->getArrayFromGatewayResponse(
@@ -629,7 +518,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                 false
             )
             ->setIsTransactionPending(
-                $this->is3dEnabled()
+                $isThreeDEnabled
             )
             ->setTransactionAdditionalInfo(
                 \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,
@@ -656,7 +545,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
             $this->getModuleHelper()->throwWebApiException($errorMessage);
         }
 
-        if ($this->is3dEnabled() && $status->isPendingAsync()) {
+        if ($isThreeDEnabled && $status->isPendingAsync()) {
             $this->setRedirectUrl(
                 $this->getGenesisResponse()->redirect_url
             );
@@ -664,33 +553,6 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         } else {
             $this->unsetRedirectUrl();
         }
-    }
-
-    /**
-     * Sets the 3D-Secure redirect URL or throws an exception on failure
-     *
-     * @param string $redirectUrl
-     * @throws \Exception
-     */
-    public function setRedirectUrl($redirectUrl)
-    {
-        if (!isset($redirectUrl)) {
-            throw new \Exception(__('Empty 3D-Secure redirect URL'));
-        }
-
-        if (filter_var($redirectUrl, FILTER_VALIDATE_URL) === false) {
-            throw new \Exception(__('Invalid 3D-Secure redirect URL'));
-        }
-
-        $this->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl($redirectUrl);
-    }
-
-    /**
-     * Unsets the 3D-Secure redirect URL
-     */
-    public function unsetRedirectUrl()
-    {
-        $this->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl(null);
     }
 
     /**

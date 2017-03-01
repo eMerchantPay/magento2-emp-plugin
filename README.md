@@ -1,6 +1,11 @@
 eMerchantPay Gateway Module for Magento 2 CE
 =============================
 
+[![Build Status](https://img.shields.io/travis/eMerchantPay/magento2-emp-plugin.svg?style=flat)](https://travis-ci.org/eMerchantPay/magento2-emp-plugin)
+[![Latest Stable Version](https://poser.pugx.org/emerchantpay/magento2-emp-plugin/v/stable)](https://packagist.org/packages/emerchantpay/magento2-emp-plugin)
+[![Total Downloads](https://img.shields.io/packagist/dt/eMerchantPay/magento2-emp-plugin.svg?style=flat)](https://packagist.org/packages/emerchantpay/magento2-emp-plugin)
+[![Software License](https://img.shields.io/badge/license-GPL-green.svg?style=flat)](http://opensource.org/licenses/gpl-2.0.php)
+
 This is a Payment Module for Magento 2 Community Edition, that gives you the ability to process payments through eMerchantPay's Payment Gateway - Genesis.
 
 Requirements

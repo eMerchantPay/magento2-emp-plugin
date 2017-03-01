@@ -29,7 +29,7 @@ abstract class AbstractCheckoutRedirectAction extends \EMerchantPay\Genesis\Cont
     /**
      * @var \EMerchantPay\Genesis\Helper\Checkout
      */
-    private $_checkoutHelper;
+    protected $_checkoutHelper;
     /**
      * @param \Magento\Framework\App\Action\Context $context
      * @param \Magento\Checkout\Model\Session $checkoutSession

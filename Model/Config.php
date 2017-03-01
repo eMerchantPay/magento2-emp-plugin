@@ -123,8 +123,6 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * @param string $key
      * @param null $storeId
      * @return null|string
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function getValue($key, $storeId = null)
     {
@@ -136,7 +134,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
                     $value = $this->getScopeConfig()->getValue(
                         $path,
                         ScopeInterface::SCOPE_STORE,
-                        $this->_storeId
+                        $storeId ?: $this->_storeId
                     );
                     return $value;
                 }
@@ -312,11 +310,14 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     /**
      * Get if specific currencies are allowed
      * (not all global allowed currencies)
-     * @return array
+     * @return bool
      */
     public function getAreAllowedSpecificCurrencies()
     {
-        return $this->isFlagChecked($this->_methodCode, 'allow_specific_currency');
+        return $this->isFlagChecked(
+            $this->_methodCode,
+            'allow_specific_currency'
+        );
     }
 
     /**

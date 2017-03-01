@@ -1,0 +1,36 @@
+language: php
+
+sudo: true
+
+cache:
+  directories:
+    - $HOME/.composer/cache
+
+matrix:
+  include:
+    - php: 5.6
+    - php: 7.0
+  allow_failures:
+    - php: 5.6
+    - php: 7.0
+
+before_install:
+  - composer selfupdate
+
+install:
+  - export COMPOSER_ROOT_VERSION=dev-master
+  - sudo apt-get remove libcurl4-gnutls-dev
+  - sudo apt-get install libcurl4-openssl-dev
+
+script:
+  composer create-project --repository-url=https://70b6e72e6e33d12c4260ad54dbc7fec0:7ba15f6725fd0f426f1d52661583a9ca@repo.magento.com/ magento/project-community-edition magento-root
+
+  mkdir -p magento-root/app/code/EMerchantPay/Genesis
+
+  cp -r !(magento-root) magento-root/app/code/EMerchantPay/Genesis/
+
+  cd magento-root
+
+  composer require genesisgateway/genesis_php:1.4.3@stable fzaninotto/faker:1.*
+
+  php vendor/phpunit/phpunit/phpunit -c dev/tests/unit/phpunit.xml.dist app/code/EMerchantPay/Genesis/

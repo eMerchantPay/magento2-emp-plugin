@@ -26,15 +26,24 @@ namespace EMerchantPay\Genesis\Controller;
  */
 abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\AbstractAction
 {
+    const ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH = 'checkout/onepage/success';
+    const ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS = [];
+
+    const ROUTE_PATTERN_CHECKOUT_CART_PATH = 'checkout/cart';
+    const ROUTE_PATTERN_CHECKOUT_CART_ARGS = [];
+
+    const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_PATH = 'checkout';
+    const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS = ['_fragment' => 'payment'];
+
     /**
      * @var \Magento\Checkout\Model\Session
      */
-    private $_checkoutSession;
+    protected $_checkoutSession;
 
     /**
      * @var \Magento\Sales\Model\OrderFactory
      */
-    private $_orderFactory;
+    protected $_orderFactory;
 
     /**
      * @param \Magento\Framework\App\Action\Context $context
@@ -99,7 +108,10 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
      */
     protected function redirectToCheckoutFragmentPayment()
     {
-        $this->_redirect('checkout', ['_fragment' => 'payment']);
+        $this->_redirect(
+            self::ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_PATH,
+            self::ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS
+        );
     }
 
     /**
@@ -108,7 +120,10 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
      */
     protected function redirectToCheckoutOnePageSuccess()
     {
-        $this->_redirect('checkout/onepage/success');
+        $this->_redirect(
+            self::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH,
+            self::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS
+        );
     }
 
     /**
@@ -117,6 +132,9 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
      */
     protected function redirectToCheckoutCart()
     {
-        $this->_redirect('checkout/cart');
+        $this->_redirect(
+            self::ROUTE_PATTERN_CHECKOUT_CART_PATH,
+            self::ROUTE_PATTERN_CHECKOUT_CART_ARGS
+        );
     }
 }

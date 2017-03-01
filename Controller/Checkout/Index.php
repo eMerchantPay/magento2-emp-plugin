@@ -42,9 +42,11 @@ class Index extends \EMerchantPay\Genesis\Controller\AbstractCheckoutAction
 
             if (isset($redirectUrl)) {
                 $this->getResponse()->setRedirect($redirectUrl);
-            } else {
-                $this->redirectToCheckoutFragmentPayment();
+
+                return;
             }
+
+            $this->redirectToCheckoutFragmentPayment();
         }
     }
 }

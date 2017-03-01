@@ -35,18 +35,18 @@ class Redirect extends \EMerchantPay\Genesis\Controller\AbstractCheckoutRedirect
     public function execute()
     {
         switch ($this->getReturnAction()) {
-            case 'success':
+            case \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_SUCCESS:
                 $this->executeSuccessAction();
                 break;
 
-            case 'cancel':
+            case \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_CANCEL:
                 $this->getMessageManager()->addWarning(
                     __("You have successfully canceled your order")
                 );
                 $this->executeCancelAction();
                 break;
 
-            case 'failure':
+            case \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_FAILURE:
                 /**
                  * If the customer is redirected here after processing Server to Server 3D-Secure transaction
                  * this mean the Payment Transaction Status has been set to "Pending Async".

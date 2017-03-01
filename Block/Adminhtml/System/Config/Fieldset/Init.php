@@ -22,7 +22,8 @@ namespace EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset;
 /**
  * Renderer for EMerchantPay banner in System Configuration
  */
-class Init extends \Magento\Backend\Block\Template implements \Magento\Framework\Data\Form\Element\Renderer\RendererInterface
+class Init extends \Magento\Backend\Block\Template implements
+    \Magento\Framework\Data\Form\Element\Renderer\RendererInterface
 {
     /**
      * @var string
@@ -34,9 +35,13 @@ class Init extends \Magento\Backend\Block\Template implements \Magento\Framework
      *
      * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
+    // @codingStandardsIgnoreStart
     public function render(\Magento\Framework\Data\Form\Element\AbstractElement $element)
     {
         return $this->toHtml();
     }
+    // @codingStandardsIgnoreEnd
 }

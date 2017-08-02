@@ -62,7 +62,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
      * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \Magento\Payment\Model\Method\Logger $logger
+     * @param \EMerchantPay\Genesis\Logger\Logger $loggerHelper
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
@@ -80,7 +80,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Payment\Model\Method\Logger $logger,
+        \EMerchantPay\Genesis\Logger\Logger $loggerHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
@@ -90,6 +90,8 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
     ) {
+        $loggerHelper->setFilename('direct');
+
         parent::__construct(
             $context,
             $registry,
@@ -97,7 +99,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
             $customAttributeFactory,
             $paymentData,
             $scopeConfig,
-            $logger,
+            $loggerHelper,
             $moduleList,
             $localeDate,
             $resource,
@@ -158,13 +160,12 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     }
 
     /**
-     * Gets Instance of the Magento Code Logger
-     *
+     * Get custom Logger
      * @return \Psr\Log\LoggerInterface
      */
     protected function getLogger()
     {
-        return $this->_logger;
+        return $this->logger->getLogger();
     }
 
     /**
@@ -370,6 +371,9 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                 )
                 ->setAmount(
                     $amount
+                )
+                ->setUsage(
+                    'Magento2 Payment'
                 );
 
         if (!empty($payment->getCcOwner())) {
@@ -553,6 +557,8 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         } else {
             $this->unsetRedirectUrl();
         }
+
+        return $this;
     }
 
     /**

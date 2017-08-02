@@ -128,7 +128,7 @@ trait OnlinePaymentMethod
     }
 
     /**
-     * Get Instance of the Magento Code Logger
+     * Get custom Logger
      * @return \Psr\Log\LoggerInterface
      */
     abstract protected function getLogger();
@@ -237,7 +237,9 @@ trait OnlinePaymentMethod
             'currency'       =>
                 $order->getBaseCurrencyCode(),
             'amount'         =>
-                $amount
+                $amount,
+            'usage'          =>
+                'Magento2 Capture'
         ];
 
         $responseObject = $this->processReferenceTransaction(
@@ -309,7 +311,9 @@ trait OnlinePaymentMethod
             'currency'       =>
                 $order->getBaseCurrencyCode(),
             'amount'         =>
-                $amount
+                $amount,
+            'usage'          =>
+                'Magento2 Refund'
         ];
 
         $responseObject = $this->processReferenceTransaction(
@@ -359,7 +363,9 @@ trait OnlinePaymentMethod
             'remote_ip'      =>
                 $order->getRemoteIp(),
             'reference_id'   =>
-                $referenceTransaction->getTxnId()
+                $referenceTransaction->getTxnId(),
+            'usage'          =>
+                'Magento2 Void'
         ];
 
         $responseObject = $this->processReferenceTransaction(

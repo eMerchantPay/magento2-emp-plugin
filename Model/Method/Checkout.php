@@ -46,15 +46,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     protected $_isInitializeNeeded          = false;
 
     /**
-     * Get Instance of the Magento Code Logger
-     * @return \Psr\Log\LoggerInterface
-     */
-    protected function getLogger()
-    {
-        return $this->_logger;
-    }
-
-    /**
      * Checkout constructor.
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\App\Action\Context $actionContext
@@ -63,7 +54,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
      * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \Magento\Payment\Model\Method\Logger $logger
+     * @param \EMerchantPay\Genesis\Logger\Logger $loggerHelper
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
@@ -79,7 +70,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
         \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \Magento\Payment\Model\Method\Logger  $logger,
+        \EMerchantPay\Genesis\Logger\Logger  $loggerHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
@@ -87,6 +78,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
     ) {
+        $loggerHelper->setFilename('checkout');
+
         parent::__construct(
             $context,
             $registry,
@@ -94,7 +87,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $customAttributeFactory,
             $paymentData,
             $scopeConfig,
-            $logger,
+            $loggerHelper,
             $resource,
             $resourceCollection,
             $data
@@ -108,6 +101,15 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $this->getModuleHelper()->getMethodConfig(
                 $this->getCode()
             );
+    }
+
+    /**
+     * Get custom Logger
+     * @return \Psr\Log\LoggerInterface
+     */
+    protected function getLogger()
+    {
+        return $this->logger->getLogger();
     }
 
     /**
@@ -439,6 +441,8 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
 
             $this->getModuleHelper()->maskException($e);
         }
+
+        return $this;
     }
 
     /**

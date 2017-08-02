@@ -79,6 +79,16 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
     protected $checkoutSessionMock;
 
     /**
+     * @var \EMerchantPay\Genesis\Logger\Logger|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $loggerHelperMock;
+
+    /**
+     * @var \Psr\Log\LoggerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $psrLoggerMock;
+
+    /**
      * @return \EMerchantPay\Genesis\Model\Method\Checkout|\EMerchantPay\Genesis\Model\Method\Direct
      */
     protected function getPaymentMethodInstance()
@@ -198,12 +208,15 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
                 $this->configHelperMock
             );
 
+        $this->setupLoggerMocks();
+
         $this->paymentMethodInstance = $this->getObjectManagerHelper()->getObject(
             $this->getPaymentMethodClassName(),
             [
                 'scopeConfig'     => $this->scopeConfigMock,
                 'moduleHelper'    => $this->dataHelperMock,
-                'checkoutSession' => $this->checkoutSessionMock
+                'checkoutSession' => $this->checkoutSessionMock,
+                'loggerHelper'    => $this->loggerHelperMock
             ]
         );
 
@@ -240,6 +253,23 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
             $this->configHelperMock,
             $this->getPaymentMethodInstance()->getConfigHelper()
         );
+    }
+
+    protected function setupLoggerMocks()
+    {
+        $this->loggerHelperMock = $this->getMockBuilder(
+            \EMerchantPay\Genesis\Logger\Logger::class
+        )->getMock();
+
+        $this->psrLoggerMock = $this->getMockBuilder(
+            \Psr\Log\LoggerInterface::class
+        )->getMock();
+
+        $this->loggerHelperMock
+            ->method('getLogger')
+            ->willReturn(
+                $this->psrLoggerMock
+            );
     }
 
     /**

@@ -19,6 +19,12 @@
 
 namespace EMerchantPay\Genesis\Model\Method;
 
+use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
+use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
+use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\API\Request;
+
 /**
  * Checkout Payment Method Model Class
  * Class Checkout
@@ -132,20 +138,15 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         $selected_types = $this->getConfigHelper()->getTransactionTypes();
 
         $alias_map = [
-            \Genesis\API\Constants\Payment\Methods::EPS         =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::GIRO_PAY    =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::PRZELEWY24  =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::QIWI        =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::SAFETY_PAY  =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::TELEINGRESO =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::TRUST_PAY   =>
-                \Genesis\API\Constants\Transaction\Types::PPRO
+            GenesisPaymentMethods::EPS         => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::GIRO_PAY    => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::PRZELEWY24  => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::QIWI        => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::SAFETY_PAY  => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::TELEINGRESO => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::TRUST_PAY   => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::BCMC        => GenesisTransactionTypes::PPRO,
+            GenesisPaymentMethods::MYBANK      => GenesisTransactionTypes::PPRO
         ];
 
         foreach ($selected_types as $selected_type) {
@@ -177,47 +178,73 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     {
         $genesis = $this->prepareGenesisWPFRequest($data);
 
-        foreach ($this->getCheckoutTransactionTypes() as $type) {
-            if (is_array($type)) {
-                $genesis
-                    ->request()
-                        ->addTransactionType($type['name'], $type['parameters']);
-
-                continue;
-            }
-
-            if (\Genesis\API\Constants\Transaction\Types::isPayByVoucher($type)) {
-                $parameters = [
-                    'card_type' =>
-                        \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
-                    'redeem_type' =>
-                        \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT
-                ];
-
-                if ($type == \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY) {
-                    $parameters['product_name'] = $data['order']['description'];
-                    $parameters['product_category'] = $data['order']['description'];
-                }
-
-                $genesis
-                    ->request()
-                        ->addTransactionType($type, $parameters);
-
-                continue;
-            }
-
-            $genesis
-                ->request()
-                    ->addTransactionType($type);
-        }
-
-        $this->getModuleHelper()->executeGatewayRequest(
-            $genesis
+        $this->prepareTransactionTypes(
+            $genesis->request(),
+            $data
         );
+
+        $this->getModuleHelper()->executeGatewayRequest($genesis);
 
         return $this->getModuleHelper()->getGatewayResponseObject(
             $genesis->response()
         );
+    }
+
+    /**
+     * @param Request $request
+     * @param array $data
+     */
+    protected function prepareTransactionTypes($request, $data)
+    {
+        $types = $this->getCheckoutTransactionTypes();
+
+        foreach ($types as $transactionType) {
+            if (is_array($transactionType)) {
+                $request->addTransactionType(
+                    $transactionType['name'],
+                    $transactionType['parameters']
+                );
+
+                continue;
+            }
+
+            switch ($transactionType) {
+                case GenesisTransactionTypes::PAYBYVOUCHER_SALE:
+                    $parameters = [
+                        'card_type'   => CardTypes::VIRTUAL,
+                        'redeem_type' => RedeemTypes::INSTANT
+                    ];
+                    break;
+                case GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY:
+                    $parameters = [
+                        'card_type'        => CardTypes::VIRTUAL,
+                        'redeem_type'      => RedeemTypes::INSTANT,
+                        'product_name'     => $data['order']['description'],
+                        'product_category' => $data['order']['description']
+                    ];
+                    break;
+                case GenesisTransactionTypes::CITADEL_PAYIN:
+                    $parameters = [
+                        'merchant_customer_id' => $this->getModuleHelper()->getCurrentUserIdHash()
+                    ];
+                    break;
+                case GenesisTransactionTypes::IDEBIT_PAYIN:
+                case GenesisTransactionTypes::INSTA_DEBIT_PAYIN:
+                    $parameters = [
+                        'customer_account_id' => $this->getModuleHelper()->getCurrentUserIdHash()
+                    ];
+                    break;
+            }
+
+            if (!isset($parameters)) {
+                $parameters = [];
+            }
+
+            $request->addTransactionType(
+                $transactionType,
+                $parameters
+            );
+        }
     }
 
     /**

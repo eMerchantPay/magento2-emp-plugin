@@ -166,7 +166,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
         $this->orderFactoryMock->expects(self::once())
             ->method('create')
-            ->willReturn($this->getOrderMock());
+                ->willReturn($this->getOrderMock());
 
         return $this->orderFactoryMock;
     }
@@ -222,16 +222,16 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
         $orderMock->expects(self::atLeastOnce())
             ->method('getId')
-            ->willReturn(1);
+                ->willReturn(1);
 
         $orderMock->expects(self::once())
             ->method('getPayment')
-            ->willReturn($this->getPaymentMock());
+                ->willReturn($this->getPaymentMock());
 
         $orderMock->expects(self::once())
             ->method('loadByIncrementId', 'getId')
             ->with($incrementId)
-            ->willReturn($orderMock);
+                ->willReturn($orderMock);
 
         return $orderMock;
     }
@@ -277,9 +277,10 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     {
         $reconciliationObj = $this->createReconciliationObj();
 
-        $this->notificationMock = $this->getMock(
+        $this->notificationMock = $this->createMock(
             Notification::class,
             [
+                'isAuthentic',
                 'initReconciliation',
                 'getReconciliationObject'
             ],
@@ -289,12 +290,16 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
         );
 
         $this->notificationMock->expects(self::once())
+            ->method('isAuthentic')
+                ->willReturn(true);
+
+        $this->notificationMock->expects(self::once())
             ->method('initReconciliation')
-            ->willReturn(new \stdClass());
+                ->willReturn(new \stdClass());
 
         $this->notificationMock->expects(self::once())
             ->method('getReconciliationObject')
-            ->willReturn($reconciliationObj);
+                ->willReturn($reconciliationObj);
 
         return $this->notificationMock;
     }
@@ -312,11 +317,11 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
         $this->configHelperMock->expects(self::once())
             ->method('initGatewayClient')
-            ->willReturn($this->initGatewayClientMock());
+                ->willReturn($this->initGatewayClientMock());
 
         $this->configHelperMock->expects(self::never())
             ->method('initReconciliation')
-            ->willReturn($this->getNotificationMock());
+                ->willReturn($this->getNotificationMock());
 
         return $this->configHelperMock;
     }

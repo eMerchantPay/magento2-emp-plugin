@@ -19,7 +19,7 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout;
 
-use \Genesis\API\Constants\Transaction\Types as TransactionTypes;
+use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use \Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
 
 /**
@@ -28,7 +28,7 @@ use \Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
  * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType
  * @package EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout
  */
-class TransactionTypeTest extends \PHPUnit_Framework_TestCase
+class TransactionTypeTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType::toOptionArray()
@@ -39,87 +39,40 @@ class TransactionTypeTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             [
-
-                [
-                    'value' => TransactionTypes::ABNIDEAL,
-                    'label' => __('ABN iDEAL'),
-                ],
-                [
-                    'value' => TransactionTypes::AUTHORIZE,
-                    'label' => __('Authorize'),
-                ],
-                [
-                    'value' => TransactionTypes::AUTHORIZE_3D,
-                    'label' => __('Authorize (3D-Secure)'),
-                ],
-                [
-                    'value' => TransactionTypes::CASHU,
-                    'label' => __('CashU'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::EPS,
-                    'label' => __('eps'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::GIRO_PAY,
-                    'label' => __('GiroPay'),
-                ],
-                [
-                    'value' => TransactionTypes::NETELLER,
-                    'label' => __('Neteller'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::QIWI,
-                    'label' => __('Qiwi'),
-                ],
-                [
-                    'value' => TransactionTypes::PAYSAFECARD,
-                    'label' => __('PaySafeCard'),
-                ],
-                [
-                    'value' => TransactionTypes::PAYBYVOUCHER_SALE,
-                    'label' => __('PayByVoucher (Sale)'),
-                ],
-                [
-                    'value' => TransactionTypes::PAYBYVOUCHER_YEEPAY,
-                    'label' => __('PayByVoucher (oBeP)'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::PRZELEWY24,
-                    'label' => __('Przelewy24'),
-                ],
-                [
-                    'value' => TransactionTypes::POLI,
-                    'label' => __('POLi'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::SAFETY_PAY,
-                    'label' => __('SafetyPay'),
-                ],
-                [
-                    'value' => TransactionTypes::SALE,
-                    'label' => __('Sale'),
-                ],
-                [
-                    'value' => TransactionTypes::SALE_3D,
-                    'label' => __('Sale (3D-Secure)'),
-                ],
-                [
-                    'value' => TransactionTypes::SOFORT,
-                    'label' => __('SOFORT'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::TELEINGRESO,
-                    'label' => __('TeleIngreso'),
-                ],
-                [
-                    'value' => GenesisPaymentMethods::TRUST_PAY,
-                    'label' => __('TrustPay'),
-                ],
-                [
-                    'value' => TransactionTypes::WEBMONEY,
-                    'label' => __('WebMoney'),
-                ]
+                ['value' => GenesisTransactionTypes::ABNIDEAL, 'label' => __('ABN iDEAL')],
+                ['value' => GenesisTransactionTypes::ALIPAY, 'label' => __('Alipay')],
+                ['value' => GenesisTransactionTypes::AUTHORIZE, 'label' => __('Authorize')],
+                ['value' => GenesisTransactionTypes::AUTHORIZE_3D, 'label' => __('Authorize (3D-Secure)')],
+                ['value' => GenesisTransactionTypes::CASHU, 'label' => __('CashU')],
+                ['value' => GenesisTransactionTypes::CITADEL_PAYIN, 'label' => __('Citadel')],
+                ['value' => GenesisPaymentMethods::EPS, 'label' => __('eps')],
+                ['value' => GenesisTransactionTypes::EZEEWALLET, 'label' => __('eZeeWallet')],
+                ['value' => GenesisTransactionTypes::IDEBIT_PAYIN, 'label' => __('iDebit')],
+                ['value' => GenesisTransactionTypes::INPAY, 'label' => __('INPay')],
+                ['value' => GenesisTransactionTypes::INSTA_DEBIT_PAYIN, 'label' => __('InstaDebit')],
+                ['value' => GenesisPaymentMethods::GIRO_PAY, 'label' => __('GiroPay')],
+                ['value' => GenesisTransactionTypes::NETELLER, 'label' => __('Neteller')],
+                ['value' => GenesisPaymentMethods::BCMC, 'label' => __('Mr.Cash')],
+                ['value' => GenesisPaymentMethods::MYBANK, 'label' => __('MyBank')],
+                ['value' => GenesisPaymentMethods::QIWI, 'label' => __('Qiwi')],
+                ['value' => GenesisTransactionTypes::P24, 'label' => __('P24')],
+                ['value' => GenesisTransactionTypes::PAYPAL_EXPRESS, 'label' => __('PayPal Express')],
+                ['value' => GenesisTransactionTypes::PAYSAFECARD, 'label' => __('PaySafeCard')],
+                ['value' => GenesisTransactionTypes::PAYSEC_PAYIN, 'label' => __('PaySec')],
+                ['value' => GenesisTransactionTypes::PAYBYVOUCHER_SALE, 'label' => __('PayByVoucher (Sale)')],
+                ['value' => GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY, 'label' => __('PayByVoucher (oBeP)')],
+                ['value' => GenesisPaymentMethods::PRZELEWY24, 'label' => __('Przelewy24')],
+                ['value' => GenesisTransactionTypes::POLI, 'label' => __('POLi')],
+                ['value' => GenesisPaymentMethods::SAFETY_PAY, 'label' => __('SafetyPay')],
+                ['value' => GenesisTransactionTypes::SALE, 'label' => __('Sale')],
+                ['value' => GenesisTransactionTypes::SALE_3D, 'label' => __('Sale (3D-Secure)')],
+                ['value' => GenesisTransactionTypes::SDD_SALE, 'label' => __('SDD Sale')],
+                ['value' => GenesisTransactionTypes::SOFORT, 'label' => __('SOFORT')],
+                ['value' => GenesisPaymentMethods::TELEINGRESO, 'label' => __('TeleIngreso')],
+                ['value' => GenesisPaymentMethods::TRUST_PAY, 'label' => __('TrustPay')],
+                ['value' => GenesisTransactionTypes::TRUSTLY_SALE, 'label' => __('Trustly Sale')],
+                ['value' => GenesisTransactionTypes::WEBMONEY, 'label' => __('WebMoney')],
+                ['value' => GenesisTransactionTypes::WECHAT, 'label' => __('WeChat')]
             ],
             $sourceModel->toOptionArray()
         );

@@ -124,39 +124,52 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         parent::setUp();
 
+        $this->setUpBasicMocks();
+        $this->setUpContextMock();
+        $this->setUpStoreManagerMock();
+
+        $this->moduleHelper = $this->getObjectManagerHelper()->getObject(
+            EMerchantPayDataHelper::class,
+            [
+                'context'        => $this->contextMock,
+                'storeManager'   => $this->storeManagerMock,
+                'localeResolver' => $this->localeResolverMock
+            ]
+        );
+    }
+
+    /**
+     * Sets up basic mock objects used in other Context and StoreManager mocks.
+     */
+    protected function setUpBasicMocks()
+    {
         $this->scopeConfigMock = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-            ->getMock();
-
-        $this->contextMock = $this->getMockBuilder(\Magento\Framework\App\Helper\Context::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getScopeConfig', 'getUrlBuilder'])
-            ->getMock();
-
-        $this->storeManagerMock = $this->getMockBuilder(\Magento\Store\Model\StoreManager::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['getStore'])
             ->getMock();
 
         $this->storeMock = $this->getMockBuilder(\Magento\Store\Model\Store::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->storeManagerMock->expects(static::any())
-            ->method('getStore')
-            ->willReturn(
-                $this->storeMock
-            );
-
         $this->urlBuilderMock = $this->getMockBuilder(\Magento\Framework\Url::class)
             ->disableOriginalConstructor()
             ->setMethods(['getUrl'])
             ->getMock();
 
-        $this->storeManagerMock->expects(static::any())
-            ->method('getUrlBuilder')
-            ->willReturn(
-                $this->urlBuilderMock
-            );
+        $this->localeResolverMock = $this->getMockBuilder(\Magento\Framework\Locale\Resolver::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getLocale'])
+            ->getMock();
+    }
+
+    /**
+     * Sets up Context mock
+     */
+    protected function setUpContextMock()
+    {
+        $this->contextMock = $this->getMockBuilder(\Magento\Framework\App\Helper\Context::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getScopeConfig', 'getUrlBuilder'])
+            ->getMock();
 
         $this->contextMock->expects(static::any())
             ->method('getScopeConfig')
@@ -169,20 +182,29 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->willReturn(
                 $this->urlBuilderMock
             );
+    }
 
-        $this->localeResolverMock = $this->getMockBuilder(\Magento\Framework\Locale\Resolver::class)
+    /**
+     * Sets up StoreManager mock.
+     */
+    protected function setUpStoreManagerMock()
+    {
+        $this->storeManagerMock = $this->getMockBuilder(\Magento\Store\Model\StoreManager::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getLocale'])
+            ->setMethods(['getStore', 'getUrlBuilder'])
             ->getMock();
 
-        $this->moduleHelper = $this->getObjectManagerHelper()->getObject(
-            EMerchantPayDataHelper::class,
-            [
-                'context'        => $this->contextMock,
-                'storeManager'   => $this->storeManagerMock,
-                'localeResolver' => $this->localeResolverMock
-            ]
-        );
+        $this->storeManagerMock->expects(static::any())
+            ->method('getStore')
+            ->willReturn(
+                $this->storeMock
+            );
+
+        $this->storeManagerMock->expects(static::any())
+            ->method('getUrlBuilder')
+            ->willReturn(
+                $this->urlBuilderMock
+            );
     }
 
     /**
@@ -405,11 +427,8 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $exceptionMessage = 'Exception Message';
 
-        $this->setExpectedException(
-            \Magento\Framework\Webapi\Exception::class,
-            $exceptionMessage,
-            0
-        );
+        $this->expectException(\Magento\Framework\Webapi\Exception::class);
+        $this->expectExceptionMessage($exceptionMessage);
 
         $this->moduleHelper->maskException(
             new \Genesis\Exceptions\ErrorAPI(

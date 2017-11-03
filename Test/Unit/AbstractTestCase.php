@@ -25,7 +25,7 @@ use Magento\Framework\TestFramework\Unit\Helper\ObjectManager as ObjectManagerHe
  * Class AbstractTestCase
  * @package EMerchantPay\Genesis\Test\Unit
  */
-abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
+abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
 {
     const SAMPLE_REDIRECT_URL       = 'https://example.com/action/redirect/to';
     const SAMPLE_NOTIFICATION_URL   = 'https://example.com/action/notify';

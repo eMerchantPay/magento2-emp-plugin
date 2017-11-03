@@ -11,8 +11,8 @@ This is a Payment Module for Magento 2 Community Edition, that gives you the abi
 Requirements
 ------------
 
-* Magento 2 Community Edition 2.x (Tested upto __2.1.3__)
-* [GenesisPHP v1.4.x](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
+* Magento 2 Community Edition 2.x (Tested upto __2.2.0__)
+* [GenesisPHP v1.8.3](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
 * PCI-certified server in order to use ```eMerchantPay Direct```
 
 *Note:* This module has been tested only with Magento 2 __Community Edition__, it may not work
@@ -52,7 +52,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.4.3@stable
+    $ composer require genesisgateway/genesis_php:1.8.3@stable
     ```
 
 * Enable Payment Module 
@@ -94,7 +94,7 @@ Steps:
 GenesisPHP Requirements
 ------------
 
-* PHP version 5.3.2 or newer
+* PHP version 5.5.9 or newer
 * PHP Extensions:
     * [BCMath](https://php.net/bcmath)
     * [CURL](https://php.net/curl) (required, only if you use the curl network interface)

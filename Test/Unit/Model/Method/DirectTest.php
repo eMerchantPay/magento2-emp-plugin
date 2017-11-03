@@ -331,10 +331,8 @@ class DirectTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\AbstractMe
             ->method('setEmerchantPayCheckoutRedirectUrl')
             ->withAnyParameters();
 
-        $this->setExpectedException(
-            \Magento\Framework\Webapi\Exception::class,
-            $exceptionMessage
-        );
+        $this->expectException(\Magento\Framework\Webapi\Exception::class);
+        $this->expectExceptionMessage($exceptionMessage);
     }
 
     /**
@@ -615,17 +613,13 @@ class DirectTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\AbstractMe
             ->method('setEmerchantPayCheckoutRedirectUrl')
             ->with($redirectUrl);
 
-        $this->setExpectedException(
-            \Exception::class,
-            'Invalid 3D-Secure redirect URL'
-        );
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Invalid 3D-Secure redirect URL');
 
         $this->getPaymentMethodInstance()->setRedirectUrl($redirectUrl);
 
-        $this->setExpectedException(
-            \Exception::class,
-            'Empty 3D-Secure redirect URL'
-        );
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Empty 3D-Secure redirect URL');
 
         $this->getPaymentMethodInstance()->setRedirectUrl(null);
     }

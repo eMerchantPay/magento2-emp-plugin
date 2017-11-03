@@ -59,6 +59,18 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                 implode(
                     ',',
                     [
+                        GenesisTransactionTypes::ALIPAY,
+                        GenesisTransactionTypes::EZEEWALLET,
+                        GenesisTransactionTypes::IDEBIT_PAYIN,
+                        GenesisTransactionTypes::INPAY,
+                        GenesisTransactionTypes::INSTA_DEBIT_PAYIN,
+                        GenesisTransactionTypes::P24,
+                        GenesisTransactionTypes::PAYPAL_EXPRESS,
+                        GenesisTransactionTypes::TRUSTLY_SALE,
+                        GenesisTransactionTypes::WECHAT,
+                        GenesisTransactionTypes::PAYSEC_PAYIN,
+                        GenesisTransactionTypes::SDD_SALE,
+                        GenesisTransactionTypes::CITADEL_PAYIN,
                         GenesisTransactionTypes::AUTHORIZE,
                         GenesisTransactionTypes::AUTHORIZE_3D,
                         GenesisTransactionTypes::SALE,
@@ -78,6 +90,8 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         GenesisPaymentMethods::SAFETY_PAY,
                         GenesisPaymentMethods::TELEINGRESO,
                         GenesisPaymentMethods::TRUST_PAY,
+                        GenesisPaymentMethods::BCMC,
+                        GenesisPaymentMethods::MYBANK,
                         GenesisTransactionTypes::SOFORT,
                     ]
                 )
@@ -87,6 +101,18 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
 
         $this->assertEquals(
             [
+                GenesisTransactionTypes::ALIPAY,
+                GenesisTransactionTypes::EZEEWALLET,
+                GenesisTransactionTypes::IDEBIT_PAYIN,
+                GenesisTransactionTypes::INPAY,
+                GenesisTransactionTypes::INSTA_DEBIT_PAYIN,
+                GenesisTransactionTypes::P24,
+                GenesisTransactionTypes::PAYPAL_EXPRESS,
+                GenesisTransactionTypes::TRUSTLY_SALE,
+                GenesisTransactionTypes::WECHAT,
+                GenesisTransactionTypes::PAYSEC_PAYIN,
+                GenesisTransactionTypes::SDD_SALE,
+                GenesisTransactionTypes::CITADEL_PAYIN,
                 GenesisTransactionTypes::AUTHORIZE,
                 GenesisTransactionTypes::AUTHORIZE_3D,
                 GenesisTransactionTypes::SALE,
@@ -122,6 +148,12 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::TRUST_PAY,
+                        ],
+                        [
+                            'payment_method' => GenesisPaymentMethods::BCMC,
+                        ],
+                        [
+                            'payment_method' => GenesisPaymentMethods::MYBANK,
                         ]
                     ]
                 ],

@@ -27,7 +27,7 @@ use \Genesis\API\Constants\Transaction\Types as TransactionTypes;
  * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Direct\TransactionType
  * @package EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Direct
  */
-class TransactionTypeTest extends \PHPUnit_Framework_TestCase
+class TransactionTypeTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Direct\TransactionType::toOptionArray()

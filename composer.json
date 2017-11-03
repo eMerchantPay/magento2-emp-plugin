@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "eMerchantPay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.1.4",
+    "version": "1.1.6",
     "license": [
         "GPL-2.0"
     ],
@@ -14,8 +14,8 @@
         }
     ],
     "require": {
-        "php": "~5.5.0|~5.6.0|~7.0.0",
-        "genesisgateway/genesis_php": "1.4.*"
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*",
+        "genesisgateway/genesis_php": "1.8.3"
     },
     "require-dev": {
         "fzaninotto/faker": "1.*@stable"
@@ -39,6 +39,8 @@
         "refund",
         "void",
         "3d-secure",
+        "alipay",
+        "earthport",
         "neteller",
         "ezeewallet",
         "paybyvouchers",
@@ -47,7 +49,14 @@
         "ppro",
         "ideal",
         "cashu",
-        "elv",
+        "inpay",
+        "p24",
+        "paypal",
+        "paypal_express",
+        "paysec",
+        "trustly",
+        "trustly_sale",
+        "trustly_withdrawal",
         "eps",
         "giropay",
         "przelewy24",
@@ -55,11 +64,27 @@
         "safetypay",
         "teleingreso",
         "trustpay",
+        "bcmc",
+        "mybank",
         "webmoney",
         "poli",
+        "sdd",
+        "sct_payout",
+        "sdd_refund",
+        "sdd_recurring",
+        "idebit",
+        "idebit_payin",
+        "idebit_payout",
+        "insta_debit",
+        "insta_debit_payin",
+        "insta_debit_payout",
+        "citadel",
+        "citadel_payin",
+        "citadel_payout",
         "tc40",
         "fraud",
-        "chargeback"
+        "chargeback",
+        "wechat"
     ],
     "autoload": {
         "files": [

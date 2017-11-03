@@ -1,0 +1,179 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "50b373fd313749648295e78882beb706",
+    "packages": [
+        {
+            "name": "genesisgateway/genesis_php",
+            "version": "1.8.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/GenesisGateway/genesis_php.git",
+                "reference": "606b0d64a2af44cf37ad6aedbec3c0a0bf38a774"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/606b0d64a2af44cf37ad6aedbec3c0a0bf38a774",
+                "reference": "606b0d64a2af44cf37ad6aedbec3c0a0bf38a774",
+                "shasum": ""
+            },
+            "require": {
+                "ext-bcmath": "*",
+                "ext-curl": "*",
+                "ext-filter": "*",
+                "ext-hash": "*",
+                "ext-simplexml": "*",
+                "ext-xmlreader": "*",
+                "ext-xmlwriter": "*",
+                "php": ">=5.5.9"
+            },
+            "require-dev": {
+                "fzaninotto/faker": "1.*@stable",
+                "phpspec/phpspec": "2.*@stable"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Genesis": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP Client for Genesis Payment Processing Gateway",
+            "keywords": [
+                "3d-secure",
+                "POLi",
+                "Przelewy24",
+                "SDD",
+                "alipay",
+                "authorize",
+                "bcmc",
+                "capture",
+                "cashu",
+                "chargeback",
+                "citadel",
+                "citadel_payin",
+                "citadel_payout",
+                "credit_card",
+                "debit_card",
+                "e-commerce",
+                "earthport",
+                "eps",
+                "ezeewallet",
+                "fraud",
+                "genesis",
+                "genesisgateway",
+                "giropay",
+                "ideal",
+                "idebit",
+                "idebit_payin",
+                "idebit_payout",
+                "inpay",
+                "insta_debit",
+                "insta_debit_payin",
+                "insta_debit_payout",
+                "mastercard",
+                "mybank",
+                "neteller",
+                "p24",
+                "paybyvouchers",
+                "payment_gateway",
+                "payment_processing",
+                "payments",
+                "paypal",
+                "paypal_express",
+                "paysafecard",
+                "paysec",
+                "pci-dss",
+                "ppro",
+                "qiwi",
+                "recurring",
+                "refund",
+                "safetypay",
+                "sct_payout",
+                "sdd_recurring",
+                "sdd_refund",
+                "sofort",
+                "tc40",
+                "teleingreso",
+                "trustly",
+                "trustly_sale",
+                "trustly_withdrawal",
+                "trustpay",
+                "visa",
+                "void",
+                "webmoney",
+                "wechat"
+            ],
+            "time": "2017-10-06T08:34:56+00:00"
+        }
+    ],
+    "packages-dev": [
+        {
+            "name": "fzaninotto/faker",
+            "version": "v1.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fzaninotto/Faker.git",
+                "reference": "d3ed4cc37051c1ca52d22d76b437d14809fc7e0d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/d3ed4cc37051c1ca52d22d76b437d14809fc7e0d",
+                "reference": "d3ed4cc37051c1ca52d22d76b437d14809fc7e0d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.3.3 || ^7.0"
+            },
+            "require-dev": {
+                "ext-intl": "*",
+                "phpunit/phpunit": "^4.0 || ^5.0",
+                "squizlabs/php_codesniffer": "^1.5"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.8-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Faker\\": "src/Faker/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "François Zaninotto"
+                }
+            ],
+            "description": "Faker is a PHP library that generates fake data for you.",
+            "keywords": [
+                "data",
+                "faker",
+                "fixtures"
+            ],
+            "time": "2017-08-15T16:48:10+00:00"
+        }
+    ],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "fzaninotto/faker": 0
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "~5.5.0|~5.6.0|~7.0.0"
+    },
+    "platform-dev": []
+}

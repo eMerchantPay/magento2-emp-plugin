@@ -31,6 +31,6 @@ script:
 
   cd magento-root
 
-  composer require genesisgateway/genesis_php:1.8.3@stable fzaninotto/faker:1.*
+  composer require genesisgateway/genesis_php:1.9.* fzaninotto/faker:1.*
 
   php vendor/phpunit/phpunit/phpunit -c dev/tests/unit/phpunit.xml.dist app/code/EMerchantPay/Genesis/

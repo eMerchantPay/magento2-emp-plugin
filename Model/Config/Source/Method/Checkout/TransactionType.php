@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 eMerchantPay Ltd.
+ * Copyright (C) 2018 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,8 +12,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * @author      eMerchantPay
- * @copyright   2016 eMerchantPay Ltd.
+ * @author      emerchantpay
+ * @copyright   2018 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -65,7 +65,6 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
             ['value' => GenesisTransactionTypes::SALE_3D, 'label' => __('Sale (3D-Secure)')],
             ['value' => GenesisTransactionTypes::SDD_SALE, 'label' => __('SDD Sale')],
             ['value' => GenesisTransactionTypes::SOFORT, 'label' => __('SOFORT')],
-            ['value' => GenesisPaymentMethods::TELEINGRESO, 'label' => __('TeleIngreso')],
             ['value' => GenesisPaymentMethods::TRUST_PAY, 'label' => __('TrustPay')],
             ['value' => GenesisTransactionTypes::TRUSTLY_SALE, 'label' => __('Trustly Sale')],
             ['value' => GenesisTransactionTypes::WEBMONEY, 'label' => __('WebMoney')],

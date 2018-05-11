@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="eMerchantPay Gateway Module Coding Standards">
-    <description>Generally-applicable sniffs for eMerchantPay Gateway Module</description>
+<ruleset name="emerchantpay Gateway Module Coding Standards">
+    <description>Generally-applicable sniffs for emerchantpay Gateway Module</description>
 
     <rule ref="EcgM2"/>
 

@@ -1,21 +1,21 @@
 {
     "name": "emerchantpay/magento2-emp-plugin",
-    "description": "eMerchantPay Payment Gateway for Magento 2",
+    "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.1.6",
+    "version": "1.1.7",
     "license": [
         "GPL-2.0"
     ],
     "authors": [
         {
-            "name": "eMerchantPay",
+            "name": "emerchantpay",
             "email": "shopping_carts@emerchantpay.com",
             "homepage": "https://emerchantpay.com"
         }
     ],
     "require": {
         "php": "7.0.2|7.0.4|~7.0.6|7.1.*",
-        "genesisgateway/genesis_php": "1.8.3"
+        "genesisgateway/genesis_php": "1.9.*"
     },
     "require-dev": {
         "fzaninotto/faker": "1.*@stable"
@@ -62,7 +62,6 @@
         "przelewy24",
         "qiwi",
         "safetypay",
-        "teleingreso",
         "trustpay",
         "bcmc",
         "mybank",

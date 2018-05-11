@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2016 eMerchantPay Ltd.
+Copyright (C) 2018 emerchantpay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -12,13 +12,13 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-@author      eMerchantPay
-@copyright   2016 eMerchantPay Ltd.
+@author      emerchantpay
+@copyright   2018 emerchantpay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
     <group id="emerchantpay_checkout" translate="label comment" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
-        <label>eMerchantPay Checkout</label>
+        <label>emerchantpay Checkout</label>
         <frontend_model>EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\CheckoutPayment</frontend_model>
         <comment><![CDATA[Checkout payment method - receive credit-card payments, without the need of PCI-DSS certificate or HTTPS. Note: Upon checkout, the customer will be redirected to a secure payment form, located on our servers and we will notify you, once the payment reached a final status]]></comment>
         <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">

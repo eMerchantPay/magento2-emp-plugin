@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2016 eMerchantPay Ltd.
+Copyright (C) 2018 emerchantpay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -12,13 +12,13 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-@author      eMerchantPay
-@copyright   2016 eMerchantPay Ltd.
+@author      emerchantpay
+@copyright   2018 emerchantpay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
     <group id="emerchantpay_direct" translate="label comment" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
-        <label>eMerchantPay Direct</label>
+        <label>emerchantpay Direct</label>
         <frontend_model>EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\DirectPayment</frontend_model>
         <comment><![CDATA[Direct payment method - allow customers to enter their CreditCard information on your website. Note: You need PCI-DSS certificate in order to enable this payment method.]]></comment>
         <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">

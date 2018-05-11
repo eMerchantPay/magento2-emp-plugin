@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2016 eMerchantPay Ltd.
+Copyright (C) 2018 emerchantpay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -12,8 +12,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-@author      eMerchantPay
-@copyright   2016 eMerchantPay Ltd.
+@author      emerchantpay
+@copyright   2018 emerchantpay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Magento/Store/etc/config.xsd">
@@ -23,7 +23,7 @@ GNU General Public License for more details.
                 <active>0</active>
                 <model>EMerchantPay\Genesis\Model\Method\Direct</model>
                 <order_status>payment_review</order_status>
-                <title>eMerchantPay Direct</title>
+                <title>emerchantpay Direct</title>
                 <test_mode>1</test_mode>
                 <transaction_type>sale</transaction_type>
                 <allowspecific>0</allowspecific>
@@ -35,7 +35,7 @@ GNU General Public License for more details.
                 <active>0</active>
                 <model>EMerchantPay\Genesis\Model\Method\Checkout</model>
                 <order_status>payment_review</order_status>
-                <title>eMerchantPay Checkout</title>
+                <title>emerchantpay Checkout</title>
                 <test_mode>1</test_mode>
                 <transaction_types>sale</transaction_types>
                 <allowspecific>0</allowspecific>

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2016 eMerchantPay Ltd.
+ * Copyright (C) 2018 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,8 +12,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * @author      eMerchantPay
- * @copyright   2016 eMerchantPay Ltd.
+ * @author      emerchantpay
+ * @copyright   2018 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -88,7 +88,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         GenesisPaymentMethods::PRZELEWY24,
                         GenesisPaymentMethods::QIWI,
                         GenesisPaymentMethods::SAFETY_PAY,
-                        GenesisPaymentMethods::TELEINGRESO,
                         GenesisPaymentMethods::TRUST_PAY,
                         GenesisPaymentMethods::BCMC,
                         GenesisPaymentMethods::MYBANK,
@@ -142,9 +141,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::SAFETY_PAY,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::TELEINGRESO,
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::TRUST_PAY,

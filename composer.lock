@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7386cda41e73ba0d7eb7a9acea88598",
+    "content-hash": "d2792f13b805a0dbd9340e208f9c0ae1",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.9.3",
+            "version": "1.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "f6d7a85db86b2e1bdb047846badda10c4c334052"
+                "reference": "bbcba4386303587369575522dd5002f04110e9a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/f6d7a85db86b2e1bdb047846badda10c4c334052",
-                "reference": "f6d7a85db86b2e1bdb047846badda10c4c334052",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/bbcba4386303587369575522dd5002f04110e9a5",
+                "reference": "bbcba4386303587369575522dd5002f04110e9a5",
                 "shasum": ""
             },
             "require": {
@@ -52,11 +52,12 @@
                 "SDD",
                 "alipay",
                 "authorize",
+                "banco_do_brasil",
                 "bcmc",
+                "bitpay",
                 "capture",
                 "cashu",
                 "chargeback",
-                "citadel",
                 "citadel_payin",
                 "citadel_payout",
                 "container_store",
@@ -64,6 +65,7 @@
                 "debit_card",
                 "e-commerce",
                 "earthport",
+                "entercash",
                 "eps",
                 "ezeewallet",
                 "fashioncheque",
@@ -79,8 +81,10 @@
                 "insta_debit",
                 "insta_debit_payin",
                 "insta_debit_payout",
+                "instant_transfer",
                 "intersolve",
                 "mastercard",
+                "multibanco",
                 "mybank",
                 "neteller",
                 "p24",
@@ -92,6 +96,7 @@
                 "paypal_express",
                 "paysafecard",
                 "paysec",
+                "payu",
                 "pci-dss",
                 "ppro",
                 "qiwi",
@@ -110,24 +115,25 @@
                 "visa",
                 "void",
                 "webmoney",
-                "wechat"
+                "wechat",
+                "zimpler"
             ],
-            "time": "2018-04-12T13:35:57+00:00"
+            "time": "2019-02-26T09:33:51+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "fzaninotto/faker",
-            "version": "v1.7.1",
+            "version": "v1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fzaninotto/Faker.git",
-                "reference": "d3ed4cc37051c1ca52d22d76b437d14809fc7e0d"
+                "reference": "f72816b43e74063c8b10357394b6bba8cb1c10de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/d3ed4cc37051c1ca52d22d76b437d14809fc7e0d",
-                "reference": "d3ed4cc37051c1ca52d22d76b437d14809fc7e0d",
+                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/f72816b43e74063c8b10357394b6bba8cb1c10de",
+                "reference": "f72816b43e74063c8b10357394b6bba8cb1c10de",
                 "shasum": ""
             },
             "require": {
@@ -135,7 +141,7 @@
             },
             "require-dev": {
                 "ext-intl": "*",
-                "phpunit/phpunit": "^4.0 || ^5.0",
+                "phpunit/phpunit": "^4.8.35 || ^5.7",
                 "squizlabs/php_codesniffer": "^1.5"
             },
             "type": "library",
@@ -164,7 +170,7 @@
                 "faker",
                 "fixtures"
             ],
-            "time": "2017-08-15T16:48:10+00:00"
+            "time": "2018-07-12T10:23:15+00:00"
         }
     ],
     "aliases": [],

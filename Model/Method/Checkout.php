@@ -24,6 +24,8 @@ use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
 use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
 use Genesis\API\Request;
+use Genesis\Genesis;
+use Magento\Customer\Api\Data\CustomerInterface;
 
 /**
  * Checkout Payment Method Model Class
@@ -34,7 +36,9 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
 {
     use \EMerchantPay\Genesis\Model\Traits\OnlinePaymentMethod;
 
-    const CODE = 'emerchantpay_checkout';
+    const CODE                     = 'emerchantpay_checkout';
+    const CUSTOMER_CONSUMER_ID_KEY = 'consumer_id';
+
     /**
      * Checkout Method Code
      */
@@ -51,8 +55,11 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     protected $_canAuthorize                = true;
     protected $_isInitializeNeeded          = false;
 
+    protected $_customerRepositoryInterface;
+
     /**
      * Checkout constructor.
+     *
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\App\Action\Context $actionContext
      * @param \Magento\Framework\Registry $registry
@@ -64,9 +71,12 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
+     * @param \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
+     *
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
         \Magento\Framework\Model\Context $context,
@@ -80,6 +90,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
+        \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
@@ -99,11 +110,12 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $data
         );
 
-        $this->_actionContext   = $actionContext;
-        $this->_storeManager    = $storeManager;
-        $this->_checkoutSession = $checkoutSession;
-        $this->_moduleHelper    = $moduleHelper;
-        $this->_configHelper    =
+        $this->_actionContext               = $actionContext;
+        $this->_storeManager                = $storeManager;
+        $this->_checkoutSession             = $checkoutSession;
+        $this->_moduleHelper                = $moduleHelper;
+        $this->_customerRepositoryInterface = $customerRepositoryInterface;
+        $this->_configHelper                =
             $this->getModuleHelper()->getMethodConfig(
                 $this->getCode()
             );
@@ -250,7 +262,11 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      * Prepares Genesis Request with basic request data
      *
      * @param array $data
-     * @return \Genesis\Genesis
+     *
+     * @return Genesis
+     * @throws \Genesis\Exceptions\InvalidMethod
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     protected function prepareGenesisWPFRequest($data)
     {
@@ -282,6 +298,14 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 ->setLanguage(
                     $data['order']['language']
                 );
+
+        if ($this->getConfigHelper()->isTokenizationEnabled()) {
+            $this->prepareTokenization(
+                $genesis,
+                $data['order']['customer']['id'],
+                $data['order']['customer']['email']
+            );
+        }
 
         $genesis
             ->request()
@@ -358,6 +382,85 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
+     * @param $customerId
+     * @param $customerEmail
+     *
+     * @return string|null
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    protected function getGatewayConsumerIdFor($customerId, $customerEmail)
+    {
+        if ($customerId === null) {
+            return null;
+        }
+        $customer = $this->_customerRepositoryInterface->getById($customerId);
+        $attr = $this->getCustomAttributeConsumerId($customer);
+
+        return !empty($attr[$customerEmail]) ? $attr[$customerEmail] : null;
+    }
+
+    /**
+     * @param CustomerInterface $customer
+     *
+     * @return array
+     */
+    protected function getCustomAttributeConsumerId(CustomerInterface $customer)
+    {
+        $attr = $customer->getCustomAttribute(self::CUSTOMER_CONSUMER_ID_KEY);
+        if (empty($attr)) {
+            return [];
+        }
+        $attr = json_decode($attr->getValue(), true);
+
+        return is_array($attr) ? $attr : [];
+    }
+
+    /**
+     * @param $customerId
+     * @param $customerEmail
+     * @param $consumerId
+     *
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws \Magento\Framework\Exception\State\InputMismatchException
+     */
+    protected function setGatewayConsumerIdFor($customerId, $customerEmail, $consumerId)
+    {
+        if ($customerId === null) {
+            return;
+        }
+        $customer = $this->_customerRepositoryInterface->getById($customerId);
+
+        $attr = $this->getCustomAttributeConsumerId($customer);
+        $attr[$customerEmail] = $consumerId;
+
+        $customer->setCustomAttribute(self::CUSTOMER_CONSUMER_ID_KEY, json_encode($attr));
+
+        $this->_customerRepositoryInterface->save($customer);
+    }
+
+    /**
+     * @param Genesis $genesis
+     * @param $customerId
+     * @param $customerEmail
+     *
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    protected function prepareTokenization(Genesis $genesis, $customerId, $customerEmail)
+    {
+        $consumerId = $this->getGatewayConsumerIdFor($customerId, $customerEmail);
+
+        if ($consumerId) {
+            $genesis->request()->setConsumerId($consumerId);
+        }
+
+        $genesis->request()->setRememberCard(true);
+    }
+
+    /**
      * Order Payment
      * @param \Magento\Payment\Model\InfoInterface $payment
      * @param float $amount
@@ -390,6 +493,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                     $order
                 ),
                 'customer' => [
+                    'id'    => $order->getCustomerId(),
                     'email' => $this->getCheckoutSession()->getQuote()->getCustomerEmail(),
                 ],
                 'billing' =>
@@ -450,6 +554,16 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 $payment,
                 $responseObject
             );
+
+            if ($this->getConfigHelper()->isTokenizationEnabled() &&
+                !empty($responseObject->consumer_id)
+            ) {
+                $this->setGatewayConsumerIdFor(
+                    $data['order']['customer']['id'],
+                    $data['order']['customer']['email'],
+                    $responseObject->consumer_id
+                );
+            }
 
             $this->setRedirectUrl(
                 $responseObject->redirect_url

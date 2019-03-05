@@ -460,7 +460,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
                     ->setShippingState(
                         $shipping->getRegionCode()
                     )
-                    ->setShippinCountry(
+                    ->setShippingCountry(
                         $shipping->getCountryId()
                     );
         }

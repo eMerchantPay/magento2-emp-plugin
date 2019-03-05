@@ -58,7 +58,7 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
                 ['value' => GenesisTransactionTypes::P24, 'label' => __('P24')],
                 ['value' => GenesisTransactionTypes::PAYPAL_EXPRESS, 'label' => __('PayPal Express')],
                 ['value' => GenesisTransactionTypes::PAYSAFECARD, 'label' => __('PaySafeCard')],
-                ['value' => GenesisTransactionTypes::PAYSEC_PAYIN, 'label' => __('PaySec')],
+                ['value' => GenesisTransactionTypes::ONLINE_BANKING_PAYIN, 'label' => __('OnlineBanking')],
                 ['value' => GenesisTransactionTypes::PAYBYVOUCHER_SALE, 'label' => __('PayByVoucher (Sale)')],
                 ['value' => GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY, 'label' => __('PayByVoucher (oBeP)')],
                 ['value' => GenesisPaymentMethods::PRZELEWY24, 'label' => __('Przelewy24')],

@@ -1065,7 +1065,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY,
             GenesisTransactionTypes::PAYPAL_EXPRESS,
             GenesisTransactionTypes::PAYSAFECARD,
-            GenesisTransactionTypes::PAYSEC_PAYIN,
+            GenesisTransactionTypes::ONLINE_BANKING_PAYIN,
             GenesisTransactionTypes::PPRO,
             GenesisTransactionTypes::SALE,
             GenesisTransactionTypes::SALE_3D,

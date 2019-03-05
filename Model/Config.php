@@ -221,6 +221,19 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     }
 
     /**
+     * Check whether tokenization is enabled
+     *
+     * @param string $methodCode Method code
+     * @return bool
+     */
+    public function isTokenizationEnabled($methodCode = null)
+    {
+        $methodCode = $methodCode?: $this->_methodCode;
+
+        return $this->isFlagChecked($methodCode, 'tokenization');
+    }
+
+    /**
      * Check if Method Bool Setting Checked
      * @param string|null $methodCode
      * @param string $name

@@ -1,7 +1,7 @@
 emerchantpay Gateway Module for Magento 2 CE
 =============================
 
-[![Build Status](https://img.shields.io/travis/emerchantpay/magento2-emp-plugin.svg?style=flat)](https://travis-ci.org/emerchantpay/magento2-emp-plugin)
+[![Build Status](https://img.shields.io/travis/eMerchantPay/magento2-emp-plugin.svg?style=flat)](https://travis-ci.org/eMerchantPay/magento2-emp-plugin)
 [![Latest Stable Version](https://poser.pugx.org/emerchantpay/magento2-emp-plugin/v/stable)](https://packagist.org/packages/emerchantpay/magento2-emp-plugin)
 [![Total Downloads](https://img.shields.io/packagist/dt/emerchantpay/magento2-emp-plugin.svg?style=flat)](https://packagist.org/packages/emerchantpay/magento2-emp-plugin)
 [![Software License](https://img.shields.io/badge/license-GPL-green.svg?style=flat)](http://opensource.org/licenses/gpl-2.0.php)
@@ -12,7 +12,7 @@ Requirements
 ------------
 
 * Magento 2 Community Edition 2.2.x (Tested upto __2.2.3__)
-* [GenesisPHP v1.12.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.12.0) - (Integrated in Module)
+* [GenesisPHP v1.14.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.14.0) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento 2 __Community Edition__, it may not work
@@ -52,7 +52,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.12.0@stable
+    $ composer require genesisgateway/genesis_php:1.14.0@stable
     ```
 
 * Enable Payment Module 

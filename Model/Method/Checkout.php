@@ -21,6 +21,7 @@ namespace EMerchantPay\Genesis\Model\Method;
 
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
+use Genesis\API\Constants\Transaction\States;
 use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
 use Genesis\API\Request;
@@ -453,11 +454,52 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
     {
         $consumerId = $this->getGatewayConsumerIdFor($customerId, $customerEmail);
 
+        if (empty($consumerId)) {
+            $consumerId = $this->retrieveConsumerIdFromEmail($customerEmail);
+        }
+
         if ($consumerId) {
             $genesis->request()->setConsumerId($consumerId);
         }
 
         $genesis->request()->setRememberCard(true);
+    }
+
+    /**
+     * @param string $email
+     *
+     * @return null|int
+     */
+    protected function retrieveConsumerIdFromEmail($email)
+    {
+        try {
+            $genesis = new Genesis('NonFinancial\Consumers\Retrieve');
+            $genesis->request()->setEmail($email);
+
+            $genesis->execute();
+
+            $response = $genesis->response()->getResponseObject();
+
+            if ($this->isErrorResponse($response)) {
+                return null;
+            }
+
+            return $response->consumer_id;
+        } catch (\Exception $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * @param $response
+     *
+     * @return bool
+     */
+    protected function isErrorResponse($response)
+    {
+        $state = new States($response->status);
+
+        return $state->isError();
     }
 
     /**
@@ -555,9 +597,7 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
                 $responseObject
             );
 
-            if ($this->getConfigHelper()->isTokenizationEnabled() &&
-                !empty($responseObject->consumer_id)
-            ) {
+            if (!empty($responseObject->consumer_id)) {
                 $this->setGatewayConsumerIdFor(
                     $data['order']['customer']['id'],
                     $data['order']['customer']['email'],

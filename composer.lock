@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "d2792f13b805a0dbd9340e208f9c0ae1",
+    "content-hash": "ea29551756fb60bcd322f21387e6f205",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.12.0",
+            "version": "1.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "bbcba4386303587369575522dd5002f04110e9a5"
+                "reference": "b2a40413fd50357f41015eb05db9af305a3f4a6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/bbcba4386303587369575522dd5002f04110e9a5",
-                "reference": "bbcba4386303587369575522dd5002f04110e9a5",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/b2a40413fd50357f41015eb05db9af305a3f4a6f",
+                "reference": "b2a40413fd50357f41015eb05db9af305a3f4a6f",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +118,7 @@
                 "wechat",
                 "zimpler"
             ],
-            "time": "2019-02-26T09:33:51+00:00"
+            "time": "2019-04-10T11:33:49+00:00"
         }
     ],
     "packages-dev": [

@@ -33,9 +33,8 @@ use Magento\Customer\Api\Data\CustomerInterface;
  * Class Checkout
  * @package EMerchantPay\Genesis\Model\Method
  */
-class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
+class Checkout extends Base
 {
-    use \EMerchantPay\Genesis\Model\Traits\OnlinePaymentMethod;
 
     const CODE                     = 'emerchantpay_checkout';
     const CUSTOMER_CONSUMER_ID_KEY = 'consumer_id';
@@ -45,28 +44,11 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
      */
     protected $_code = self::CODE;
 
-    protected $_canOrder                    = true;
-    protected $_isGateway                   = true;
-    protected $_canCapture                  = true;
-    protected $_canCapturePartial           = true;
-    protected $_canRefund                   = true;
-    protected $_canCancelInvoice            = true;
-    protected $_canVoid                     = true;
-    protected $_canRefundInvoicePartial     = true;
-    protected $_canAuthorize                = true;
-    protected $_isInitializeNeeded          = false;
-
-    protected $_customerRepositoryInterface;
-
     /**
      * Checkout constructor.
-     *
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\App\Action\Context $actionContext
      * @param \Magento\Framework\Registry $registry
-     * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
-     * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
-     * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \EMerchantPay\Genesis\Logger\Logger $loggerHelper
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
@@ -83,9 +65,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         \Magento\Framework\Model\Context $context,
         \Magento\Framework\App\Action\Context $actionContext,
         \Magento\Framework\Registry $registry,
-        \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory,
-        \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
-        \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \EMerchantPay\Genesis\Logger\Logger  $loggerHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
@@ -101,9 +80,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
         parent::__construct(
             $context,
             $registry,
-            $extensionFactory,
-            $customAttributeFactory,
-            $paymentData,
             $scopeConfig,
             $loggerHelper,
             $resource,
@@ -120,15 +96,6 @@ class Checkout extends \Magento\Payment\Model\Method\AbstractMethod
             $this->getModuleHelper()->getMethodConfig(
                 $this->getCode()
             );
-    }
-
-    /**
-     * Get custom Logger
-     * @return \Psr\Log\LoggerInterface
-     */
-    protected function getLogger()
-    {
-        return $this->logger->getLogger();
     }
 
     /**

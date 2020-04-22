@@ -135,7 +135,18 @@ GNU General Public License for more details.
             </depends>
             <can_be_empty>0</can_be_empty>
         </field>
-        <field id="min_order_total" translate="label" type="text" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="cctypes" translate="label" type="multiselect" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Allow Specific Credit Card Types</label>
+            <comment><![CDATA[Select allowed credit card type]]></comment>
+            <toottip><![CDATA[Hint: You should have in mind that, you'd better allow only the types, which can be processed from your configured Merchant-Terminals.]]></toottip>
+            <config_path>payment/emerchantpay_direct/cctypes</config_path>
+            <source_model>Magento\Payment\Model\Source\Cctype</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+            <can_be_empty>0</can_be_empty>
+        </field>
+        <field id="min_order_total" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Minimum Order Total</label>
             <config_path>payment/emerchantpay_direct/min_order_total</config_path>
             <validate>validate-zero-or-greater</validate>
@@ -144,7 +155,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="max_order_total" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="max_order_total" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Maximum Order Total</label>
             <config_path>payment/emerchantpay_direct/max_order_total</config_path>
             <validate>validate-zero-or-greater</validate>
@@ -153,7 +164,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="sort_order" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sort_order" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Sort Order</label>
             <config_path>payment/emerchantpay_direct/sort_order</config_path>
             <frontend_class>validate-number</frontend_class>

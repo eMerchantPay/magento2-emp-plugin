@@ -28,7 +28,7 @@ GNU General Public License for more details.
                 <transaction_type>sale</transaction_type>
                 <allowspecific>0</allowspecific>
                 <allow_specific_currency>0</allow_specific_currency>
-                <cctypes>AE,VI,MC,DI,JCB</cctypes>
+                <cctypes>AE,VI,MC,DI,JCB,SM,DN,SO,MI,MD,HC,ELO,AU,OT</cctypes>
                 <group>emerchantpay</group>
             </emerchantpay_direct>
             <emerchantpay_checkout>

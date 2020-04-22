@@ -20,17 +20,18 @@
 namespace EMerchantPay\Genesis\Model\Method;
 
 use Magento\Framework\DataObject;
+use Magento\Payment\Model\InfoInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 
 /**
  * Direct Payment Method Model Class
  * Class Direct
  * @package EMerchantPay\Genesis\Model\Method
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
-class Direct extends \Magento\Payment\Model\Method\Cc
+class Direct extends Base
 {
-    use \EMerchantPay\Genesis\Model\Traits\OnlinePaymentMethod;
-
     const CODE = 'emerchantpay_direct';
 
     /**
@@ -38,54 +39,32 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      */
     protected $_code = self::CODE;
 
-    protected $_canOrder = true;
-    protected $_isGateway = true;
-    protected $_canAuthorize = true;
-    protected $_canCapture = true;
-    protected $_canCapturePartial = true;
-    protected $_canRefund = true;
-    protected $_canRefundInvoicePartial = true;
-    protected $_canCancelInvoice = true;
-    protected $_canVoid = true;
-
-    protected $_isInitializeNeeded = false;
-
-    protected $_canFetchTransactionInfo = true;
-    protected $_canSaveCc = false;
-
     /**
      * Direct constructor.
+     *
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\App\Action\Context $actionContext
      * @param \Magento\Framework\Registry $registry
-     * @param \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory
-     * @param \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory
-     * @param \Magento\Payment\Helper\Data $paymentData
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \EMerchantPay\Genesis\Logger\Logger $loggerHelper
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
-     * @param \Magento\Framework\Module\ModuleListInterface $moduleList
-     * @param \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
+     *
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function __construct(
         \Magento\Framework\Model\Context $context,
         \Magento\Framework\App\Action\Context $actionContext,
         \Magento\Framework\Registry $registry,
-        \Magento\Framework\Api\ExtensionAttributesFactory $extensionFactory,
-        \Magento\Framework\Api\AttributeValueFactory $customAttributeFactory,
-        \Magento\Payment\Helper\Data $paymentData,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \EMerchantPay\Genesis\Logger\Logger $loggerHelper,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
-        \Magento\Framework\Module\ModuleListInterface $moduleList,
-        \Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
@@ -95,13 +74,8 @@ class Direct extends \Magento\Payment\Model\Method\Cc
         parent::__construct(
             $context,
             $registry,
-            $extensionFactory,
-            $customAttributeFactory,
-            $paymentData,
             $scopeConfig,
             $loggerHelper,
-            $moduleList,
-            $localeDate,
             $resource,
             $resourceCollection,
             $data
@@ -160,15 +134,6 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     }
 
     /**
-     * Get custom Logger
-     * @return \Psr\Log\LoggerInterface
-     */
-    protected function getLogger()
-    {
-        return $this->logger->getLogger();
-    }
-
-    /**
      * Check whether we're doing 3D transactions,
      * based on the module configuration
      *
@@ -187,6 +152,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      *
      * @param \Magento\Payment\Model\InfoInterface $payment
      * @param float $amount
+     *
      * @return $this
      */
     public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
@@ -199,6 +165,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      *
      * @param \Magento\Payment\Model\InfoInterface $payment
      * @param float $amount
+     *
      * @return $this
      */
     public function capture(\Magento\Payment\Model\InfoInterface $payment, $amount)
@@ -238,6 +205,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      * Assign data to info model instance
      *
      * @param \Magento\Framework\DataObject|mixed $data
+     *
      * @return $this
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -282,6 +250,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      * Determines if the CC Details are supplied to the Payment Info Instance
      *
      * @param \Magento\Payment\Model\InfoInterface $info
+     *
      * @return bool
      */
     protected function getInfoInstanceHasCcDetails(\Magento\Payment\Model\InfoInterface $info)
@@ -295,7 +264,9 @@ class Direct extends \Magento\Payment\Model\Method\Cc
 
     /**
      * Builds full Request Class Name by Transaction Type
+     *
      * @param string $transactionType
+     *
      * @return string
      */
     protected function getTransactionTypeRequestClassName($transactionType)
@@ -316,6 +287,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
      *
      * @param \Magento\Payment\Model\InfoInterface $payment
      * @param $amount
+     *
      * @return $this
      * @throws \Exception
      * @throws \Genesis\Exceptions\ErrorAPI
@@ -328,7 +300,7 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     {
         $transactionType = $this->getConfigTransactionType();
 
-        $isThreeDEnabled =  $this->isThreeDEnabled();
+        $isThreeDEnabled = $this->isThreeDEnabled();
 
         $order = $payment->getOrder();
 
@@ -562,29 +534,144 @@ class Direct extends \Magento\Payment\Model\Method\Cc
     }
 
     /**
+     * Validate payment method information object
+     *
+     * @return $this
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @SuppressWarnings(PHPMD)
+     * @codingStandardsIgnoreStart
+     */
+    public function validate()
+    {
+        /*
+         * calling parent validate function
+         */
+        parent::validate();
+
+        $info           = $this->getInfoInstance();
+        $availableTypes = explode(',', $this->getConfigData('cctypes'));
+        $ccNumber       = $info->getCcNumber();
+
+        // remove credit card number delimiters such as "-" and space
+        $ccNumber = preg_replace('/[\-\s]+/', '', $ccNumber);
+        $info->setCcNumber($ccNumber);
+
+        if (!$this->validateCcNumOther($ccNumber)) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Invalid Credit Card Number')
+            );
+        }
+
+        if (!in_array($info->getCcType(), $availableTypes)) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('This credit card type is not allowed for this payment method.')
+            );
+        }
+
+        if (!$this->_validateExpDate($info->getCcExpYear(), $info->getCcExpMonth())) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Please enter a valid credit card expiration date.')
+            );
+        }
+
+        if (preg_match('/^\d+$/', $this->getCcNumber())) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Invalid Card Verification Number')
+            );
+        }
+
+        return $this;
+        // @codingStandardsIgnoreEnd
+    }
+
+    /**
+     * @return bool
+     * @api
+     */
+    public function hasVerification()
+    {
+        $configData = $this->getConfigData('useccv');
+        if ($configData === null) {
+            return true;
+        }
+
+        return (bool)$configData;
+    }
+
+    /**
+     * @param string $expYear
+     * @param string $expMonth
+     *
+     * @return bool
+     * @codingStandardsIgnoreStart
+     */
+    protected function _validateExpDate($expYear, $expMonth)
+    {
+        $date = new \DateTime();
+        if (!$expYear || !$expMonth || (int)$date->format('Y') > $expYear
+            || (int)$date->format('Y') == $expYear && (int)$date->format('m') > $expMonth
+        ) {
+            return false;
+        }
+
+        return true;
+        // @codingStandardsIgnoreEnd
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return bool
+     * @api
+     */
+    public function otherCcType($type)
+    {
+        return $type == 'OT';
+    }
+
+    /**
+     * Other credit cart type number validation
+     *
+     * @param string $ccNumber
+     *
+     * @return bool
+     * @api
+     */
+    public function validateCcNumOther($ccNumber)
+    {
+        return preg_match('/^\\d+$/', $ccNumber);
+    }
+
+    /**
      * Determines method's availability based on config data and quote amount
      *
      * @param \Magento\Quote\Api\Data\CartInterface|null $quote
+     *
      * @return bool
      */
     public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
     {
-        return parent::isAvailable($quote) &&
-            $this->getConfigHelper()->isMethodAvailable() &&
-            $this->getModuleHelper()->isStoreSecure();
+        return $this->getConfigData('cctypes', $quote ? $quote->getStoreId() : null) &&
+               parent::isAvailable($quote) &&
+               $this->getConfigHelper()->isMethodAvailable() &&
+               $this->getModuleHelper()->isStoreSecure();
     }
 
     /**
-     * Checks base currency against the allowed currency
+     * @param InfoInterface $payment
+     * @param float $amount
      *
-     * @param string $currencyCode
-     * @return bool
+     * @return bool|Base
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @SuppressWarnings(PHPMD)
+     * @codingStandardsIgnoreStart
      */
-    public function canUseForCurrency($currencyCode)
+    public function order(InfoInterface $payment, $amount)
     {
-        return $this->getModuleHelper()->isCurrencyAllowed(
-            $this->getCode(),
-            $currencyCode
-        );
+        if (!$this->canReviewPayment()) {
+            throw new \Magento\Framework\Exception\LocalizedException(__('The order action is unavailable.'));
+        }
+        return false;
+        // @codingStandardsIgnoreEnd
     }
 }

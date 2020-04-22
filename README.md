@@ -11,8 +11,8 @@ This is a Payment Module for Magento 2 Community Edition, that gives you the abi
 Requirements
 ------------
 
-* Magento 2 Community Edition 2.2.x (Tested upto __2.2.3__)
-* [GenesisPHP v1.14.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.14.0) - (Integrated in Module)
+* Magento 2 Community Edition 2.2.x (Tested upto __2.3.4__)
+* [GenesisPHP v1.18.2](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.2) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento 2 __Community Edition__, it may not work

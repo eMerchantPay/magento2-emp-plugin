@@ -50,7 +50,10 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
         );
 
         if (isset($responseObject->payment_transaction)) {
-            $payment_transaction = $responseObject->payment_transaction;
+            $payment_transaction = $this->getModuleHelper()->populatePaymentTransaction(
+                $responseObject,
+                $payment->getEntityId()
+            );
 
             $payment
                 ->setLastTransId(

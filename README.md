@@ -52,7 +52,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.14.0@stable
+    $ composer require genesisgateway/genesis_php:1.18.2@stable
     ```
 
 * Enable Payment Module 

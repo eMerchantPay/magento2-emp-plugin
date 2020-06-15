@@ -1076,4 +1076,87 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         return in_array($transactionType, $captureNotificationTransactions);
     }
+
+    /**
+     * Extract the payment transaction object from Genesis Response
+     *
+     * @param \stdClass $responseObject
+     * @param int $payment_id
+     *
+     * @return \stdClass
+     */
+    public function populatePaymentTransaction($responseObject, $payment_id)
+    {
+        if (isset($responseObject->payment_transaction->unique_id)) {
+            return $responseObject->payment_transaction;
+        }
+
+        if (count($responseObject->payment_transaction) > 1) {
+            $paymentTransactions = $responseObject->payment_transaction;
+            $lastTransaction     = $this->getLastPaymentTransaction(
+                $payment_id
+            );
+
+            if (!isset($lastTransaction)) {
+                return $paymentTransactions[0];
+            }
+
+            foreach ($paymentTransactions as $paymentTransaction) {
+                if ($paymentTransaction->unique_id == $lastTransaction->getParentTxnId()) {
+                    return $paymentTransaction;
+                }
+            }
+
+            return $paymentTransactions[0];
+        }
+    }
+
+    /**
+     * Find last Payment TransactionFind Payment Transaction per Field Value
+     *
+     * @param string $fieldValue
+     * @param string $fieldName
+     *
+     * @return null|\Magento\Sales\Model\Order\Payment\Transaction
+     */
+    public function getLastPaymentTransaction($fieldValue, $fieldName = 'payment_id')
+    {
+        if (!isset($fieldValue) || empty($fieldValue)) {
+            return null;
+        }
+
+        $transactionBuilder = $this->getObjectManager()->create(
+            "\\Magento\\Sales\\Model\\Order\\Payment\\Transaction\\Repository"
+        );
+
+        $searchBuilder = $this->getObjectManager()->create("\\Magento\\Framework\\Api\\SearchCriteriaBuilder");
+        $filterBuilder = $this->getObjectManager()->create("\\Magento\\Framework\\Api\\FilterBuilder");
+        $sortBuilder   = $this->getObjectManager()->create("\\Magento\\Framework\\Api\\SortOrder");
+
+        $filters[] = $filterBuilder
+            ->setField($fieldName)
+            ->setValue($fieldValue)
+            ->create();
+
+        $orderCriteria = $sortBuilder
+            ->setField("transaction_id")
+            ->setDirection("DESC");
+
+        $searchCriteria = $searchBuilder
+            ->addFilters($filters)
+            ->setPageSize(1)
+            ->setSortOrders([$orderCriteria])
+            ->create();
+
+        /** @var \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\Collection $transactionList */
+        $transactionList = $transactionBuilder->getList($searchCriteria);
+
+        if ($transactionList->getSize()) {
+            /** @var \Magento\Sales\Model\Order\Payment\Transaction $trx */
+            $transaction = $transactionList->getLastItem();
+            return $transaction;
+        }
+
+        return null;
+    }
 }

@@ -55,6 +55,11 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 $payment->getEntityId()
             );
 
+            $this->createIpnComment(
+                $this->getTransactionMessage($payment_transaction),
+                true
+            );
+
             $payment
                 ->setLastTransId(
                     $payment_transaction->unique_id
@@ -79,9 +84,7 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                     )
                 )
                 ->setPreparedMessage(
-                    $this->createIpnComment(
-                        $payment_transaction->message
-                    )
+                    __('Module') . ' ' . $this->getConfigHelper()->getCheckoutTitle()
                 )
                 ->resetTransactionAdditionalInfo(
 
@@ -92,10 +95,12 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 $payment_transaction
             );
 
-            $this->registerPaymentNotification(
-                $payment,
-                $payment_transaction
-            );
+            if (\Genesis\API\Constants\Transaction\States::APPROVED == $payment_transaction->status) {
+                $this->registerPaymentNotification(
+                    $payment,
+                    $payment_transaction
+                );
+            }
 
             $payment->save();
         }

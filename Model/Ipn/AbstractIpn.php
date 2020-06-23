@@ -299,4 +299,38 @@ abstract class AbstractIpn
 
         return !in_array($responseObject->transaction_type, $voidableTransactions);
     }
+
+    /**
+     * Extract the Message from Genesis response
+     *
+     * @param \stdClass $transactionResponse
+     *
+     * @return string
+     */
+    protected function getTransactionMessage($transactionResponse)
+    {
+        $uniqueId          = $transactionResponse->unique_id;
+        $transactionStatus = $transactionResponse->status;
+        $additionalNotes   = isset($transactionResponse->message) ? "({$transactionResponse->message})" : '';
+        $transactionType   = isset($transactionResponse->transaction_type) ?
+            $transactionResponse->transaction_type : '';
+
+        $messageArray = [
+            __('Module'),
+            $this->getConfigHelper()->getCheckoutTitle(),
+            __('Notification Received'),
+            'UniqueID',
+            $uniqueId,
+            __('Transaction type'),
+            strtoupper($transactionType),
+            ' - ',
+            strtoupper($transactionStatus)
+        ];
+
+        if (!empty($additionalNotes)) {
+            array_push($messageArray, $additionalNotes);
+        }
+
+        return implode(' ', $messageArray);
+    }
 }

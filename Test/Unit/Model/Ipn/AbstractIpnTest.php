@@ -20,6 +20,7 @@
 namespace EMerchantPay\Genesis\Test\Unit\Model\Ipn;
 
 use Magento\Framework\App\Action\Context;
+use Magento\Sales\Model\Order\Status\History;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
@@ -217,7 +218,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
         $orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->setMethods(['loadByIncrementId','getId','getPayment'])
+            ->setMethods(['loadByIncrementId','getId','getPayment', 'addStatusHistoryComment'])
             ->getMock();
 
         $orderMock->expects(self::atLeastOnce())
@@ -233,7 +234,30 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
             ->with($incrementId)
                 ->willReturn($orderMock);
 
+        $orderMock->expects(self::once())
+            ->method('addStatusHistoryComment')
+                ->willReturn($this->getOrderStatusHistoryMock());
+
         return $orderMock;
+    }
+
+    /**
+     * Get Mock for OrderStatusHistory
+     *
+     * @return \Magento\Sales\Model\Order\Status\History|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected function getOrderStatusHistoryMock()
+    {
+        $statusHistory = $this->getMockBuilder(History::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['setIsCustomerNotified'])
+            ->getMock();
+
+        $statusHistory->expects(self::once())
+            ->method('setIsCustomerNotified')
+                ->willReturnSelf();
+
+        return $statusHistory;
     }
 
     /**
@@ -257,6 +281,46 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
                 break;
         }
         return $result;
+    }
+
+    /**
+     * @param \stdClass $responseObject
+     * @return bool
+     */
+    protected function getShouldSetCurrentTranPending($responseObject)
+    {
+        return
+            $responseObject->status != \Genesis\API\Constants\Transaction\States::APPROVED;
+    }
+
+    /**
+     * Get if Authorize or Capture event should be executed
+     *
+     * @param $status
+     *
+     * @return \PHPUnit\Framework\MockObject\Matcher\InvokedCount
+     */
+    protected function getShouldExecuteAuthoirizeCaptureEvent($status)
+    {
+        if (\Genesis\API\Constants\Transaction\States::APPROVED == $status) {
+            return self::once();
+        }
+
+        return self::never();
+    }
+
+    /**
+     * @param \stdClass $responseObject
+     * @return bool
+     */
+    protected function getShouldCloseCurrentTransaction($responseObject)
+    {
+        $voidableTransactions = [
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D
+        ];
+
+        return !in_array($responseObject->transaction_type, $voidableTransactions);
     }
 
     /**
@@ -312,7 +376,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     {
         $this->configHelperMock = $this->getMockBuilder('EMerchantPay\Genesis\Model\Config')
             ->disableOriginalConstructor()
-            ->setMethods(['initGatewayClient', 'initReconciliation'])
+            ->setMethods(['initGatewayClient', 'initReconciliation', 'getCheckoutTitle'])
             ->getMock();
 
         $this->configHelperMock->expects(self::once())
@@ -322,6 +386,10 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
         $this->configHelperMock->expects(self::never())
             ->method('initReconciliation')
                 ->willReturn($this->getNotificationMock());
+
+        $this->configHelperMock->expects(self::atLeastOnce())
+            ->method('getCheckoutTitle')
+                ->willReturn('sample reconciliation message');
 
         return $this->configHelperMock;
     }

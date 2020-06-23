@@ -20,6 +20,8 @@
 namespace EMerchantPay\Genesis\Helper;
 
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Magento\Sales\Model\Order\CreditmemoFactory;
+use Magento\Sales\Model\Service\CreditmemoService;
 
 /**
  * Helper Class for all Payment Methods
@@ -683,18 +685,56 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
             case \Genesis\API\Constants\Transaction\States::ERROR:
             case \Genesis\API\Constants\Transaction\States::DECLINED:
-                foreach ($order->getInvoiceCollection() as $invoice) {
-                    $invoice->cancel();
+                $this->buildInvoiceCancelation($order);
+                $order->save();
+                break;
+            case \Genesis\API\Constants\Transaction\States::VOIDED:
+                $this->buildInvoiceCancelation($order);
+                $this->setOrderStatusByState(
+                    $order,
+                    \Magento\Sales\Model\Order::STATE_CANCELED
+                );
+                $order->save();
+                break;
+            case \Genesis\API\Constants\Transaction\States::REFUNDED:
+                if ($order->canCreditmemo()) {
+                    /** @var CreditmemoFactory $creditMemoFactory */
+                    $creditMemoFactory = $this->getObjectManager()
+                        ->create('Magento\Sales\Model\Order\CreditmemoFactory');
+                    /** @var CreditmemoService $creditmemoService */
+                    $creditmemoService = $this->getObjectManager()
+                        ->create('Magento\Sales\Model\Service\CreditmemoService');
+
+                    $creditMemo = $creditMemoFactory->createByOrder($order);
+                    $creditmemoService->refund($creditMemo);
                 }
-                $order
-                    ->registerCancellation($message)
-                    ->setCustomerNoteNotify(true)
-                    ->save();
+
+                $order->save();
                 break;
             default:
                 $order->save();
                 break;
         }
+    }
+
+    /**
+     * @param \Magento\Sales\Model\Order $order
+     * @param bool $customerNotify
+     * @param string $message
+     *
+     * @return \Magento\Sales\Model\Order
+     */
+    public function buildInvoiceCancelation($order, $customerNotify = true, $message = '')
+    {
+        /** @var \Magento\Sales\Model\Order\Invoice $invoice */
+        foreach ($order->getInvoiceCollection() as $invoice) {
+            $invoice->cancel();
+        }
+        $order
+            ->registerCancellation($message)
+            ->setCustomerNoteNotify($customerNotify);
+
+        return $order;
     }
 
     /**

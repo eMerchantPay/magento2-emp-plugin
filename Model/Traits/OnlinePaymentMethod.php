@@ -249,7 +249,10 @@ trait OnlinePaymentMethod
         );
 
         if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-            $this->getMessageManager()->addSuccess($responseObject->message);
+            $this->getMessageManager()->addSuccess(
+                __('Successful Capture') .
+                (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
+            );
         } else {
             $this->getModuleHelper()->throwWebApiException(
                 $responseObject->message
@@ -323,7 +326,10 @@ trait OnlinePaymentMethod
         );
 
         if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-            $this->getMessageManager()->addSuccess($responseObject->message);
+            $this->getMessageManager()->addSuccess(
+                __('Successful Refund') .
+                (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
+            );
         } else {
             $this->getMessageManager()->addError($responseObject->message);
             $this->getModuleHelper()->throwWebApiException(
@@ -375,7 +381,10 @@ trait OnlinePaymentMethod
         );
 
         if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-            $this->getMessageManager()->addSuccess($responseObject->message);
+            $this->getMessageManager()->addSuccess(
+                __('Successful Void') .
+                (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
+            );
         } else {
             $this->getModuleHelper()->throwWebApiException(
                 $responseObject->message

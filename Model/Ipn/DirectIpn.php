@@ -50,6 +50,11 @@ class DirectIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
             false
         );
 
+        $this->createIpnComment(
+            $this->getTransactionMessage($responseObject),
+            true
+        );
+
         $payment
             ->setLastTransId(
                 $responseObject->unique_id
@@ -66,23 +71,23 @@ class DirectIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 false
             )
             ->setPreparedMessage(
-                $this->createIpnComment(
-                    $responseObject->message
-                )
+                __('Module') . ' ' . $this->getConfigHelper()->getCheckoutTitle()
             )
             ->resetTransactionAdditionalInfo();
 
-        switch ($responseObject->transaction_type) {
-            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
-                $payment->registerAuthorizationNotification($responseObject->amount);
-                break;
-            case \Genesis\API\Constants\Transaction\Types::SALE:
-            case \Genesis\API\Constants\Transaction\Types::SALE_3D:
-                $payment->registerCaptureNotification($responseObject->amount);
-                break;
-            default:
-                break;
+        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+            switch ($responseObject->transaction_type) {
+                case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
+                case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
+                    $payment->registerAuthorizationNotification($responseObject->amount);
+                    break;
+                case \Genesis\API\Constants\Transaction\Types::SALE:
+                case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+                    $payment->registerCaptureNotification($responseObject->amount);
+                    break;
+                default:
+                    break;
+            }
         }
 
         $payment->save();

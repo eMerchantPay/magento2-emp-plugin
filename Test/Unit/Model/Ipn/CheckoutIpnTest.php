@@ -93,7 +93,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
         $this->reconciliationObj->unique_id             = $this->postParams[self::UNIQUE_ID_NAME];
         $this->reconciliationObj->transaction_id        = self::RECONCILIATION_TRANSACTION_ID;
         $this->reconciliationObj->status                = \Genesis\API\Constants\Transaction\States::APPROVED;
-        $this->reconciliationObj->message               = self::RECONCILIATION_MESSAGE;
+        $this->reconciliationObj->message               = __('Module') . ' ' . self::RECONCILIATION_MESSAGE;
         $this->reconciliationObj->transaction_type      = self::RECONCILIATION_TRANSACTION_TYPE;
         $this->reconciliationObj->amount                = self::RECONCILIATION_AMOUNT;
         $this->reconciliationObj->payment_transaction   = $this->reconciliationObj;
@@ -180,12 +180,16 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
 
         $paymentMock->expects(self::once())
             ->method('setIsTransactionPending')
-            ->with(false)
+            ->with(
+                $this->getShouldSetCurrentTranPending($this->reconciliationObj)
+            )
             ->willReturnSelf();
 
         $paymentMock->expects(self::once())
             ->method('setIsTransactionClosed')
-            ->with(false)
+            ->with(
+                $this->getShouldCloseCurrentTransaction($this->reconciliationObj)
+            )
             ->willReturnSelf();
 
         $paymentMock->expects(self::once())
@@ -202,11 +206,13 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
             ->with('raw_details_info')
             ->willReturn(null);
 
-        $paymentMock->expects(self::once())
-            ->method($this->getNotificationFunctionName(
+        $paymentMock->expects(
+            $this->getShouldExecuteAuthoirizeCaptureEvent($this->reconciliationObj->status)
+        )->method(
+            $this->getNotificationFunctionName(
                 $this->reconciliationObj->transaction_type
-            ))
-            ->with($this->reconciliationObj->amount)
+            )
+        )->with($this->reconciliationObj->amount)
             ->willReturn(null);
 
         return $paymentMock;

@@ -138,7 +138,7 @@ GNU General Public License for more details.
         <field id="cctypes" translate="label" type="multiselect" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Allow Specific Credit Card Types</label>
             <comment><![CDATA[Select allowed credit card type]]></comment>
-            <toottip><![CDATA[Hint: You should have in mind that, you'd better allow only the types, which can be processed from your configured Merchant-Terminals.]]></toottip>
+            <tooltip><![CDATA[Hint: You should have in mind that, you'd better allow only the types, which can be processed from your configured Merchant-Terminals.]]></tooltip>
             <config_path>payment/emerchantpay_direct/cctypes</config_path>
             <source_model>Magento\Payment\Model\Source\Cctype</source_model>
             <depends>

@@ -114,6 +114,14 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->method('getConfig')
             ->willReturn($orderConfigMock);
 
+        $orderMock->expects(static::atLeastOnce())
+            ->method('setStatus')
+            ->willReturn($orderMock);
+
+        $orderMock->expects(static::atLeastOnce())
+            ->method('setState')
+            ->willReturn($orderMock);
+
         return $orderMock;
     }
 
@@ -562,10 +570,10 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
          */
         $orderConfigMock = $orderMock->getConfig();
 
-        $orderMock->expects(static::never())
+        $orderMock->expects(static::exactly(2))
             ->method('setState');
 
-        $orderMock->expects(static::never())
+        $orderMock->expects(static::exactly(2))
             ->method('setStatus');
 
         $orderMock->expects(static::exactly(2))
@@ -584,7 +592,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->method('save')
             ->willReturnSelf();
 
-        $orderConfigMock->expects(static::never())
+        $orderConfigMock->expects(static::exactly(2))
             ->method('getStateDefaultStatus');
 
         $this->moduleHelper->setOrderState(
@@ -595,6 +603,54 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $this->moduleHelper->setOrderState(
             $orderMock,
             GenesisTransactionStates::DECLINED
+        );
+    }
+
+    /**
+     * @covers EMerchantPayDataHelper::setOrderState($order, GenesisTransactionStates::APPROVED)
+     */
+    public function testSetOrderStateOnPaymentTimeoutOrVoid()
+    {
+        $orderMock = $this->getOrderMock();
+
+        /**
+         * @var $orderConfigMock \Magento\Sales\Model\Order\Config|\PHPUnit_Framework_MockObject_MockObject
+         */
+        $orderConfigMock = $orderMock->getConfig();
+
+        $orderMock->expects(static::exactly(2))
+            ->method('setState');
+
+        $orderMock->expects(static::exactly(2))
+            ->method('setStatus');
+
+        $orderMock->expects(static::exactly(2))
+            ->method('getInvoiceCollection')
+            ->willReturn([]);
+
+        $orderMock->expects(static::exactly(2))
+            ->method('registerCancellation')
+            ->willReturnSelf();
+
+        $orderMock->expects(static::exactly(2))
+            ->method('setCustomerNoteNotify')
+            ->willReturnSelf();
+
+        $orderMock->expects(static::exactly(2))
+            ->method('save')
+            ->willReturnSelf();
+
+        $orderConfigMock->expects(static::exactly(2))
+            ->method('getStateDefaultStatus');
+
+        $this->moduleHelper->setOrderState(
+            $orderMock,
+            GenesisTransactionStates::TIMEOUT
+        );
+
+        $this->moduleHelper->setOrderState(
+            $orderMock,
+            GenesisTransactionStates::VOIDED
         );
     }
 

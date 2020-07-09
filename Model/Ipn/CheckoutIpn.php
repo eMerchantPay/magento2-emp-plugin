@@ -41,7 +41,8 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
      */
     protected function processNotification($responseObject)
     {
-        $payment = $this->getPayment();
+        $recordedToCommentHistory = false;
+        $payment                  = $this->getPayment();
 
         $this->getModuleHelper()->updateTransactionAdditionalInfo(
             $responseObject->unique_id,
@@ -50,6 +51,7 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
         );
 
         if (isset($responseObject->payment_transaction)) {
+            $addToCommentHistory = $recordedToCommentHistory = true;
             $payment_transaction = $this->getModuleHelper()->populatePaymentTransaction(
                 $responseObject,
                 $payment->getEntityId()
@@ -57,7 +59,7 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
 
             $this->createIpnComment(
                 $this->getTransactionMessage($payment_transaction),
-                true
+                $addToCommentHistory
             );
 
             $payment
@@ -103,6 +105,13 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
             }
 
             $payment->save();
+        }
+
+        if (!$recordedToCommentHistory) {
+            $this->createIpnComment(
+                $this->getTransactionMessage($responseObject),
+                true
+            );
         }
 
         $this->getModuleHelper()->setOrderState(

@@ -313,7 +313,7 @@ abstract class AbstractIpn
         $transactionStatus = $transactionResponse->status;
         $additionalNotes   = isset($transactionResponse->message) ? "({$transactionResponse->message})" : '';
         $transactionType   = isset($transactionResponse->transaction_type) ?
-            $transactionResponse->transaction_type : '';
+            $transactionResponse->transaction_type : __('unknown');
 
         $messageArray = [
             __('Module'),

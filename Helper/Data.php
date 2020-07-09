@@ -686,9 +686,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             case \Genesis\API\Constants\Transaction\States::ERROR:
             case \Genesis\API\Constants\Transaction\States::DECLINED:
                 $this->buildInvoiceCancelation($order);
+                $this->setOrderStatusByState(
+                    $order,
+                    \Magento\Sales\Model\Order::STATE_CLOSED
+                );
                 $order->save();
                 break;
             case \Genesis\API\Constants\Transaction\States::VOIDED:
+            case \Genesis\API\Constants\Transaction\States::TIMEOUT:
                 $this->buildInvoiceCancelation($order);
                 $this->setOrderStatusByState(
                     $order,

@@ -19,6 +19,9 @@
 
 namespace EMerchantPay\Genesis\Model\Config\Source\Method\Checkout;
 
+use EMerchantPay\Genesis\Helper\Checkout;
+use EMerchantPay\Genesis\Helper\Data;
+use Genesis\API\Constants\Transaction\Names;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use \Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
 
@@ -35,40 +38,42 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
      */
     public function toOptionArray()
     {
-        return [
-            ['value' => GenesisTransactionTypes::ABNIDEAL, 'label' => __('ABN iDEAL')],
-            ['value' => GenesisTransactionTypes::ALIPAY, 'label' => __('Alipay')],
-            ['value' => GenesisTransactionTypes::AUTHORIZE, 'label' => __('Authorize')],
-            ['value' => GenesisTransactionTypes::AUTHORIZE_3D, 'label' => __('Authorize (3D-Secure)')],
-            ['value' => GenesisTransactionTypes::CASHU, 'label' => __('CashU')],
-            ['value' => GenesisTransactionTypes::CITADEL_PAYIN, 'label' => __('Citadel')],
-            ['value' => GenesisPaymentMethods::EPS, 'label' => __('eps')],
-            ['value' => GenesisTransactionTypes::EZEEWALLET, 'label' => __('eZeeWallet')],
-            ['value' => GenesisTransactionTypes::IDEBIT_PAYIN, 'label' => __('iDebit')],
-            ['value' => GenesisTransactionTypes::INPAY, 'label' => __('INPay')],
-            ['value' => GenesisTransactionTypes::INSTA_DEBIT_PAYIN, 'label' => __('InstaDebit')],
-            ['value' => GenesisPaymentMethods::GIRO_PAY, 'label' => __('GiroPay')],
-            ['value' => GenesisTransactionTypes::NETELLER, 'label' => __('Neteller')],
-            ['value' => GenesisPaymentMethods::BCMC, 'label' => __('Mr.Cash')],
-            ['value' => GenesisPaymentMethods::MYBANK, 'label' => __('MyBank')],
-            ['value' => GenesisPaymentMethods::QIWI, 'label' => __('Qiwi')],
-            ['value' => GenesisTransactionTypes::P24, 'label' => __('P24')],
-            ['value' => GenesisTransactionTypes::PAYPAL_EXPRESS, 'label' => __('PayPal Express')],
-            ['value' => GenesisTransactionTypes::PAYSAFECARD, 'label' => __('PaySafeCard')],
-            ['value' => GenesisTransactionTypes::ONLINE_BANKING_PAYIN, 'label' => __('OnlineBanking')],
-            ['value' => GenesisTransactionTypes::PAYBYVOUCHER_SALE, 'label' => __('PayByVoucher (Sale)')],
-            ['value' => GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY, 'label' => __('PayByVoucher (oBeP)')],
-            ['value' => GenesisPaymentMethods::PRZELEWY24, 'label' => __('Przelewy24')],
-            ['value' => GenesisTransactionTypes::POLI, 'label' => __('POLi')],
-            ['value' => GenesisPaymentMethods::SAFETY_PAY, 'label' => __('SafetyPay')],
-            ['value' => GenesisTransactionTypes::SALE, 'label' => __('Sale')],
-            ['value' => GenesisTransactionTypes::SALE_3D, 'label' => __('Sale (3D-Secure)')],
-            ['value' => GenesisTransactionTypes::SDD_SALE, 'label' => __('SDD Sale')],
-            ['value' => GenesisTransactionTypes::SOFORT, 'label' => __('SOFORT')],
-            ['value' => GenesisPaymentMethods::TRUST_PAY, 'label' => __('TrustPay')],
-            ['value' => GenesisTransactionTypes::TRUSTLY_SALE, 'label' => __('Trustly Sale')],
-            ['value' => GenesisTransactionTypes::WEBMONEY, 'label' => __('WebMoney')],
-            ['value' => GenesisTransactionTypes::WECHAT, 'label' => __('WeChat')]
-        ];
+        $data = [];
+
+        $transactionTypes = GenesisTransactionTypes::getWPFTransactionTypes();
+        $excludedTypes    = Checkout::getRecurringTransactionTypes();
+
+        // Exclude PPRO transaction. This is not standalone transaction type
+        array_push($excludedTypes, GenesisTransactionTypes::PPRO);
+
+        // Exclude Transaction Types
+        $transactionTypes = array_diff($transactionTypes, $excludedTypes);
+
+        // Add PPRO types
+        $pproTypes = array_map(
+            function ($type) {
+                return $type . Data::PPRO_TRANSACTION_SUFFIX;
+            },
+            GenesisPaymentMethods::getMethods()
+        );
+        $transactionTypes = array_merge($transactionTypes, $pproTypes);
+        asort($transactionTypes);
+
+        foreach ($transactionTypes as $type) {
+            $name = Names::getName($type);
+            if (!GenesisTransactionTypes::isValidTransactionType($type)) {
+                $name = strtoupper($type);
+            }
+
+            array_push(
+                $data,
+                [
+                    'value' => $type,
+                    'label' => __($name)
+                ]
+            );
+        }
+
+        return $data;
     }
 }

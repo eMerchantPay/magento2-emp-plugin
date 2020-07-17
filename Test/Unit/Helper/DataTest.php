@@ -764,7 +764,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     public function testGetUnsupportedGatewayLocale()
     {
-        $danishLocale = 'da_DK';
+        $danishLocale = 'fa_AF';
         $defaultLocale = 'en';
 
         $this->localeResolverMock->expects(static::once())

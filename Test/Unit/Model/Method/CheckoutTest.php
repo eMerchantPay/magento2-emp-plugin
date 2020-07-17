@@ -19,7 +19,9 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Method;
 
+use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Model\Method\Checkout as CheckoutPaymentMethod;
+use Genesis\API\Constants\Payment\Methods;
 use Magento\Framework\DataObject as MagentoDataObject;
 use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
@@ -83,15 +85,16 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         GenesisTransactionTypes::WEBMONEY,
                         GenesisTransactionTypes::PAYBYVOUCHER_SALE,
                         GenesisTransactionTypes::PAYSAFECARD,
-                        GenesisPaymentMethods::EPS,
-                        GenesisPaymentMethods::GIRO_PAY,
-                        GenesisPaymentMethods::PRZELEWY24,
-                        GenesisPaymentMethods::QIWI,
-                        GenesisPaymentMethods::SAFETY_PAY,
-                        GenesisPaymentMethods::TRUST_PAY,
-                        GenesisPaymentMethods::BCMC,
-                        GenesisPaymentMethods::MYBANK,
                         GenesisTransactionTypes::SOFORT,
+                        Methods::EPS . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::GIRO_PAY . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::PRZELEWY24 . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::QIWI . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::SAFETY_PAY . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::TRUST_PAY . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::BCMC . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::MYBANK . Data::PPRO_TRANSACTION_SUFFIX,
+                        Methods::IDEAL . Data::PPRO_TRANSACTION_SUFFIX
                     ]
                 )
             );
@@ -150,6 +153,9 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::MYBANK,
+                        ],
+                        [
+                            'payment_method' => GenesisPaymentMethods::IDEAL,
                         ]
                     ]
                 ],

@@ -19,6 +19,7 @@
 
 namespace EMerchantPay\Genesis\Model\Method;
 
+use Genesis\API\Constants\Transaction\Types;
 use Magento\Framework\DataObject;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
@@ -271,11 +272,7 @@ class Direct extends Base
      */
     protected function getTransactionTypeRequestClassName($transactionType)
     {
-        $requestClassName = ucfirst(
-            str_replace('3d', '3D', $transactionType)
-        );
-
-        return "Financial\\Cards\\{$requestClassName}";
+        return Types::getFinancialRequestClassForTrxType($transactionType);
     }
 
     /**

@@ -19,6 +19,7 @@
 
 namespace EMerchantPay\Genesis\Model\Method;
 
+use EMerchantPay\Genesis\Helper\Data;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
 use Genesis\API\Constants\Transaction\States;
@@ -114,19 +115,15 @@ class Checkout extends Base
     public function getCheckoutTransactionTypes()
     {
         $processed_list = [];
+        $alias_map      = [];
 
         $selected_types = $this->getConfigHelper()->getTransactionTypes();
+        $ppro_suffix    = Data::PPRO_TRANSACTION_SUFFIX;
+        $methods        = GenesisPaymentMethods::getMethods();
 
-        $alias_map = [
-            GenesisPaymentMethods::EPS         => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::GIRO_PAY    => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::PRZELEWY24  => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::QIWI        => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::SAFETY_PAY  => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::TRUST_PAY   => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::BCMC        => GenesisTransactionTypes::PPRO,
-            GenesisPaymentMethods::MYBANK      => GenesisTransactionTypes::PPRO
-        ];
+        foreach ($methods as $method) {
+            $alias_map[$method . $ppro_suffix] = GenesisTransactionTypes::PPRO;
+        }
 
         foreach ($selected_types as $selected_type) {
             if (!array_key_exists($selected_type, $alias_map)) {
@@ -140,7 +137,7 @@ class Checkout extends Base
             $processed_list[$transaction_type]['name'] = $transaction_type;
 
             $processed_list[$transaction_type]['parameters'][] = [
-                'payment_method' => $selected_type
+                'payment_method' => str_replace($ppro_suffix, '', $selected_type)
             ];
         }
 
@@ -211,6 +208,19 @@ class Checkout extends Base
                 case GenesisTransactionTypes::INSTA_DEBIT_PAYIN:
                     $parameters = [
                         'customer_account_id' => $this->getModuleHelper()->getCurrentUserIdHash()
+                    ];
+                    break;
+                case GenesisTransactionTypes::KLARNA_AUTHORIZE:
+                    $itemsObject = $this->getModuleHelper()->getKlarnaCustomParamItems($data['order']['orderObject']);
+                    $parameters = $itemsObject->toArray();
+                    break;
+                case GenesisTransactionTypes::TRUSTLY_SALE:
+                    $helper        = $this->getModuleHelper();
+                    $userId        = $helper->getCurrentUserId();
+                    $trustlyUserId = empty($userId) ? $helper->getCurrentUserIdHash() : $userId;
+
+                    $parameters = [
+                        'user_id' => $trustlyUserId
                     ];
                     break;
             }
@@ -508,7 +518,8 @@ class Checkout extends Base
                 'billing' =>
                     $order->getBillingAddress(),
                 'shipping' =>
-                    $order->getShippingAddress()
+                    $order->getShippingAddress(),
+                'orderObject' => $order
             ],
             'urls' => [
                 'notify' =>

@@ -1,23 +1,23 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ea29551756fb60bcd322f21387e6f205",
+    "content-hash": "ad8c2ff5dd902a30a7dbdcfefef21dd0",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.14.0",
+            "version": "1.18.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "b2a40413fd50357f41015eb05db9af305a3f4a6f"
+                "reference": "5eca397c220fab7e0d7e4ea8c4f696bdebd23a2c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/b2a40413fd50357f41015eb05db9af305a3f4a6f",
-                "reference": "b2a40413fd50357f41015eb05db9af305a3f4a6f",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/5eca397c220fab7e0d7e4ea8c4f696bdebd23a2c",
+                "reference": "5eca397c220fab7e0d7e4ea8c4f696bdebd23a2c",
                 "shasum": ""
             },
             "require": {
@@ -50,26 +50,38 @@
                 "POLi",
                 "Przelewy24",
                 "SDD",
-                "alipay",
+                "aura",
                 "authorize",
+                "baloto",
                 "banco_do_brasil",
-                "bcmc",
+                "bancontact",
                 "bitpay",
+                "blacklist",
+                "boleto",
+                "cabal",
                 "capture",
                 "cashu",
+                "cencosud",
                 "chargeback",
-                "citadel_payin",
-                "citadel_payout",
+                "consumers",
                 "container_store",
+                "credit",
                 "credit_card",
                 "debit_card",
                 "e-commerce",
-                "earthport",
-                "entercash",
+                "efecty",
+                "elo",
                 "eps",
+                "ezeecard",
                 "ezeewallet",
                 "fashioncheque",
                 "fraud",
+                "fx",
+                "fx_rate",
+                "fx_rates",
+                "fx_search",
+                "fx_tier",
+                "fx_tiers",
                 "genesis",
                 "genesisgateway",
                 "giropay",
@@ -86,9 +98,11 @@
                 "mastercard",
                 "multibanco",
                 "mybank",
+                "neosurf",
                 "neteller",
+                "oxxo",
                 "p24",
-                "paybyvouchers",
+                "pagofacil",
                 "payment_gateway",
                 "payment_processing",
                 "payments",
@@ -99,41 +113,54 @@
                 "payu",
                 "pci-dss",
                 "ppro",
+                "preauthorization",
+                "preauthorization_incremental",
+                "preauthorization_partial",
                 "qiwi",
+                "reconcile",
                 "recurring",
+                "redpagos",
                 "refund",
+                "reports",
                 "safetypay",
+                "santander",
+                "santander_cash",
+                "sca",
                 "sct_payout",
                 "sdd_recurring",
                 "sdd_refund",
                 "sofort",
                 "tc40",
+                "transfer_to",
                 "trustly",
                 "trustly_sale",
                 "trustly_withdrawal",
                 "trustpay",
+                "upi",
                 "visa",
                 "void",
                 "webmoney",
+                "webpay",
                 "wechat",
+                "wpf",
                 "zimpler"
             ],
-            "time": "2019-04-10T11:33:49+00:00"
+            "time": "2020-07-15T09:14:19+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "fzaninotto/faker",
-            "version": "v1.8.0",
+            "version": "v1.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fzaninotto/Faker.git",
-                "reference": "f72816b43e74063c8b10357394b6bba8cb1c10de"
+                "reference": "fc10d778e4b84d5bd315dad194661e091d307c6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/f72816b43e74063c8b10357394b6bba8cb1c10de",
-                "reference": "f72816b43e74063c8b10357394b6bba8cb1c10de",
+                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/fc10d778e4b84d5bd315dad194661e091d307c6f",
+                "reference": "fc10d778e4b84d5bd315dad194661e091d307c6f",
                 "shasum": ""
             },
             "require": {
@@ -142,12 +169,12 @@
             "require-dev": {
                 "ext-intl": "*",
                 "phpunit/phpunit": "^4.8.35 || ^5.7",
-                "squizlabs/php_codesniffer": "^1.5"
+                "squizlabs/php_codesniffer": "^2.9.2"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.8-dev"
+                    "dev-master": "1.9-dev"
                 }
             },
             "autoload": {
@@ -170,7 +197,7 @@
                 "faker",
                 "fixtures"
             ],
-            "time": "2018-07-12T10:23:15+00:00"
+            "time": "2019-12-12T13:22:17+00:00"
         }
     ],
     "aliases": [],
@@ -181,7 +208,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "7.0.2|7.0.4|~7.0.6|7.1.*"
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*"
     },
     "platform-dev": []
 }

@@ -19,6 +19,7 @@
 
 namespace EMerchantPay\Genesis\Helper;
 
+use Genesis\API\Constants\Transaction\Types;
 use Magento\Sales\Model\Order;
 
 /**
@@ -76,5 +77,19 @@ class Checkout
     public function restoreQuote()
     {
         return $this->getCheckoutSession()->restoreQuote();
+    }
+
+    /**
+     * Retrieve Recurring transaction Types
+     *
+     * @return array
+     */
+    public static function getRecurringTransactionTypes()
+    {
+        return [
+            Types::SDD_INIT_RECURRING_SALE,
+            Types::INIT_RECURRING_SALE,
+            Types::INIT_RECURRING_SALE_3D
+        ];
     }
 }

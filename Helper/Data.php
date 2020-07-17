@@ -20,6 +20,7 @@
 namespace EMerchantPay\Genesis\Helper;
 
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
 
@@ -47,6 +48,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const ACTION_RETURN_FAILURE = 'failure';
 
     const GENESIS_GATEWAY_ERROR_MESSAGE_DEFAULT = 'An error has occurred while processing your request to the gateway';
+
+    const PPRO_TRANSACTION_SUFFIX = '_ppro';
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
@@ -951,27 +954,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function canRefundTransaction($transaction)
     {
-        $refundableTransactions = [
-            GenesisTransactionTypes::CAPTURE,
-            GenesisTransactionTypes::SALE,
-            GenesisTransactionTypes::SALE_3D,
-            GenesisTransactionTypes::INIT_RECURRING_SALE,
-            GenesisTransactionTypes::INIT_RECURRING_SALE_3D,
-            GenesisTransactionTypes::RECURRING_SALE,
-            GenesisTransactionTypes::CASHU,
-            GenesisTransactionTypes::PPRO,
-            GenesisTransactionTypes::ABNIDEAL,
-            GenesisTransactionTypes::TRUSTLY_SALE,
-            GenesisTransactionTypes::P24,
-            GenesisTransactionTypes::INPAY,
-            GenesisTransactionTypes::PAYPAL_EXPRESS
-        ];
-
         $transactionType = $this->getTransactionTypeByTransaction(
             $transaction
         );
 
-        return (!empty($transactionType) && in_array($transactionType, $refundableTransactions));
+        return (!empty($transactionType) && GenesisTransactionTypes::canRefund($transactionType));
     }
 
     /**
@@ -1018,11 +1005,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getIsTransactionThreeDSecure($transactionType)
     {
-        return
-            $this->getStringEndsWith(
-                strtoupper($transactionType),
-                self::SECURE_TRANSACTION_TYPE_SUFFIX
-            );
+        return GenesisTransactionTypes::is3D($transactionType);
     }
 
     /**
@@ -1080,12 +1063,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getShouldCreateAuthNotification($transactionType)
     {
-        $authorizeTransactions = [
-            GenesisTransactionTypes::AUTHORIZE,
-            GenesisTransactionTypes::AUTHORIZE_3D
-        ];
-
-        return in_array($transactionType, $authorizeTransactions);
+        return GenesisTransactionTypes::isAuthorize($transactionType);
     }
 
     /**
@@ -1094,32 +1072,98 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getShouldCreateCaptureNotification($transactionType)
     {
-        $captureNotificationTransactions = [
-            GenesisTransactionTypes::ABNIDEAL,
-            GenesisTransactionTypes::ALIPAY,
-            GenesisTransactionTypes::CITADEL_PAYIN,
-            GenesisTransactionTypes::CASHU,
-            GenesisTransactionTypes::EZEEWALLET,
-            GenesisTransactionTypes::IDEBIT_PAYIN,
-            GenesisTransactionTypes::INPAY,
-            GenesisTransactionTypes::INSTA_DEBIT_PAYIN,
-            GenesisTransactionTypes::TRUSTLY_SALE,
-            GenesisTransactionTypes::NETELLER,
-            GenesisTransactionTypes::P24,
-            GenesisTransactionTypes::PAYBYVOUCHER_SALE,
-            GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY,
-            GenesisTransactionTypes::PAYPAL_EXPRESS,
-            GenesisTransactionTypes::PAYSAFECARD,
-            GenesisTransactionTypes::ONLINE_BANKING_PAYIN,
-            GenesisTransactionTypes::PPRO,
-            GenesisTransactionTypes::SALE,
-            GenesisTransactionTypes::SALE_3D,
-            GenesisTransactionTypes::SOFORT,
-            GenesisTransactionTypes::SDD_SALE,
-            GenesisTransactionTypes::WECHAT
-        ];
+        return !GenesisTransactionTypes::isAuthorize($transactionType);
+    }
 
-        return in_array($transactionType, $captureNotificationTransactions);
+    /**
+     * @param Order $order
+     * @return \Genesis\API\Request\Financial\Alternatives\Klarna\Items
+     * @throws \Genesis\Exceptions\ErrorParameter
+     */
+    public function getKlarnaCustomParamItems($order)
+    {
+        $items     = new \Genesis\API\Request\Financial\Alternatives\Klarna\Items($order->getOrderCurrencyCode());
+        $itemsList = $this->getItemListArray($order);
+        foreach ($itemsList as $item) {
+            $klarnaItem = new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                $item['name'],
+                $item['type'],
+                $item['qty'],
+                $item['price']
+            );
+            $items->addItem($klarnaItem);
+        }
+
+        $taxes = floatval($order->getTaxAmount());
+        if ($taxes) {
+            $items->addItem(
+                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                    'Taxes',
+                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SURCHARGE,
+                    1,
+                    $taxes
+                )
+            );
+        }
+
+        $discount = floatval($order->getDiscountAmount());
+        if ($discount) {
+            $items->addItem(
+                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                    'Discount',
+                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DISCOUNT,
+                    1,
+                    -$discount
+                )
+            );
+        }
+
+        $shipping_cost = floatval($order->getShippingAmount());
+        if ($shipping_cost) {
+            $items->addItem(
+                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                    'Shipping Costs',
+                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SHIPPING_FEE,
+                    1,
+                    $shipping_cost
+                )
+            );
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param $order
+     * @return array
+     */
+    public function getItemListArray($order)
+    {
+        $productResult = [];
+
+        foreach ($order->getAllItems() as $item) {
+            /** @var $item Mage_Sales_Model_Quote_Item */
+            $product = $item->getProduct();
+
+            $type = $item->getIsVirtual() ?
+                \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DIGITAL :
+                \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_PHYSICAL;
+
+            $productResult[] = [
+                'sku'  =>
+                    $product->getSku(),
+                'name' =>
+                    $product->getName(),
+                'qty'  =>
+                    $item->getData('qty_ordered'),
+                'price' =>
+                    $item->getPrice(),
+                'type' =>
+                    $type
+            ];
+        }
+
+        return $productResult;
     }
 
     /**

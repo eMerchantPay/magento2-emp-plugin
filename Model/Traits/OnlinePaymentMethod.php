@@ -19,6 +19,8 @@
 
 namespace EMerchantPay\Genesis\Model\Traits;
 
+use Genesis\API\Constants\Transaction\Types;
+
 /**
  * Trait for defining common variables and methods for all Payment Solutions
  * Trait OnlinePaymentMethod
@@ -139,25 +141,26 @@ trait OnlinePaymentMethod
      *      - Refund
      *      - Void
      *
-     * @param string $transactionType
+     * @param $transactionClass
      * @param \Magento\Payment\Model\InfoInterface $payment
      * @param array $data
      * @return \stdClass
+     * @throws \Genesis\Exceptions\DeprecatedMethod
+     * @throws \Genesis\Exceptions\ErrorAPI
+     * @throws \Genesis\Exceptions\InvalidArgument
+     * @throws \Genesis\Exceptions\InvalidMethod
+     * @throws \Genesis\Exceptions\InvalidResponse
+     * @throws \Genesis\Exceptions\ErrorParameter
      */
     protected function processReferenceTransaction(
-        $transactionType,
+        $transactionClass,
         \Magento\Payment\Model\InfoInterface $payment,
         $data
     ) {
-        $transactionType = ucfirst(
-            strtolower(
-                $transactionType
-            )
-        );
 
         $this->getConfigHelper()->initGatewayClient();
 
-        $genesis = new \Genesis\Genesis("Financial\\{$transactionType}");
+        $genesis = new \Genesis\Genesis($transactionClass);
 
         foreach ($data as $key => $value) {
             $methodName = sprintf(
@@ -171,6 +174,20 @@ trait OnlinePaymentMethod
                     ->{$methodName}(
                         $value
                     );
+        }
+
+        if (in_array(
+            $transactionClass,
+            [
+                Types::getCaptureTransactionClass(Types::KLARNA_AUTHORIZE),
+                Types::getRefundTransactionClass(Types::KLARNA_CAPTURE)
+            ]
+        )) {
+            $genesis
+                ->request()
+                ->setItems(
+                    $this->getModuleHelper()->getKlarnaCustomParamItems($payment->getOrder())
+                );
         }
 
         $genesis->execute();
@@ -242,8 +259,12 @@ trait OnlinePaymentMethod
                 'Magento2 Capture'
         ];
 
+        $transactionClass = Types::getCaptureTransactionClass(
+            $this->getModuleHelper()->getTransactionTypeByTransaction($authTransaction)
+        );
+
         $responseObject = $this->processReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::CAPTURE,
+            $transactionClass,
             $payment,
             $data
         );
@@ -319,8 +340,12 @@ trait OnlinePaymentMethod
                 'Magento2 Refund'
         ];
 
+        $transactionClass = Types::getRefundTransactionClass(
+            $this->getModuleHelper()->getTransactionTypeByTransaction($captureTransaction)
+        );
+
         $responseObject = $this->processReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::REFUND,
+            $transactionClass,
             $payment,
             $data
         );
@@ -374,8 +399,10 @@ trait OnlinePaymentMethod
                 'Magento2 Void'
         ];
 
+        $transactionClass = Types::getFinancialRequestClassForTrxType(Types::VOID);
+
         $responseObject = $this->processReferenceTransaction(
-            \Genesis\API\Constants\Transaction\Types::VOID,
+            $transactionClass,
             $payment,
             $data
         );

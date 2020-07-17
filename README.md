@@ -12,7 +12,7 @@ Requirements
 ------------
 
 * Magento 2 Community Edition 2.2.x (Tested upto __2.3.4__)
-* [GenesisPHP v1.18.2](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.2) - (Integrated in Module)
+* [GenesisPHP v1.18.4](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.4) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento 2 __Community Edition__, it may not work
@@ -52,7 +52,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.18.2@stable
+    $ composer require genesisgateway/genesis_php:1.18.4@stable
     ```
 
 * Enable Payment Module 

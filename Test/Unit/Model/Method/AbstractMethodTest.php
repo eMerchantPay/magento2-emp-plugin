@@ -396,7 +396,7 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
             )
             ->getMock();
 
-        $authPaymentTransactionMock->expects(self::once())
+        $authPaymentTransactionMock->expects(self::atLeastOnce())
             ->method('getAdditionalInformation')
             ->with(
                 \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS

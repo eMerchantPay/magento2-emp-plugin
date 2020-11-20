@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.2.4",
+    "version": "1.2.5",
     "license": [
         "GPL-2.0"
     ],
@@ -14,7 +14,7 @@
         }
     ],
     "require": {
-        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*",
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*",
         "genesisgateway/genesis_php": "1.18.4"
     },
     "require-dev": {

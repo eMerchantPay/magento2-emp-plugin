@@ -51,6 +51,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     const PPRO_TRANSACTION_SUFFIX = '_ppro';
 
+    const PLATFORM_TRANSACTION_SUFFIX = '_mage2';
+
     /**
      * @var \Magento\Framework\ObjectManagerInterface
      */
@@ -323,7 +325,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             '%s_%s',
             (string)$orderId,
             $this->uniqHash($length)
-        ), 0, $length);
+        ), 0, $length) . self::PLATFORM_TRANSACTION_SUFFIX;
     }
 
     /**
@@ -776,7 +778,16 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function buildOrderUsage()
     {
-        return __('Magento 2 Transaction');
+        return sprintf('%s %s', __('Payment via'), $this->getStoreName());
+    }
+
+    /**
+     * Get Store frontend name
+     * @return string
+     */
+    public function getStoreName()
+    {
+        return $this->getStoreManager()->getStore()->getFrontendName();
     }
 
     /**

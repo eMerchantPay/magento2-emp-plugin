@@ -89,7 +89,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         Methods::EPS . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::GIRO_PAY . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::PRZELEWY24 . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::QIWI . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::SAFETY_PAY . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::TRUST_PAY . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::BCMC . Data::PPRO_TRANSACTION_SUFFIX,
@@ -138,9 +137,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::PRZELEWY24,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::QIWI,
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::SAFETY_PAY,

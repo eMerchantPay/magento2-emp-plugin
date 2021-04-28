@@ -347,4 +347,17 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
             )
         );
     }
+
+    /**
+     * Checks whether an email has to be sent after successful payment
+     *
+     * @param string|null $methodCode
+     * @return bool
+     */
+    public function getPaymentConfirmationEmailEnabled($methodCode = null)
+    {
+        $methodCode = $methodCode?: $this->_methodCode;
+
+        return $this->isFlagChecked($methodCode, 'payment_confirmation_email_enabled');
+    }
 }

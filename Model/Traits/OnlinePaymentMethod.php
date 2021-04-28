@@ -350,16 +350,29 @@ trait OnlinePaymentMethod
             $data
         );
 
-        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
-            $this->getMessageManager()->addSuccess(
-                __('Successful Refund') .
-                (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
-            );
-        } else {
-            $this->getMessageManager()->addError($responseObject->message);
-            $this->getModuleHelper()->throwWebApiException(
-                $responseObject->message
-            );
+
+        switch ($responseObject->status) {
+            case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
+                $this->getMessageManager()->addNoticeMessage(
+                    __('Pending approval') .
+                    (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
+                );
+                $this->getModuleHelper()->throwWebApiException(
+                    __('Credit Memo is not created! The Refund is pending approval on the Gateway.')
+                );
+                break;
+            case \Genesis\API\Constants\Transaction\States::APPROVED:
+                $this->getMessageManager()->addSuccessMessage(
+                    __('Successful Refund') .
+                    (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
+                );
+                break;
+            default:
+                $this->getMessageManager()->addErrorMessage($responseObject->message);
+                $this->getModuleHelper()->throwWebApiException(
+                    $responseObject->message
+                );
+                break;
         }
 
         unset($data);

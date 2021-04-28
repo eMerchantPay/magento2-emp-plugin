@@ -939,4 +939,34 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             $gatewayResponseMessage
         );
     }
+
+    /**
+     * @covers EMerchantPayDataHelper::getErrorMessageFromGatewayResponse()
+     */
+    public function testGetPendingAsyncSuccessErrorMessageFromGatewayResponse()
+    {
+        $successfulGatewayResponseMessage = 'Transaction successful!';
+        $successfulGatewayResponseTechnicalMessage = 'Transaction has been processed successfully!';
+
+        $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
+            \Genesis\API\Constants\Transaction\States::PENDING_ASYNC,
+            \Genesis\API\Constants\Transaction\Types::REFUND,
+            $successfulGatewayResponseMessage,
+	        $successfulGatewayResponseTechnicalMessage
+        );
+
+        $gatewayResponseMessage = $this->moduleHelper->getErrorMessageFromGatewayResponse(
+            $validGatewayResponseWithMessage
+        );
+
+        $this->assertStringStartsWith(
+            $successfulGatewayResponseMessage,
+            $gatewayResponseMessage
+        );
+
+        $this->assertStringEndsWith(
+	        $successfulGatewayResponseTechnicalMessage,
+            $gatewayResponseMessage
+        );
+    }
 }

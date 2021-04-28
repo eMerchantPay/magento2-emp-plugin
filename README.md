@@ -12,7 +12,7 @@ Requirements
 ------------
 
 * Magento 2 Community Edition 2.2.x (Tested upto __2.3.4__)
-* [GenesisPHP v1.18.4](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.4) - (Integrated in Module)
+* [GenesisPHP v1.18.9](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.9) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento 2 __Community Edition__, it may not work
@@ -52,7 +52,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.18.4@stable
+    $ composer require genesisgateway/genesis_php:1.18.9@stable
     ```
 
 * Enable Payment Module 
@@ -78,7 +78,9 @@ Configuration
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
 * Go back to ```Payment Methods``` and click the button ```Configure``` under the payment method ```emerchantpay Checkout``` or ```emerchantpay Direct``` to expand the available settings
 * Set ```Enabled``` to ```Yes```, set the correct credentials, select your prefered transaction types and additional settings and click ```Save config```
-
+* Set ```Enable payment e-mail notification``` to ```Yes``` to receive emails after successful payment.
+  **Note**: If you consider sending Order e-mail after a successful payment, make sure to enable the configuration option from the payment method config and disable 
+  the Order e-mails from the ```Stores``` -> ```Configuration``` -> ```Sales``` -> ```Sales Emails``` in the Order section.
 Configure Magento over secured HTTPS Connection
 ---------------------
 This configuration is needed for ```emerchantpay Direct``` Method to be usable.

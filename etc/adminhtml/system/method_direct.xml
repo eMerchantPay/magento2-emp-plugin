@@ -174,5 +174,14 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
+        <field id="payment_confirmation_email_enabled" translate="label" type="select" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Enable e-mail notifications</label>
+            <comment><![CDATA[If enabled, you start to receive emails after success payment.]]></comment>
+            <config_path>payment/emerchantpay_direct/payment_confirmation_email_enabled</config_path>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
     </group>
 </include>

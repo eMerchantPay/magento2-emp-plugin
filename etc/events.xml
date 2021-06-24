@@ -20,4 +20,7 @@ GNU General Public License for more details.
     <event name="controller_front_send_response_before">
         <observer name="emerchantpay_checkout_controller_front_send_response_before" instance="EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore"/>
     </event>
+    <event name="sales_order_save_before">
+        <observer name="payment_sales_order_save_before" instance="EMerchantPay\Genesis\Model\Observer\SalesOrderBeforeSaveObserver" />
+    </event>
 </config>

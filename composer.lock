@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ad8c2ff5dd902a30a7dbdcfefef21dd0",
+    "content-hash": "ea6662488c65a6a7d775464ba499e278",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.18.4",
+            "version": "1.18.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "5eca397c220fab7e0d7e4ea8c4f696bdebd23a2c"
+                "reference": "bb238b164f05d6800eb196e48bc3a3a21610bac8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/5eca397c220fab7e0d7e4ea8c4f696bdebd23a2c",
-                "reference": "5eca397c220fab7e0d7e4ea8c4f696bdebd23a2c",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/bb238b164f05d6800eb196e48bc3a3a21610bac8",
+                "reference": "bb238b164f05d6800eb196e48bc3a3a21610bac8",
                 "shasum": ""
             },
             "require": {
@@ -32,7 +32,7 @@
             },
             "require-dev": {
                 "fzaninotto/faker": "1.*@stable",
-                "phpspec/phpspec": "2.*@stable"
+                "phpspec/phpspec": "3.4.*@stable"
             },
             "type": "library",
             "autoload": {
@@ -47,9 +47,11 @@
             "description": "PHP Client for Genesis Payment Processing Gateway",
             "keywords": [
                 "3d-secure",
+                "3ds_v2",
                 "POLi",
                 "Przelewy24",
                 "SDD",
+                "apple",
                 "aura",
                 "authorize",
                 "baloto",
@@ -93,7 +95,6 @@
                 "insta_debit",
                 "insta_debit_payin",
                 "insta_debit_payout",
-                "instant_transfer",
                 "intersolve",
                 "mastercard",
                 "multibanco",
@@ -112,11 +113,11 @@
                 "paysec",
                 "payu",
                 "pci-dss",
+                "postfinance",
                 "ppro",
                 "preauthorization",
                 "preauthorization_incremental",
                 "preauthorization_partial",
-                "qiwi",
                 "reconcile",
                 "recurring",
                 "redpagos",
@@ -124,7 +125,6 @@
                 "reports",
                 "safetypay",
                 "santander",
-                "santander_cash",
                 "sca",
                 "sct_payout",
                 "sdd_recurring",
@@ -134,7 +134,6 @@
                 "transfer_to",
                 "trustly",
                 "trustly_sale",
-                "trustly_withdrawal",
                 "trustpay",
                 "upi",
                 "visa",
@@ -142,25 +141,24 @@
                 "webmoney",
                 "webpay",
                 "wechat",
-                "wpf",
-                "zimpler"
+                "wpf"
             ],
-            "time": "2020-07-15T09:14:19+00:00"
+            "time": "2021-03-17T12:18:54+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "fzaninotto/faker",
-            "version": "v1.9.1",
+            "version": "v1.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fzaninotto/Faker.git",
-                "reference": "fc10d778e4b84d5bd315dad194661e091d307c6f"
+                "reference": "848d8125239d7dbf8ab25cb7f054f1a630e68c2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/fc10d778e4b84d5bd315dad194661e091d307c6f",
-                "reference": "fc10d778e4b84d5bd315dad194661e091d307c6f",
+                "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/848d8125239d7dbf8ab25cb7f054f1a630e68c2e",
+                "reference": "848d8125239d7dbf8ab25cb7f054f1a630e68c2e",
                 "shasum": ""
             },
             "require": {
@@ -197,7 +195,8 @@
                 "faker",
                 "fixtures"
             ],
-            "time": "2019-12-12T13:22:17+00:00"
+            "abandoned": true,
+            "time": "2020-12-11T09:56:16+00:00"
         }
     ],
     "aliases": [],
@@ -208,7 +207,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*"
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*"
     },
     "platform-dev": []
 }

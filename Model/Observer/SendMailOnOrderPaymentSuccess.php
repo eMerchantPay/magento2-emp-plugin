@@ -90,7 +90,6 @@ class SendMailOnOrderPaymentSuccess implements ObserverInterface
         }
 
         if ($this->_configHelper->getPaymentConfirmationEmailEnabled($methodCode)) {
-            $this->checkoutSession->setForceOrderMailSentOnSuccess(true);
             $this->orderSender->send($order, true);
         }
     }

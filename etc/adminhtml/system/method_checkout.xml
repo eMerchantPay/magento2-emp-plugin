@@ -161,7 +161,7 @@ GNU General Public License for more details.
         </field>
         <field id="payment_confirmation_email_enabled" translate="label" type="select" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable e-mail notifications</label>
-            <comment><![CDATA[If enabled, you start to receive emails after success payment.]]></comment>
+            <comment><![CDATA[If checked, the New Order e-mails are received upon successful payment.<br>Notes: Make sure to enable New Order e-mails from Store > Configuration > Sales > Sales Emails > Order > Enabled]]></comment>
             <config_path>payment/emerchantpay_checkout/payment_confirmation_email_enabled</config_path>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <depends>

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ea6662488c65a6a7d775464ba499e278",
+    "content-hash": "9347909fcaea830d25a801d022c63c87",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.18.9",
+            "version": "1.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "bb238b164f05d6800eb196e48bc3a3a21610bac8"
+                "reference": "d49b2a84b3f5536d8aff38b9c5c267c5c6c27cb5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/bb238b164f05d6800eb196e48bc3a3a21610bac8",
-                "reference": "bb238b164f05d6800eb196e48bc3a3a21610bac8",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/d49b2a84b3f5536d8aff38b9c5c267c5c6c27cb5",
+                "reference": "d49b2a84b3f5536d8aff38b9c5c267c5c6c27cb5",
                 "shasum": ""
             },
             "require": {
@@ -51,7 +51,7 @@
                 "POLi",
                 "Przelewy24",
                 "SDD",
-                "apple",
+                "apple_pay",
                 "aura",
                 "authorize",
                 "baloto",
@@ -143,7 +143,7 @@
                 "wechat",
                 "wpf"
             ],
-            "time": "2021-03-17T12:18:54+00:00"
+            "time": "2021-07-15T10:35:38+00:00"
         }
     ],
     "packages-dev": [
@@ -209,5 +209,6 @@
     "platform": {
         "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }

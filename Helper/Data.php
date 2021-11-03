@@ -303,7 +303,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         return substr(sha1(
             uniqid(
-                microtime() . mt_rand(),
+                microtime() . random_int(1, PHP_INT_MAX),
                 true
             )
         ), 0, $length);

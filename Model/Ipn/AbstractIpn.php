@@ -19,6 +19,9 @@
 
 namespace EMerchantPay\Genesis\Model\Ipn;
 
+use EMerchantPay\Genesis\Helper\Data;
+use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+
 /**
  * Base IPN Handler Class
  *
@@ -293,9 +296,14 @@ abstract class AbstractIpn
     protected function getShouldCloseCurrentTransaction($responseObject)
     {
         $voidableTransactions = [
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D
+            GenesisTransactionTypes::AUTHORIZE,
+            GenesisTransactionTypes::AUTHORIZE_3D,
+            GenesisTransactionTypes::GOOGLE_PAY
         ];
+
+        if ($this->getModuleHelper()->isTransactionWithCustomAttribute($responseObject->transaction_type)) {
+            return !$this->getModuleHelper()->isSelectedAuthorizePaymentType($responseObject->transaction_type);
+        }
 
         return !in_array($responseObject->transaction_type, $voidableTransactions);
     }

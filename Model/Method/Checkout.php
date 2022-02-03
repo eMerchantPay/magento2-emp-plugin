@@ -125,6 +125,13 @@ class Checkout extends Base
             $alias_map[$method . $ppro_suffix] = GenesisTransactionTypes::PPRO;
         }
 
+        $alias_map = array_merge($alias_map, [
+            Data::GOOGLE_PAY_TRANSACTION_PREFIX . Data::GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE =>
+                GenesisTransactionTypes::GOOGLE_PAY,
+            Data::GOOGLE_PAY_TRANSACTION_PREFIX . Data::GOOGLE_PAY_PAYMENT_TYPE_SALE      =>
+                GenesisTransactionTypes::GOOGLE_PAY
+        ]);
+
         foreach ($selected_types as $selected_type) {
             if (!array_key_exists($selected_type, $alias_map)) {
                 $processed_list[] = $selected_type;
@@ -136,8 +143,11 @@ class Checkout extends Base
 
             $processed_list[$transaction_type]['name'] = $transaction_type;
 
+            // WPF Custom Attribute
+            $key = $transaction_type === GenesisTransactionTypes::GOOGLE_PAY ? 'payment_type' : 'payment_method';
+
             $processed_list[$transaction_type]['parameters'][] = [
-                'payment_method' => str_replace($ppro_suffix, '', $selected_type)
+                $key => str_replace([$ppro_suffix, Data::GOOGLE_PAY_TRANSACTION_PREFIX], '', $selected_type)
             ];
         }
 

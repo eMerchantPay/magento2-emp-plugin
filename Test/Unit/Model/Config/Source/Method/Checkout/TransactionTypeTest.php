@@ -22,6 +22,7 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout;
 use EMerchantPay\Genesis\Helper\Checkout;
 use EMerchantPay\Genesis\Helper\Data;
 use Genesis\API\Constants\Transaction\Names;
+use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use \Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
 
@@ -46,6 +47,8 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
 
         // Exclude PPRO transaction. This is not standalone transaction type
         array_push($excludedTypes, GenesisTransactionTypes::PPRO);
+        // Exclude GooglePay transaction. In this way Google Pay Payment types will be introduced
+        array_push($excludedTypes, GenesisTransactionTypes::GOOGLE_PAY);
 
         // Exclude Transaction Types
         $transactionTypes = array_diff($transactionTypes, $excludedTypes);
@@ -57,7 +60,19 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
             },
             GenesisPaymentMethods::getMethods()
         );
-        $transactionTypes = array_merge($transactionTypes, $pproTypes);
+
+        // Add Google Payment types
+        $googlePayTypes = array_map(
+            function ($type) {
+                return Data::GOOGLE_PAY_TRANSACTION_PREFIX . $type;
+            },
+            [
+                GooglePaymentTypes::AUTHORIZE,
+                GooglePaymentTypes::SALE
+            ]
+        );
+
+        $transactionTypes = array_merge($transactionTypes, $pproTypes, $googlePayTypes);
         asort($transactionTypes);
 
         foreach ($transactionTypes as $type) {

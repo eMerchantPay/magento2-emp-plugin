@@ -19,6 +19,7 @@
 
 namespace EMerchantPay\Genesis\Helper;
 
+use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
@@ -50,6 +51,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const GENESIS_GATEWAY_ERROR_MESSAGE_DEFAULT = 'An error has occurred while processing your request to the gateway';
 
     const PPRO_TRANSACTION_SUFFIX = '_ppro';
+
+    const GOOGLE_PAY_TRANSACTION_PREFIX     = GenesisTransactionTypes::GOOGLE_PAY . '_';
+    const GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE = GooglePaymentTypes::AUTHORIZE;
+    const GOOGLE_PAY_PAYMENT_TYPE_SALE      = GooglePaymentTypes::SALE;
 
     const PLATFORM_TRANSACTION_SUFFIX = '_mage2';
 
@@ -1074,6 +1079,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getShouldCreateAuthNotification($transactionType)
     {
+        if ($this->isTransactionWithCustomAttribute($transactionType)) {
+            return $this->isSelectedAuthorizePaymentType($transactionType);
+        }
+
         return GenesisTransactionTypes::isAuthorize($transactionType);
     }
 
@@ -1083,6 +1092,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getShouldCreateCaptureNotification($transactionType)
     {
+        if ($this->isTransactionWithCustomAttribute($transactionType)) {
+            return !$this->isSelectedAuthorizePaymentType($transactionType);
+        }
+
         return !GenesisTransactionTypes::isAuthorize($transactionType);
     }
 
@@ -1258,5 +1271,40 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return null;
+    }
+
+    /**
+     * Check if special validation should be applied
+     *
+     * @param $transactionType
+     * @return bool
+     */
+    public function isTransactionWithCustomAttribute($transactionType)
+    {
+        $transactionTypes = [
+            GenesisTransactionTypes::GOOGLE_PAY
+        ];
+
+        return in_array($transactionType, $transactionTypes);
+    }
+
+    /**
+     * Check if we should create Authorize Notification to the Magneto store
+     *
+     * @param $transactionType
+     * @return bool
+     */
+    public function isSelectedAuthorizePaymentType($transactionType)
+    {
+        switch ($transactionType) {
+            case GenesisTransactionTypes::GOOGLE_PAY:
+                return in_array(
+                    self::GOOGLE_PAY_TRANSACTION_PREFIX . self::GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE,
+                    $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+                        ->getTransactionTypes()
+                );
+            default:
+                return false;
+        }
     }
 }

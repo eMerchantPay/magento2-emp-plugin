@@ -17,7 +17,7 @@ GNU General Public License for more details.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/Module/etc/module.xsd">
-    <module name="EMerchantPay_Genesis" setup_version="1.2.8">
+    <module name="EMerchantPay_Genesis" setup_version="1.2.9">
         <sequence>
             <module name="Magento_Checkout"/>
             <module name="Magento_Sales"/>

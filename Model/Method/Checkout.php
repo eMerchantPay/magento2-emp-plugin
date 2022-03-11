@@ -129,7 +129,13 @@ class Checkout extends Base
             Data::GOOGLE_PAY_TRANSACTION_PREFIX . Data::GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE =>
                 GenesisTransactionTypes::GOOGLE_PAY,
             Data::GOOGLE_PAY_TRANSACTION_PREFIX . Data::GOOGLE_PAY_PAYMENT_TYPE_SALE      =>
-                GenesisTransactionTypes::GOOGLE_PAY
+                GenesisTransactionTypes::GOOGLE_PAY,
+            Data::PAYPAL_TRANSACTION_PREFIX . Data::PAYPAL_PAYMENT_TYPE_AUTHORIZE         =>
+                GenesisTransactionTypes::PAY_PAL,
+            Data::PAYPAL_TRANSACTION_PREFIX . Data::PAYPAL_PAYMENT_TYPE_SALE              =>
+                GenesisTransactionTypes::PAY_PAL,
+            Data::PAYPAL_TRANSACTION_PREFIX . Data::PAYPAL_PAYMENT_TYPE_EXPRESS           =>
+                GenesisTransactionTypes::PAY_PAL
         ]);
 
         foreach ($selected_types as $selected_type) {
@@ -144,10 +150,18 @@ class Checkout extends Base
             $processed_list[$transaction_type]['name'] = $transaction_type;
 
             // WPF Custom Attribute
-            $key = $transaction_type === GenesisTransactionTypes::GOOGLE_PAY ? 'payment_type' : 'payment_method';
+            $key = $this->getCustomParameterKey($transaction_type);
 
             $processed_list[$transaction_type]['parameters'][] = [
-                $key => str_replace([$ppro_suffix, Data::GOOGLE_PAY_TRANSACTION_PREFIX], '', $selected_type)
+                $key => str_replace(
+                    [
+                        $ppro_suffix,
+                        Data::GOOGLE_PAY_TRANSACTION_PREFIX,
+                        Data::PAYPAL_TRANSACTION_PREFIX
+                    ],
+                    '',
+                    $selected_type
+                )
             ];
         }
 
@@ -301,6 +315,9 @@ class Checkout extends Base
                     $data['urls']['notify']
                 )
                 ->setReturnSuccessUrl(
+                    $data['urls']['return_success']
+                )
+                ->setReturnPendingUrl(
                     $data['urls']['return_success']
                 )
                 ->setReturnFailureUrl(
@@ -681,5 +698,31 @@ class Checkout extends Base
             $this->getCode(),
             $currencyCode
         );
+    }
+
+    /**
+     * Returns payment method/type based on transaction type
+     *
+     * @param string $transactionType Transaction type
+     *
+     * @return string
+     */
+    protected function getCustomParameterKey($transactionType)
+    {
+        switch ($transactionType) {
+            case GenesisTransactionTypes::PPRO:
+                $result = 'payment_method';
+                break;
+            case GenesisTransactionTypes::PAY_PAL:
+                $result = 'payment_type';
+                break;
+            case GenesisTransactionTypes::GOOGLE_PAY:
+                $result = 'payment_subtype';
+                break;
+            default:
+                $result = 'unknown';
+        }
+
+        return $result;
     }
 }

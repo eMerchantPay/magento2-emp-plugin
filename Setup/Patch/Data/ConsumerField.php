@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2022 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,44 +13,44 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2022 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-namespace EMerchantPay\Genesis\Setup;
+namespace EMerchantPay\Genesis\Setup\Patch\Data;
 
+use Magento\Customer\Model\Customer;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Eav\Model\Config;
-use Magento\Framework\Setup\ModuleContextInterface;
-use Magento\Framework\Setup\ModuleDataSetupInterface;
-use Magento\Customer\Model\Customer;
-use Magento\Framework\Setup\UpgradeDataInterface;
-use Magento\Customer\Setup\CustomerSetupFactory as CustomerSetupFactory;
 use Magento\Eav\Model\Entity\Attribute\SetFactory as AttributeSetFactory;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Customer\Setup\CustomerSetupFactory as CustomerSetupFactory;
+use Magento\Framework\Setup\Patch\DataPatchInterface;
 
-class UpgradeData implements UpgradeDataInterface
+/**
+ * Create Data Migration with ConsumerId field assigned to the Magento 2 Customer
+ */
+class ConsumerField implements DataPatchInterface
 {
     const CUSTOM_FIELD_CONSUMER_ID = 'consumer_id';
 
-    protected $eavSetupFactory;
-    protected $eavConfig;
-    protected $customerSetupFactory;
-    protected $attributeSetFactory;
-
     /**
-     * UpgradeData constructor.
-     *
-     * @param EavSetupFactory $eavSetupFactory
-     * @param Config $config
-     * @param CustomerSetupFactory $customerSetupFactory
-     * @param AttributeSetFactory $attributeSetFactory
+     * @var ModuleDataSetupInterface
      */
+    private $moduleDataSetup;
+    private EavSetupFactory $eavSetupFactory;
+    private Config $eavConfig;
+    private CustomerSetupFactory $customerSetupFactory;
+    private AttributeSetFactory $attributeSetFactory;
+
     public function __construct(
+        ModuleDataSetupInterface $moduleDataSetup,
         EavSetupFactory $eavSetupFactory,
         Config $config,
         CustomerSetupFactory $customerSetupFactory,
         AttributeSetFactory $attributeSetFactory
     ) {
+        $this->moduleDataSetup = $moduleDataSetup;
         $this->eavSetupFactory = $eavSetupFactory;
         $this->eavConfig = $config;
         $this->customerSetupFactory = $customerSetupFactory;
@@ -58,17 +58,13 @@ class UpgradeData implements UpgradeDataInterface
     }
 
     /**
-     * @param ModuleDataSetupInterface $setup
-     * @param ModuleContextInterface $context
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @codingStandardsIgnoreStart
+     * Patch Code
      */
-    public function upgrade(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
+    public function apply()
     {
-        // @codingStandardsIgnoreEnd
-        $setup->startSetup();
+        $this->moduleDataSetup->getConnection()->startSetup();
 
-        $customerSetup = $this->customerSetupFactory->create(['setup' => $setup]);
+        $customerSetup = $this->customerSetupFactory->create(['setup' => $this->moduleDataSetup]);
 
         $customerEntity = $customerSetup->getEavConfig()->getEntityType(Customer::ENTITY);
         $attributeSetId = $customerEntity->getDefaultAttributeSetId();
@@ -76,7 +72,7 @@ class UpgradeData implements UpgradeDataInterface
         $attributeSet     = $this->attributeSetFactory->create();
         $attributeGroupId = $attributeSet->getDefaultGroupId($attributeSetId);
 
-        $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+        $eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetup]);
         $eavSetup->addAttribute(
             Customer::ENTITY,
             self::CUSTOM_FIELD_CONSUMER_ID,
@@ -92,14 +88,34 @@ class UpgradeData implements UpgradeDataInterface
         );
 
         $document = $customerSetup->getEavConfig()
-                                  ->getAttribute(Customer::ENTITY, self::CUSTOM_FIELD_CONSUMER_ID)
-                                  ->addData([
-                                      'attribute_set_id'   => $attributeSetId,
-                                      'attribute_group_id' => $attributeGroupId
-                                  ]);
+            ->getAttribute(Customer::ENTITY, self::CUSTOM_FIELD_CONSUMER_ID)
+            ->addData([
+                'attribute_set_id'   => $attributeSetId,
+                'attribute_group_id' => $attributeGroupId
+            ]);
 
         $document->save();
 
-        $setup->endSetup();
+        $this->moduleDataSetup->getConnection()->endSetup();
+    }
+
+    /**
+     * Get array of patches that have to be executed prior to this.
+     *
+     * @return array
+     */
+    public static function getDependencies()
+    {
+        return [];
+    }
+
+    /**
+     * Get aliases (previous names) for the patch.
+     *
+     * @return string[]
+     */
+    public function getAliases()
+    {
+        return [];
     }
 }

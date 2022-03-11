@@ -23,6 +23,7 @@ use EMerchantPay\Genesis\Helper\Checkout;
 use EMerchantPay\Genesis\Helper\Data;
 use Genesis\API\Constants\Transaction\Names;
 use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
+use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use \Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
 
@@ -48,6 +49,8 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
         array_push($excludedTypes, GenesisTransactionTypes::PPRO);
         // Exclude GooglePay transaction. In this way Google Pay Payment types will be introduced
         array_push($excludedTypes, GenesisTransactionTypes::GOOGLE_PAY);
+        // Exclude PayPal transaction. Not standalone transaction type
+        array_push($excludedTypes, GenesisTransactionTypes::PAY_PAL);
 
         // Exclude Transaction Types
         $transactionTypes = array_diff($transactionTypes, $excludedTypes);
@@ -71,7 +74,24 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
             ]
         );
 
-        $transactionTypes = array_merge($transactionTypes, $pproTypes, $googlePayTypes);
+        // Add PayPal Payment types
+        $payPalTypes = array_map(
+            function ($type) {
+                return Data::PAYPAL_TRANSACTION_PREFIX . $type;
+            },
+            [
+                PayPalPaymentTypes::AUTHORIZE,
+                PayPalPaymentTypes::SALE,
+                PayPalPaymentTypes::EXPRESS
+            ]
+        );
+
+        $transactionTypes = array_merge(
+            $transactionTypes,
+            $pproTypes,
+            $googlePayTypes,
+            $payPalTypes
+        );
         asort($transactionTypes);
 
         foreach ($transactionTypes as $type) {

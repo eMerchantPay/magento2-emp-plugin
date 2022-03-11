@@ -20,6 +20,7 @@
 namespace EMerchantPay\Genesis\Helper;
 
 use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
+use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
@@ -55,6 +56,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const GOOGLE_PAY_TRANSACTION_PREFIX     = GenesisTransactionTypes::GOOGLE_PAY . '_';
     const GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE = GooglePaymentTypes::AUTHORIZE;
     const GOOGLE_PAY_PAYMENT_TYPE_SALE      = GooglePaymentTypes::SALE;
+
+    const PAYPAL_TRANSACTION_PREFIX         = GenesisTransactionTypes::PAY_PAL . '_';
+    const PAYPAL_PAYMENT_TYPE_AUTHORIZE     = PayPalPaymentTypes::AUTHORIZE;
+    const PAYPAL_PAYMENT_TYPE_SALE          = PayPalPaymentTypes::SALE;
+    const PAYPAL_PAYMENT_TYPE_EXPRESS       = PayPalPaymentTypes::EXPRESS;
 
     const PLATFORM_TRANSACTION_SUFFIX = '_mage2';
 
@@ -1282,14 +1288,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function isTransactionWithCustomAttribute($transactionType)
     {
         $transactionTypes = [
-            GenesisTransactionTypes::GOOGLE_PAY
+            GenesisTransactionTypes::GOOGLE_PAY,
+            GenesisTransactionTypes::PAY_PAL
         ];
 
         return in_array($transactionType, $transactionTypes);
     }
 
     /**
-     * Check if we should create Authorize Notification to the Magneto store
+     * Check if we should create Authorize Notification to the Magento store
      *
      * @param $transactionType
      * @return bool
@@ -1300,6 +1307,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             case GenesisTransactionTypes::GOOGLE_PAY:
                 return in_array(
                     self::GOOGLE_PAY_TRANSACTION_PREFIX . self::GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE,
+                    $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+                        ->getTransactionTypes()
+                );
+            case GenesisTransactionTypes::PAY_PAL:
+                return in_array(
+                    self::PAYPAL_TRANSACTION_PREFIX . self::PAYPAL_PAYMENT_TYPE_AUTHORIZE,
                     $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
                         ->getTransactionTypes()
                 );

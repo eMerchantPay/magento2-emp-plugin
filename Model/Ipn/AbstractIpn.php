@@ -298,7 +298,8 @@ abstract class AbstractIpn
         $voidableTransactions = [
             GenesisTransactionTypes::AUTHORIZE,
             GenesisTransactionTypes::AUTHORIZE_3D,
-            GenesisTransactionTypes::GOOGLE_PAY
+            GenesisTransactionTypes::GOOGLE_PAY,
+            GenesisTransactionTypes::PAY_PAL
         ];
 
         if ($this->getModuleHelper()->isTransactionWithCustomAttribute($responseObject->transaction_type)) {

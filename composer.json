@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.2.10",
+    "version": "1.2.11",
     "license": [
         "GPL-2.0"
     ],
@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*",
-        "genesisgateway/genesis_php": "1.20.0"
+        "genesisgateway/genesis_php": "1.20.1"
     },
     "require-dev": {
         "fzaninotto/faker": "1.*@stable"
@@ -46,6 +46,7 @@
         "refund",
         "void",
         "3d-secure",
+        "apple_pay",
         "aura",
         "boleto",
         "baloto",

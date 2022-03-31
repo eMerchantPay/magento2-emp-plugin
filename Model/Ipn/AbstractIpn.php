@@ -299,7 +299,8 @@ abstract class AbstractIpn
             GenesisTransactionTypes::AUTHORIZE,
             GenesisTransactionTypes::AUTHORIZE_3D,
             GenesisTransactionTypes::GOOGLE_PAY,
-            GenesisTransactionTypes::PAY_PAL
+            GenesisTransactionTypes::PAY_PAL,
+            GenesisTransactionTypes::APPLE_PAY,
         ];
 
         if ($this->getModuleHelper()->isTransactionWithCustomAttribute($responseObject->transaction_type)) {

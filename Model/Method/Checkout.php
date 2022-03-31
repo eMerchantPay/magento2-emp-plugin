@@ -135,7 +135,11 @@ class Checkout extends Base
             Data::PAYPAL_TRANSACTION_PREFIX . Data::PAYPAL_PAYMENT_TYPE_SALE              =>
                 GenesisTransactionTypes::PAY_PAL,
             Data::PAYPAL_TRANSACTION_PREFIX . Data::PAYPAL_PAYMENT_TYPE_EXPRESS           =>
-                GenesisTransactionTypes::PAY_PAL
+                GenesisTransactionTypes::PAY_PAL,
+            Data::APPLE_PAY_TRANSACTION_PREFIX . Data::APPLE_PAY_PAYMENT_TYPE_AUTHORIZE   =>
+                GenesisTransactionTypes::APPLE_PAY,
+            Data::APPLE_PAY_TRANSACTION_PREFIX . Data::APPLE_PAY_PAYMENT_TYPE_SALE        =>
+                GenesisTransactionTypes::APPLE_PAY,
         ]);
 
         foreach ($selected_types as $selected_type) {
@@ -157,7 +161,8 @@ class Checkout extends Base
                     [
                         $ppro_suffix,
                         Data::GOOGLE_PAY_TRANSACTION_PREFIX,
-                        Data::PAYPAL_TRANSACTION_PREFIX
+                        Data::PAYPAL_TRANSACTION_PREFIX,
+                        Data::APPLE_PAY_TRANSACTION_PREFIX,
                     ],
                     '',
                     $selected_type
@@ -717,6 +722,7 @@ class Checkout extends Base
                 $result = 'payment_type';
                 break;
             case GenesisTransactionTypes::GOOGLE_PAY:
+            case GenesisTransactionTypes::APPLE_PAY:
                 $result = 'payment_subtype';
                 break;
             default:

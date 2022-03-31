@@ -21,6 +21,7 @@ namespace EMerchantPay\Genesis\Helper;
 
 use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
+use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
@@ -61,6 +62,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const PAYPAL_PAYMENT_TYPE_AUTHORIZE     = PayPalPaymentTypes::AUTHORIZE;
     const PAYPAL_PAYMENT_TYPE_SALE          = PayPalPaymentTypes::SALE;
     const PAYPAL_PAYMENT_TYPE_EXPRESS       = PayPalPaymentTypes::EXPRESS;
+    
+    const APPLE_PAY_TRANSACTION_PREFIX      = GenesisTransactionTypes::APPLE_PAY . '_';
+    const APPLE_PAY_PAYMENT_TYPE_AUTHORIZE  = ApplePaymentTypes::AUTHORIZE;
+    const APPLE_PAY_PAYMENT_TYPE_SALE       = ApplePaymentTypes::SALE;
 
     const PLATFORM_TRANSACTION_SUFFIX = '_mage2';
 
@@ -1289,7 +1294,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     {
         $transactionTypes = [
             GenesisTransactionTypes::GOOGLE_PAY,
-            GenesisTransactionTypes::PAY_PAL
+            GenesisTransactionTypes::PAY_PAL,
+            GenesisTransactionTypes::APPLE_PAY
         ];
 
         return in_array($transactionType, $transactionTypes);
@@ -1313,6 +1319,12 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             case GenesisTransactionTypes::PAY_PAL:
                 return in_array(
                     self::PAYPAL_TRANSACTION_PREFIX . self::PAYPAL_PAYMENT_TYPE_AUTHORIZE,
+                    $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+                        ->getTransactionTypes()
+                );
+            case GenesisTransactionTypes::APPLE_PAY:
+                return in_array(
+                    self::APPLE_PAY_TRANSACTION_PREFIX . self::APPLE_PAY_PAYMENT_TYPE_AUTHORIZE,
                     $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
                         ->getTransactionTypes()
                 );

@@ -38,10 +38,10 @@ class ConsumerField implements DataPatchInterface
      * @var ModuleDataSetupInterface
      */
     private $moduleDataSetup;
-    private EavSetupFactory $eavSetupFactory;
-    private Config $eavConfig;
-    private CustomerSetupFactory $customerSetupFactory;
-    private AttributeSetFactory $attributeSetFactory;
+    private $eavSetupFactory;
+    private $eavConfig;
+    private $customerSetupFactory;
+    private $attributeSetFactory;
 
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,

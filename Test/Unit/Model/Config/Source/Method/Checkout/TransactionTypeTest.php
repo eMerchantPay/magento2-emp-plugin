@@ -22,6 +22,7 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout;
 use EMerchantPay\Genesis\Helper\Checkout;
 use EMerchantPay\Genesis\Helper\Data;
 use Genesis\API\Constants\Transaction\Names;
+use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
@@ -52,6 +53,8 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
         array_push($excludedTypes, GenesisTransactionTypes::GOOGLE_PAY);
         // Exclude PayPal transaction. In this way PayPal Payment types will be introduced
         array_push($excludedTypes, GenesisTransactionTypes::PAY_PAL);
+        // Exclude Apple Pay transaction.
+        array_push($excludedTypes, GenesisTransactionTypes::APPLE_PAY);
 
         // Exclude Transaction Types
         $transactionTypes = array_diff($transactionTypes, $excludedTypes);
@@ -87,11 +90,23 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
             ]
         );
 
+        // Add Apple Pay types
+        $applePayTypes = array_map(
+            function ($type) {
+                return Data::APPLE_PAY_TRANSACTION_PREFIX . $type;
+            },
+            [
+                ApplePaymentTypes::AUTHORIZE,
+                ApplePaymentTypes::SALE
+            ]
+        );
+
         $transactionTypes = array_merge(
             $transactionTypes,
             $pproTypes,
             $googlePayTypes,
-            $payPalTypes
+            $payPalTypes,
+            $applePayTypes
         );
         asort($transactionTypes);
 

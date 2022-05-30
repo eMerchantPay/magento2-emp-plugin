@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.2.11",
+    "version": "1.2.12",
     "license": [
         "GPL-2.0"
     ],
@@ -84,6 +84,7 @@
         "insta_debit",
         "insta_debit_payin",
         "insta_debit_payout",
+        "interac",
         "intersolve",
         "multibanco",
         "mybank",

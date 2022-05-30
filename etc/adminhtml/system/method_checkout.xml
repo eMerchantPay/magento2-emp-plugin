@@ -74,12 +74,20 @@ GNU General Public License for more details.
             </depends>
             <can_be_empty>0</can_be_empty>
         </field>
-        <field id="tokenization" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="online_banking_payment_methods" translate="label" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Bank code(s) for Online banking</label>
+            <comment><![CDATA[Select the Bank codes for Online banking]]></comment>
+            <tooltip><![CDATA[You can select Bank codes for Online banking transaction type.]]></tooltip>
+            <config_path>payment/emerchantpay_checkout/bank_codes</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\BankCode</source_model>
+            <can_be_empty>1</can_be_empty>
+        </field>
+        <field id="tokenization" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable Tokenization</label>
             <config_path>payment/emerchantpay_checkout/tokenization</config_path>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
         </field>
-        <field id="order_status" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="order_status" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>New Order Status</label>
             <comment><![CDATA[Select the default order status for new orders.]]></comment>
             <config_path>payment/emerchantpay_checkout/order_status</config_path>

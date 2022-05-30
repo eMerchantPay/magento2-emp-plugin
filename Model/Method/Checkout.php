@@ -20,6 +20,7 @@
 namespace EMerchantPay\Genesis\Model\Method;
 
 use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\BankCode;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
 use Genesis\API\Constants\Transaction\States;
@@ -252,6 +253,14 @@ class Checkout extends Base
                         'user_id' => $trustlyUserId
                     ];
                     break;
+                case GenesisTransactionTypes::ONLINE_BANKING_PAYIN:
+                    $parameters['bank_codes'] = array_map(
+                        function ($value) {
+                            return ['bank_code' => $value];
+                        },
+                        $this->getConfigHelper()->getBankCodes()
+                    );
+                    break;
             }
 
             if (!isset($parameters)) {
@@ -262,6 +271,7 @@ class Checkout extends Base
                 $transactionType,
                 $parameters
             );
+            unset($parameters);
         }
     }
 

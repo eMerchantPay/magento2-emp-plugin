@@ -360,4 +360,20 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
         return $this->isFlagChecked($methodCode, 'payment_confirmation_email_enabled');
     }
+
+    /**
+     * Get selected Bank codes
+     * @return array
+     */
+    public function getBankCodes()
+    {
+        return
+            array_map(
+                'trim',
+                explode(
+                    ',',
+                    $this->getValue('bank_codes')
+                )
+            );
+    }
 }

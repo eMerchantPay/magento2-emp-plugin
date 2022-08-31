@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f62bb0d7445d5d5ee80c018c4b84527",
+    "content-hash": "3a1a6b72a194e1188104f34bfe40caab",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.20.1",
+            "version": "1.21.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "1cebebf22baec9ae53d11441325a269319bc5819"
+                "reference": "6fcdca45c7faac4c24c686b1b9e4e9b406dac0ad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/1cebebf22baec9ae53d11441325a269319bc5819",
-                "reference": "1cebebf22baec9ae53d11441325a269319bc5819",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/6fcdca45c7faac4c24c686b1b9e4e9b406dac0ad",
+                "reference": "6fcdca45c7faac4c24c686b1b9e4e9b406dac0ad",
                 "shasum": ""
             },
             "require": {
@@ -51,6 +51,8 @@
                 "POLi",
                 "Przelewy24",
                 "SDD",
+                "african_mobile_payout",
+                "african_mobile_sale",
                 "apple_pay",
                 "aura",
                 "authorize",
@@ -64,12 +66,14 @@
                 "capture",
                 "cashu",
                 "cencosud",
+                "charge",
                 "chargeback",
                 "consumers",
                 "container_store",
                 "credit",
                 "credit_card",
                 "debit_card",
+                "disbursement",
                 "e-commerce",
                 "efecty",
                 "elo",
@@ -97,7 +101,9 @@
                 "insta_debit_payin",
                 "insta_debit_payout",
                 "intersolve",
+                "managed_recurring",
                 "mastercard",
+                "money_transfer",
                 "multibanco",
                 "mybank",
                 "neosurf",
@@ -115,6 +121,7 @@
                 "paysec",
                 "payu",
                 "pci-dss",
+                "pix",
                 "postfinance",
                 "ppro",
                 "preauthorization",
@@ -125,6 +132,8 @@
                 "redpagos",
                 "refund",
                 "reports",
+                "russian_mobile_payout",
+                "russian_mobile_sale",
                 "safetypay",
                 "santander",
                 "sca",
@@ -145,7 +154,7 @@
                 "wechat",
                 "wpf"
             ],
-            "time": "2022-03-04T15:33:49+00:00"
+            "time": "2022-08-26T08:43:23+00:00"
         }
     ],
     "packages-dev": [

@@ -23,6 +23,7 @@ use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes a
 use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
 use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Magento\Framework\App\ObjectManager;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
@@ -1331,5 +1332,73 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             default:
                 return false;
         }
+    }
+
+    /**
+     * Search for a Physical product in the Checkout Order
+     *
+     * @param $order
+     * @return bool
+     */
+    public function isCheckoutWithPhysicalProduct($order)
+    {
+        foreach ($order->getAllItems() as $item) {
+            $isVirtual = (bool) $item->getIsVirtual();
+            if (!$isVirtual) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Load the Customer Entity
+     *
+     * @param $customerId
+     * @return \Magento\Customer\Model\Customer
+     */
+    public function getCustomerEntity($customerId)
+    {
+        return $this->_objectManager
+            ->create('Magento\Customer\Model\Customer')
+            ->load($customerId);
+    }
+
+    /**
+     * Get All order created from the Customer
+     *
+     * @param $customerId
+     * @param array $status
+     * @param string $fromTime
+     * @param string $toTime
+     * @param string $sort
+     * @return mixed
+     */
+    public function getCustomerOrders($customerId, $status = [], $fromTime = '', $toTime = '', $sort = 'ASC')
+    {
+        $collection = $this->_objectManager->create('Magento\Sales\Model\Order')->getCollection();
+
+        $collection
+            ->join(
+                ['payment' => 'sales_order_payment'],
+                'main_table.entity_id = payment.parent_id',
+                ['method']
+            )
+            ->addFieldToFilter('payment.method', \EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+            ->addFieldToFilter('customer_id', $customerId)
+            ->setOrder('main_table.created_at', $sort);
+
+        if (!empty($status)) {
+            $collection
+                ->addFieldToFilter('status', ['in' => $status]);
+        }
+
+        if (!empty($fromTime) && !empty($toTime)) {
+            $collection
+                ->addFieldToFilter('created_at', ['from' => $fromTime, 'to' => $toTime]);
+        }
+
+        return $collection;
     }
 }

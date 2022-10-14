@@ -23,6 +23,9 @@ use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\BankCode;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
 use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
+use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
+use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\DeliveryTimeframes;
+use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\Purchase\Categories;
 use Genesis\API\Constants\Transaction\States;
 use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
@@ -59,6 +62,7 @@ class Checkout extends Base
      * @param \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
+     * @param \EMerchantpay\Genesis\Helper\Threeds $threedsHelper
      * @param array $data
      *
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -75,6 +79,7 @@ class Checkout extends Base
         \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        \EMerchantPay\Genesis\Helper\Threeds $threedsHelper,
         array $data = []
     ) {
         $loggerHelper->setFilename('checkout');
@@ -93,6 +98,7 @@ class Checkout extends Base
         $this->_storeManager                = $storeManager;
         $this->_checkoutSession             = $checkoutSession;
         $this->_moduleHelper                = $moduleHelper;
+        $this->_threedsHelper               = $threedsHelper;
         $this->_customerRepositoryInterface = $customerRepositoryInterface;
         $this->_configHelper                =
             $this->getModuleHelper()->getMethodConfig(
@@ -184,10 +190,16 @@ class Checkout extends Base
     {
         $genesis = $this->prepareGenesisWPFRequest($data);
 
+        if ($this->_configHelper->isThreedsAllowed()) {
+            $this->prepareThreedsV2Parameters($genesis, $data);
+        }
+
         $this->prepareTransactionTypes(
             $genesis->request(),
             $data
         );
+
+        $this->addScaParameters($genesis);
 
         $this->getModuleHelper()->executeGatewayRequest($genesis);
 
@@ -740,5 +752,115 @@ class Checkout extends Base
         }
 
         return $result;
+    }
+
+    /**
+     * Prepare the 3DSv2 WPF Parameters
+     *
+     * @param Genesis $genesis
+     * @param $data
+     * @return void
+     * @throws \Genesis\Exceptions\InvalidArgument
+     */
+    protected function prepareThreedsV2Parameters($genesis, $data)
+    {
+        /** @var \Genesis\API\Request\WPF\Create $request */
+        $request = $genesis->request();
+
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $data['order']['orderObject'];
+
+        $hasPhysicalProducts = $this->getModuleHelper()->isCheckoutWithPhysicalProduct($order);
+        $customer            = null;
+        if (!$order->getCustomerIsGuest()) {
+            $customer = $this->getModuleHelper()->getCustomerEntity($order->getCustomerId());
+        }
+
+        // Merchant Risk parameters
+        $request->setThreedsV2ControlChallengeIndicator($this->_configHelper->getThreedsChallengeIndicator());
+        $request->setThreedsV2PurchaseCategory(($hasPhysicalProducts ? Categories::GOODS : Categories::SERVICE));
+        $request->setThreedsV2MerchantRiskShippingIndicator(
+            $this->getThreedsHelper()->fetchShippingIndicator($hasPhysicalProducts, $order)
+        );
+        $request->setThreedsV2MerchantRiskDeliveryTimeframe(
+            $hasPhysicalProducts ? DeliveryTimeframes::ANOTHER_DAY : DeliveryTimeframes::ELECTRONICS
+        );
+        $request->setThreedsV2MerchantRiskReorderItemsIndicator(
+            $this->getThreedsHelper()->fetchReorderItemsIndicator($order)
+        );
+
+        // Card Holder parameters
+        if ($customer) {
+            $request->setThreedsV2CardHolderAccountCreationDate($customer->getCreatedAt());
+            $request->setThreedsV2CardHolderAccountUpdateIndicator(
+                $this->getThreedsHelper()->fetchUpdateIndicator($customer)
+            );
+            $request->setThreedsV2CardHolderAccountLastChangeDate(
+                $this->getThreedsHelper()->getSortedCustomerAddress($customer)[0]['updated_at']
+            );
+            $request->setThreedsV2CardHolderAccountPasswordChangeIndicator(
+                $this->getThreedsHelper()->fetchPasswordChangeIndicator($customer)
+            );
+
+            $isPasswordChanged = $request->getThreedsV2CardHolderAccountPasswordChangeIndicator() !=
+                PasswordChangeIndicators::NO_CHANGE;
+            $request->setThreedsV2CardHolderAccountPasswordChangeDate(
+                $isPasswordChanged ? $customer->getUpdatedAt() : null
+            );
+
+            $firstUsedShippingAddressTime = $this->getThreedsHelper()->fetchShippingAddressDateFirstUsed($order);
+            $request->setThreedsV2CardHolderAccountShippingAddressDateFirstUsed(
+                $firstUsedShippingAddressTime
+            );
+            $request->setThreedsV2CardHolderAccountShippingAddressUsageIndicator(
+                $this->getThreedsHelper()->fetchShippingAddressUsageIndicator($firstUsedShippingAddressTime)
+            );
+
+            $request->setThreedsV2CardHolderAccountTransactionsActivityLast24Hours(
+                $this->getThreedsHelper()->fetchTransactionActivityLast24Hours($order)
+            );
+            $request->setThreedsV2CardHolderAccountTransactionsActivityPreviousYear(
+                $this->getThreedsHelper()->fetchTransactionActivityPreviousYear($order)
+            );
+            $request->setThreedsV2CardHolderAccountPurchasesCountLast6Months(
+                $this->getThreedsHelper()->fetchPurchasedCountLastHalfYear($order)
+            );
+
+            $firstOrderDate = $this->getThreedsHelper()->fetchFirstOrderDate($order);
+            $request->setThreedsV2CardHolderAccountRegistrationDate($firstOrderDate);
+        }
+
+        $request->setThreedsV2CardHolderAccountRegistrationIndicator(
+            $this->getThreedsHelper()->fetchRegistrationIndicator($order, $firstOrderDate ?? '')
+        );
+    }
+
+    /**
+     * Threeds V2 Helper
+     *
+     * @return Data|\EMerchantPay\Genesis\Helper\Threeds
+     */
+    protected function getThreedsHelper()
+    {
+        return $this->_threedsHelper;
+    }
+
+    /**
+     * Add SCA Exemption parameters to Genesis Request
+     *
+     * @var \Genesis\Genesis $genesis
+     * @return void
+     */
+    protected function addScaParameters($genesis)
+    {
+        $scaValue       = $this->getConfigHelper()->getScaExemption();
+        $scaAmountValue = $this->getConfigHelper()->getScaExemptionAmount();
+        $wpfAmount      = (float) $genesis->request()->getAmount();
+        /** @var \Genesis\API\Request\WPF\Create $request */
+        $request        = $genesis->request();
+
+        if ($wpfAmount <= $scaAmountValue) {
+            $request->setScaExemption($scaValue);
+        }
     }
 }

@@ -22,9 +22,8 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Method;
 use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Model\Method\Checkout as CheckoutPaymentMethod;
 use Genesis\API\Constants\Payment\Methods;
-use Magento\Framework\DataObject as MagentoDataObject;
-use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
 
 /**
  * Class CheckoutTest
@@ -170,18 +169,9 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
     {
         $orderId = $this->getGeneratedOrderId();
 
-        $this->scopeConfigMock->expects(static::exactly(2))
+        $this->scopeConfigMock->expects(static::exactly(4))
             ->method('getValue')
-            ->with("payment/{$this->getPaymentMethodCode()}/transaction_types", 'store', null)
-            ->willReturn(
-                implode(
-                    ',',
-                    [
-                        GenesisTransactionTypes::AUTHORIZE,
-                        GenesisTransactionTypes::SOFORT,
-                    ]
-                )
-            );
+            ->will($this->returnCallback([$this, 'configCallback']));
 
         $orderMock = $this->getOrderMock();
 
@@ -346,5 +336,34 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
             $this->paymentMock,
             self::ORDER_AMOUNT
         );
+    }
+
+    /**
+     * Scope Config Method Settings values
+     *
+     * @param ...$args
+     * @return string
+     */
+    public function configCallback(...$args)
+    {
+        if ($args[0] === "payment/{$this->getPaymentMethodCode()}/transaction_types") {
+            return implode(
+                ',',
+                [
+                    GenesisTransactionTypes::AUTHORIZE,
+                    GenesisTransactionTypes::SOFORT,
+                ]
+            );
+        }
+
+        if ($args[0] === "payment/{$this->getPaymentMethodCode()}/sca_exemption") {
+            return 'low_value';
+        }
+
+        if ($args[0] === "payment/{$this->getPaymentMethodCode()}/sca_exemption_code") {
+            return '100';
+        }
+
+        return '';
     }
 }

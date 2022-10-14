@@ -176,5 +176,45 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
+        <field id="threeds_allowed" translate="label" type="select" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Enable 3DSv2 parameters</label>
+            <comment><![CDATA[Enable the plugin extraction of the 3DSv2 parameters and sent them to the Gateway]]></comment>
+            <config_path>payment/emerchantpay_checkout/threeds_allowed</config_path>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="threeds_challenge_indicator" translate="label" type="select" sortOrder="19" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Challenge Indicator</label>
+            <comment><![CDATA[Select the 3DSv2 Challenge weight]]></comment>
+            <tooltip><![CDATA[Hint: The value has weight and might impact the decision whether a challenge will be required for the transaction or not.]]></tooltip>
+            <config_path>payment/emerchantpay_checkout/threeds_challenge_indicator</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ChallengeIndicator</source_model>
+            <depends>
+                <field id="active">1</field>
+                <field id="threeds_allowed">1</field>
+            </depends>
+        </field>
+        <field id="sca_exemption" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>SCA Exemption</label>
+            <comment><![CDATA[Exemption for the Strong Customer Authentication]]></comment>
+            <config_path>payment/emerchantpay_checkout/sca_exemption</config_path>
+            <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ScaExemption</source_model>
+            <can_be_empty>0</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
+        <field id="sca_exemption_amount" translate="label" type="text" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Exemption Amount</label>
+            <comment><![CDATA[Exemption Amount determinate if the SCA Exemption should be included in the request to the Gateway]]></comment>
+            <config_path>payment/emerchantpay_checkout/sca_exemption_amount</config_path>
+            <validate>zero-or-greater</validate>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+        </field>
     </group>
 </include>

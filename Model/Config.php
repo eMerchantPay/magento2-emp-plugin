@@ -376,4 +376,44 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
                 )
             );
     }
+
+    /**
+     * Get is 3DSv2 allowed
+     *
+     * @return bool
+     */
+    public function isThreedsAllowed()
+    {
+        return $this->isFlagChecked($this->_methodCode, 'threeds_allowed');
+    }
+
+    /**
+     * Get the current selected Challenge Indicator
+     *
+     * @return string
+     */
+    public function getThreedsChallengeIndicator()
+    {
+        return $this->getValue('threeds_challenge_indicator');
+    }
+
+    /**
+     * Return SCA Exemption configured value
+     *
+     * @return string|null
+     */
+    public function getScaExemption()
+    {
+        return $this->getValue('sca_exemption');
+    }
+
+    /**
+     * Return SCA Exemptions configured amount
+     *
+     * @return float|null
+     */
+    public function getScaExemptionAmount()
+    {
+        return (float) $this->getValue('sca_exemption_amount');
+    }
 }

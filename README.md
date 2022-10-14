@@ -11,8 +11,8 @@ This is a Payment Module for Magento 2, that gives you the ability to process pa
 Requirements
 ------------
 
-* Magento 2 CE, EE, ECE or higher (Tested upto __2.4.4__)
-* [GenesisPHP v1.21.2](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.2) - (Integrated in Module)
+* Magento 2 CE, EE, ECE or higher (Tested upto __2.4.5__)
+* [GenesisPHP v1.21.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.3) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 Installation (composer)
@@ -49,7 +49,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.21.2@stable
+    $ composer require genesisgateway/genesis_php:1.21.3@stable
     ```
 
 * Enable Payment Module 
@@ -102,6 +102,8 @@ GenesisPHP Requirements
     * [Hash](https://php.net/hash)
     * [XMLReader](https://php.net/xmlreader)
     * [XMLWriter](https://php.net/xmlwriter)
+    * [JSON](https://www.php.net/manual/en/book.json)
+    * [OpenSSL](https://www.php.net/manual/en/book.openssl.php)
 
 Supported Transactions
 ------------

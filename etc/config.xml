@@ -41,6 +41,10 @@ GNU General Public License for more details.
                 <allowspecific>0</allowspecific>
                 <allow_specific_currency>0</allow_specific_currency>
                 <group>emerchantpay</group>
+                <threeds_allowed>1</threeds_allowed>
+                <threeds_challenge_indicator>no_preference</threeds_challenge_indicator>
+                <sca_exemption>low_risk</sca_exemption>
+                <sca_exemption_amount>100</sca_exemption_amount>
             </emerchantpay_checkout>
         </payment>
     </default>

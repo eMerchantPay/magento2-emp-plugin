@@ -11,7 +11,7 @@ This is a Payment Module for Magento 2, that gives you the ability to process pa
 Requirements
 ------------
 
-* Magento 2 CE, EE, ECE or higher (Tested upto __2.4.5__)
+* Magento 2 CE, EE, ECE or higher (Tested upto __2.4.5-p1__)
 * [GenesisPHP v1.21.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.3) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 

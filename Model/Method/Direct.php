@@ -233,7 +233,8 @@ class Direct extends Base
             [
                 'cc_type'           => $additionalData->getCcType(),
                 'cc_owner'          => $additionalData->getCcOwner(),
-                'cc_last_4'         => substr($additionalData->getCcNumber(), -4),
+                'cc_last_4'         => $additionalData->getCcNumber() ?
+                    substr($additionalData->getCcNumber(), -4) : '',
                 'cc_number'         => $additionalData->getCcNumber(),
                 'cc_cid'            => $additionalData->getCcCid(),
                 'cc_exp_month'      => $additionalData->getCcExpMonth(),
@@ -546,11 +547,11 @@ class Direct extends Base
         parent::validate();
 
         $info           = $this->getInfoInstance();
-        $availableTypes = explode(',', $this->getConfigData('cctypes'));
+        $availableTypes = explode(',', $this->getConfigData('cctypes') ?? '');
         $ccNumber       = $info->getCcNumber();
 
         // remove credit card number delimiters such as "-" and space
-        $ccNumber = preg_replace('/[\-\s]+/', '', $ccNumber);
+        $ccNumber = preg_replace('/[\-\s]+/', '', $ccNumber ?? '');
         $info->setCcNumber($ccNumber);
 
         if (!$this->validateCcNumOther($ccNumber)) {
@@ -571,7 +572,7 @@ class Direct extends Base
             );
         }
 
-        if (preg_match('/^\d+$/', $this->getCcNumber())) {
+        if (preg_match('/^\d+$/', $this->getCcNumber() ?? '')) {
             throw new \Magento\Framework\Exception\LocalizedException(
                 __('Invalid Card Verification Number')
             );

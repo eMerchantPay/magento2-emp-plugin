@@ -60,9 +60,9 @@ class Checkout extends Base
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
      * @param \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface
+     * @param \EMerchantpay\Genesis\Helper\Threeds $threedsHelper
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
-     * @param \EMerchantpay\Genesis\Helper\Threeds $threedsHelper
      * @param array $data
      *
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -77,9 +77,9 @@ class Checkout extends Base
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
         \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface,
+        \EMerchantPay\Genesis\Helper\Threeds $threedsHelper,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        \EMerchantPay\Genesis\Helper\Threeds $threedsHelper,
         array $data = []
     ) {
         $loggerHelper->setFilename('checkout');

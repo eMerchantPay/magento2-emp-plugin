@@ -38,7 +38,7 @@ use Genesis\API\Notification as Notification;
 abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Ipn\CheckoutIpn|\EMerchantPay\Genesis\Model\Ipn\DirectIpn
+     * @var \EMerchantPay\Genesis\Model\Ipn\CheckoutIpn
      */
     protected $ipnInstance;
 
@@ -123,7 +123,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Gets IPN model instance
-     * @return \EMerchantPay\Genesis\Model\Ipn\CheckoutIpn|\EMerchantPay\Genesis\Model\Ipn\DirectIpn
+     * @return \EMerchantPay\Genesis\Model\Ipn\CheckoutIpn
      */
     protected function getIpnInstance()
     {

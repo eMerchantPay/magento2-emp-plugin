@@ -190,8 +190,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     {
         return !empty($this->getUserName()) &&
                !empty($this->getPassword()) &&
-               !empty($this->getTransactionTypes()) &&
-               ($methodCode != \EMerchantPay\Genesis\Model\Method\Direct::CODE || !empty($this->getToken()));
+               !empty($this->getTransactionTypes());
     }
 
     /**

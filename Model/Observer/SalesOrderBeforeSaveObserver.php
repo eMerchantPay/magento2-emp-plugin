@@ -21,7 +21,6 @@ namespace EMerchantPay\Genesis\Model\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
 use EMerchantPay\Genesis\Model\Method\Checkout as GenesisCheckoutPaymentMethod;
-use EMerchantPay\Genesis\Model\Method\Direct as GenesisDirectPaymentMethod;
 
 class SalesOrderBeforeSaveObserver implements ObserverInterface
 {
@@ -54,7 +53,7 @@ class SalesOrderBeforeSaveObserver implements ObserverInterface
             return $this;
         }
 
-        if (in_array($methodCode, [GenesisCheckoutPaymentMethod::CODE, GenesisDirectPaymentMethod::CODE])) {
+        if (in_array($methodCode, [GenesisCheckoutPaymentMethod::CODE])) {
             $order->setCanSendNewEmailFlag(false);
             $order->setSendEmail(false);
         }

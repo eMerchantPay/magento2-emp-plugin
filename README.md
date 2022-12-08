@@ -13,7 +13,6 @@ Requirements
 
 * Magento 2 CE, EE, ECE or higher (Tested upto __2.4.5-p1__)
 * [GenesisPHP v1.21.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.3) - (Integrated in Module)
-* PCI-certified server in order to use ```emerchantpay Direct```
 
 Installation (composer)
 ---------------------
@@ -73,23 +72,11 @@ Configuration
 * Login inside the __Admin Panel__ and go to ```Stores``` -> ```Configuration``` -> ```Sales``` -> ```Payment Methods```
 * If the Payment Module Panel ```emerchantpay``` is not visible in the list of available Payment Methods, 
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
-* Go back to ```Payment Methods``` and click the button ```Configure``` under the payment method ```emerchantpay Checkout``` or ```emerchantpay Direct``` to expand the available settings
+* Go back to ```Payment Methods``` and click the button ```Configure``` under the payment method ```emerchantpay Checkout``` to expand the available settings
 * Set ```Enabled``` to ```Yes```, set the correct credentials, select your prefered transaction types and additional settings and click ```Save config```
 * Set ```Enable e-mail notification``` to ```Yes``` to receive emails after successful payment.
   **Note**: If you consider sending Order e-mail after a successful payment, make sure to enable the configuration option from the payment method config and enable 
   the Order e-mails from the ```Stores``` -> ```Configuration``` -> ```Sales``` -> ```Sales Emails``` in the Order section.
-
-Configure Magento over secured HTTPS Connection
----------------------
-This configuration is needed for ```emerchantpay Direct``` Method to be usable.
-
-Steps:
-* Ensure you have installed a valid SSL Certificate on your Web Server & you have configured your Virtual Host correctly.
-* Login to Magento 2 Admin Panel
-* Navigate to ```Stores``` -> ```Configuration``` -> ```General``` -> ```Web``` 
-* Expand Tab ```Base URLs (Secure)``` and set ```Use Secure URLs on Storefront``` and ```Use Secure URLs in Admin``` to **Yes**
-* Set your ```Secure Base URL``` and click ```Save Config```
-* It is recommended to add a **Rewrite Rule** from ```http``` to ```https``` or to configure a **Permanent Redirect** to ```https``` in your virtual host
 
 GenesisPHP Requirements
 ------------
@@ -107,12 +94,6 @@ GenesisPHP Requirements
 
 Supported Transactions
 ------------
-* ```emerchantpay Direct``` Payment Method
-    * __Authorize__
-    * __Authorize (3D-Secure)__
-    * __Sale__
-    * __Sale (3D-Secure)__
-
 * ```emerchantpay Checkout``` Payment Method
     * __Apple Pay__
     * __Argencard__

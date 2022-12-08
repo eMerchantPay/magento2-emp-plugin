@@ -27,7 +27,6 @@ GNU General Public License for more details.
                 <fieldset_css>complex</fieldset_css>
                 <comment>Accept payments through emerchantpay's Payment Gateway - Genesis</comment>
                 <include path="EMerchantPay_Genesis::system/method_checkout.xml"/>
-                <include path="EMerchantPay_Genesis::system/method_direct.xml"/>
             </group>
         </section>
     </system>

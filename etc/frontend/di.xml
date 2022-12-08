@@ -4,18 +4,10 @@
     <virtualType name="EMerchantPay\Genesis\Model\ConfigProvider" type="Magento\Payment\Model\CcGenericConfigProvider">
         <arguments>
             <argument name="methodCodes" xsi:type="array">
-                <item name="emerchantpay_direct" xsi:type="const">EMerchantPay\Genesis\Model\Method\Direct::CODE</item>
                 <item name="emerchantpay_checkout" xsi:type="const">EMerchantPay\Genesis\Model\Method\Checkout::CODE</item>
             </argument>
         </arguments>
     </virtualType>
-    <type name="Magento\Checkout\Model\CompositeConfigProvider">
-        <arguments>
-            <argument name="configProviders" xsi:type="array">
-                <item name="emerchantpay_direct_config_provider" xsi:type="object">EMerchantPay\Genesis\Model\ConfigProvider</item>
-            </argument>
-        </arguments>
-    </type>
     <type name="Magento\Framework\App\Request\CsrfValidator">
         <plugin name="csrf_validator_skip" type="EMerchantPay\Genesis\Plugin\CsrfValidatorSkip" />
     </type>

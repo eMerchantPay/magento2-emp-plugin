@@ -19,18 +19,6 @@ GNU General Public License for more details.
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Magento/Store/etc/config.xsd">
     <default>
         <payment>
-            <emerchantpay_direct>
-                <active>0</active>
-                <model>EMerchantPay\Genesis\Model\Method\Direct</model>
-                <order_status>payment_review</order_status>
-                <title>emerchantpay Direct</title>
-                <test_mode>1</test_mode>
-                <transaction_type>sale</transaction_type>
-                <allowspecific>0</allowspecific>
-                <allow_specific_currency>0</allow_specific_currency>
-                <cctypes>AE,VI,MC,DI,JCB,SM,DN,SO,MI,MD,HC,ELO,AU,OT</cctypes>
-                <group>emerchantpay</group>
-            </emerchantpay_direct>
             <emerchantpay_checkout>
                 <active>0</active>
                 <model>EMerchantPay\Genesis\Model\Method\Checkout</model>

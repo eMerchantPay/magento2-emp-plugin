@@ -37,9 +37,7 @@ abstract class AbstractControllerTest extends \EMerchantPay\Genesis\Test\Unit\Ab
 {
     /**
      * @var \EMerchantPay\Genesis\Controller\Checkout\Index|
-     *      \EMerchantPay\Genesis\Controller\Checkout\Redirect|
-     *      \EMerchantPay\Genesis\Controller\Direct\Index|
-     *      \EMerchantPay\Genesis\Controller\Direct\Redirect
+     *      \EMerchantPay\Genesis\Controller\Checkout\Redirect
      */
     protected $controllerInstance;
 

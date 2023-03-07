@@ -68,7 +68,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     const APPLE_PAY_PAYMENT_TYPE_AUTHORIZE  = ApplePaymentTypes::AUTHORIZE;
     const APPLE_PAY_PAYMENT_TYPE_SALE       = ApplePaymentTypes::SALE;
 
-    const PLATFORM_TRANSACTION_SUFFIX = '_mage2';
+    const PLATFORM_TRANSACTION_SUFFIX = '-mg2';
 
     /**
      * @var \Magento\Framework\ObjectManagerInterface
@@ -339,7 +339,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         }
 
         return substr(sprintf(
-            '%s_%s',
+            '%s-%s',
             (string)$orderId,
             $this->uniqHash($length)
         ), 0, $length) . self::PLATFORM_TRANSACTION_SUFFIX;

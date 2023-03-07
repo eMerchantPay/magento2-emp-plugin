@@ -89,7 +89,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         Methods::GIRO_PAY . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::PRZELEWY24 . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::SAFETY_PAY . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::TRUST_PAY . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::BCMC . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::MYBANK . Data::PPRO_TRANSACTION_SUFFIX,
                         Methods::IDEAL . Data::PPRO_TRANSACTION_SUFFIX
@@ -141,9 +140,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                             'payment_method' => GenesisPaymentMethods::SAFETY_PAY,
                         ],
                         [
-                            'payment_method' => GenesisPaymentMethods::TRUST_PAY,
-                        ],
-                        [
                             'payment_method' => GenesisPaymentMethods::BCMC,
                         ],
                         [
@@ -188,7 +184,7 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
             ->with($orderId)
             ->willReturn(
                 sprintf(
-                    '%s_%s',
+                    '%s-%s',
                     $orderId,
                     sha1(uniqid())
                 )

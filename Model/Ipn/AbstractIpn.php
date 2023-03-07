@@ -204,7 +204,7 @@ abstract class AbstractIpn
     protected function setOrderByReconcile($responseObject)
     {
         $transaction_id = $responseObject->transaction_id;
-        list($incrementId, $hash) = explode('_', $transaction_id);
+        list($incrementId, $hash) = explode('-', $transaction_id);
 
         $this->_order = $this->getOrderFactory()->create()->loadByIncrementId(
             (int) $incrementId

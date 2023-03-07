@@ -12,7 +12,7 @@ Requirements
 ------------
 
 * Magento 2 CE, EE, ECE or higher (Tested upto __2.4.5-p1__)
-* [GenesisPHP v1.21.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.3) - (Integrated in Module)
+* [GenesisPHP v1.21.6](https://github.com/GenesisGateway/genesis_php/releases/tag/1.21.6) - (Integrated in Module)
 
 Installation (composer)
 ---------------------
@@ -48,7 +48,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:1.21.3@stable
+    $ composer require genesisgateway/genesis_php:1.21.6@stable
     ```
 
 * Enable Payment Module 
@@ -133,6 +133,7 @@ Supported Transactions
     * __Neteller__
     * __Online Banking__
         * __Interac Combined Pay-in (CPI)__
+        * __Bancontact (BCT)__
     * __OXXO__
     * __P24__
     * __Pago Facil__

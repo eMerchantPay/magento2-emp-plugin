@@ -37,7 +37,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
     const TRANSACTION_ID                    = '12345678901234567890123456789012';
     const CUSTOMER_PWD                      = '1234567890123456789012345678901234567890';
 
-    const RECONCILIATION_TRANSACTION_ID     = '123_456';
+    const RECONCILIATION_TRANSACTION_ID     = '123-456';
     const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\API\Constants\Transaction\Types::AUTHORIZE;
     const RECONCILIATION_MESSAGE            = 'sample reconciliation message';
     const RECONCILIATION_AMOUNT             = 271.97;
@@ -59,7 +59,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
     /**
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->setPostParams();
 

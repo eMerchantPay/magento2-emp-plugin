@@ -214,7 +214,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
      */
     protected function getOrderMock()
     {
-        list($incrementId) = explode('_', $this->reconciliationObj->transaction_id);
+        list($incrementId) = explode('-', $this->reconciliationObj->transaction_id);
 
         $orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
@@ -397,7 +397,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     /**
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

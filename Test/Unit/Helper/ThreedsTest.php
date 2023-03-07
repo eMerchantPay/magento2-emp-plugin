@@ -65,7 +65,7 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected $orderCollectionFacotryMock;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 

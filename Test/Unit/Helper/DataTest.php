@@ -128,7 +128,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     /**
      * This method is called before a test is executed.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -244,24 +244,28 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->method('isCurrentlySecure')
             ->willReturn(true);
 
+        $conditions = [];
+        $returns    = [];
+
         foreach ($data['urls'] as $index => $notificationUrlData) {
-            $this->urlBuilderMock->expects(static::at($index))
-                ->method('getUrl')
-                ->with(
-                    'emerchantpay/ipn',
-                    [
-                        '_store'  =>
-                            $this->storeMock,
-                        '_secure' =>
-                            $notificationUrlData['secure'] === null
-                                ? true
-                                : $notificationUrlData['secure']
-                    ]
-                )
-                ->willReturn(
-                    "{$notificationUrlData['protocol']}://{$data['domainName']}/{$data['routePath']}/index/"
-                );
+            $conditions[$index] = [
+                'emerchantpay/ipn',
+                [
+                    '_store'  =>
+                        $this->storeMock,
+                    '_secure' =>
+                        $notificationUrlData['secure'] === null
+                            ? true
+                            : $notificationUrlData['secure']
+                ]
+            ];
+            $returns[$index] = "{$notificationUrlData['protocol']}://{$data['domainName']}/{$data['routePath']}/index/";
         }
+
+        $this->urlBuilderMock->expects(static::exactly(count($data['urls'])))
+            ->method('getUrl')
+            ->withConsecutive(...$conditions)
+            ->willReturnOnConsecutiveCalls($returns);
 
         foreach ($data['urls'] as $notificationUrlData) {
             $this->moduleHelper->getNotificationUrl(
@@ -279,7 +283,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $transactionId = $this->moduleHelper->genTransactionId($orderId);
 
-        $this->assertStringStartsWith("{$orderId}_", $transactionId);
+        $this->assertStringStartsWith("{$orderId}-", $transactionId);
 
         $anotherTransactionId = $this->moduleHelper->genTransactionId($orderId);
 

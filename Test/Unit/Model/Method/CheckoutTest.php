@@ -100,33 +100,33 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
 
         $this->assertEquals(
             [
-                GenesisTransactionTypes::ALIPAY,
-                GenesisTransactionTypes::EZEEWALLET,
-                GenesisTransactionTypes::IDEBIT_PAYIN,
-                GenesisTransactionTypes::INPAY,
-                GenesisTransactionTypes::INSTA_DEBIT_PAYIN,
-                GenesisTransactionTypes::P24,
-                GenesisTransactionTypes::PAYPAL_EXPRESS,
-                GenesisTransactionTypes::TRUSTLY_SALE,
-                GenesisTransactionTypes::WECHAT,
-                GenesisTransactionTypes::ONLINE_BANKING_PAYIN,
-                GenesisTransactionTypes::SDD_SALE,
-                GenesisTransactionTypes::CITADEL_PAYIN,
                 GenesisTransactionTypes::AUTHORIZE,
                 GenesisTransactionTypes::AUTHORIZE_3D,
                 GenesisTransactionTypes::SALE,
                 GenesisTransactionTypes::SALE_3D,
                 GenesisTransactionTypes::ABNIDEAL,
+                GenesisTransactionTypes::ALIPAY,
                 GenesisTransactionTypes::CASHU,
+                GenesisTransactionTypes::CITADEL_PAYIN,
                 GenesisTransactionTypes::EZEEWALLET,
+                GenesisTransactionTypes::EZEEWALLET,
+                GenesisTransactionTypes::IDEBIT_PAYIN,
+                GenesisTransactionTypes::INPAY,
+                GenesisTransactionTypes::INSTA_DEBIT_PAYIN,
                 GenesisTransactionTypes::NETELLER,
-                GenesisTransactionTypes::POLI,
-                GenesisTransactionTypes::WEBMONEY,
+                GenesisTransactionTypes::ONLINE_BANKING_PAYIN,
+                GenesisTransactionTypes::P24,
                 GenesisTransactionTypes::PAYBYVOUCHER_SALE,
+                GenesisTransactionTypes::PAYPAL_EXPRESS,
                 GenesisTransactionTypes::PAYSAFECARD,
+                GenesisTransactionTypes::POLI,
+                GenesisTransactionTypes::SDD_SALE,
                 GenesisTransactionTypes::PPRO => [
                     'name' => GenesisTransactionTypes::PPRO,
                     'parameters' => [
+                        [
+                            'payment_method' => GenesisPaymentMethods::BCMC,
+                        ],
                         [
                             'payment_method' => GenesisPaymentMethods::EPS
                         ],
@@ -134,23 +134,23 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                             'payment_method' => GenesisPaymentMethods::GIRO_PAY,
                         ],
                         [
-                            'payment_method' => GenesisPaymentMethods::PRZELEWY24,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::SAFETY_PAY,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::BCMC,
+                            'payment_method' => GenesisPaymentMethods::IDEAL,
                         ],
                         [
                             'payment_method' => GenesisPaymentMethods::MYBANK,
                         ],
                         [
-                            'payment_method' => GenesisPaymentMethods::IDEAL,
+                            'payment_method' => GenesisPaymentMethods::PRZELEWY24,
+                        ],
+                        [
+                            'payment_method' => GenesisPaymentMethods::SAFETY_PAY,
                         ]
                     ]
                 ],
-                GenesisTransactionTypes::SOFORT
+                GenesisTransactionTypes::SOFORT,
+                GenesisTransactionTypes::TRUSTLY_SALE,
+                GenesisTransactionTypes::WEBMONEY,
+                GenesisTransactionTypes::WECHAT,
             ],
             $transactionTypes
         );

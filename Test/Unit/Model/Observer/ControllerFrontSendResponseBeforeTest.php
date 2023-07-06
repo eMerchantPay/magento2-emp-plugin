@@ -46,6 +46,10 @@ class ControllerFrontSendResponseBeforeTest extends \EMerchantPay\Genesis\Test\U
      */
     public function testExecuteNullResponse()
     {
+        $this->observerMock->expects(self::once())
+            ->method('getEvent')
+            ->willReturn($this->eventMock);
+
         $this->eventMock->expects(self::once())
             ->method('getData')
             ->with('response')

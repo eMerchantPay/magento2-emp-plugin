@@ -20,12 +20,19 @@
 namespace EMerchantPay\Genesis\Test\Unit\Model\Observer;
 
 use EMerchantPay\Genesis\Helper\Data as DataHelper;
+use EMerchantPay\Genesis\Model\Config;
+use EMerchantPay\Genesis\Model\Observer\SalesOrderBeforeSaveObserver;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\Webapi\ErrorProcessor;
-use Magento\Framework\Event\Observer;
 use Magento\Framework\Event;
-use Magento\Framework\Webapi\Rest\Response as RestResponse;
+use Magento\Framework\Event\Observer;
+use Magento\Framework\Webapi\ErrorProcessor;
 use Magento\Framework\Webapi\Exception as WebapiException;
+use Magento\Framework\Webapi\Rest\Response as RestResponse;
+use Magento\Payment\Model\Method\InstanceFactory;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\OrderFactory;
 
 /**
  * Class AbstractObserverTest
@@ -72,6 +79,51 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
      * @var \Magento\Framework\Webapi\Exception|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $webapiException;
+
+    /**
+     * @var (Config&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $configHelper;
+
+    /**
+     * @var (InstanceFactory&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $methodInstance;
+
+    /**
+     * @var (Order&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $orderMock;
+
+    /**
+     * @var SalesOrderBeforeSaveObserver
+     */
+    protected $sendMailOnOrderPaymentSuccess;
+
+    /**
+     * @var (OrderFactory&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $orderModel;
+
+    /**
+     * @var (OrderSender&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $orderSender;
+
+    /**
+     * @var (Session&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $checkoutSession;
+
+    /**
+     * @var \stdClass
+     */
+    protected $createMock;
+
+    /**
+     * @var (OrderPaymentInterface&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected $paymentInterfaceMock;
 
     abstract protected function getObserverClassName();
 
@@ -169,6 +221,38 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
     }
 
     /**
+     * Helper class for common mocks
+     *
+     * @return void
+     */
+    protected function getSendMailOnOrderPaymentSuccessMocks(): void
+    {
+        $this->methodInstance = $this->getMockBuilder(InstanceFactory::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getCode'])
+            ->getMock();
+
+        $this->paymentInterfaceMock = $this->getMockBuilder(OrderPaymentInterface::class)
+            ->setMethods(['getMethodInstance'])
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
+
+        $this->orderMock = $this->getMockBuilder(Order::class)
+            ->setMethods(['getPayment', 'setCanSendNewEmailFlag', 'setSendEmail'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->configHelper = $this->getMockBuilder(Config::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->eventMock = $this->getMockBuilder(Event::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getData', 'getEvent', 'getOrder', 'getOrderIds'])
+            ->getMock();
+    }
+
+    /**
      * This method is called before a test is executed.
      */
     protected function setUp(): void
@@ -182,10 +266,6 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
         $this->getEventMock();
         $this->getRestResponseMock();
         $this->getWebapiException();
-
-        $this->observerMock->expects(self::once())
-            ->method('getEvent')
-            ->willReturn($this->eventMock);
 
         $this->observerInstance = $this->getObjectManagerHelper()->getObject(
             $this->getObserverClassName(),

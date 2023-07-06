@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "25d7d5b2c624f9f5f1dde507233c043a",
+    "content-hash": "86c0433601208e63e6ba9a6096854498",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.21.6",
+            "version": "1.21.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "80ad7e732a9aabcfd2c5f1f2b7a2f641b8711716"
+                "reference": "22bc66b484eb2e99a42962c4b8033dea4c050709"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/80ad7e732a9aabcfd2c5f1f2b7a2f641b8711716",
-                "reference": "80ad7e732a9aabcfd2c5f1f2b7a2f641b8711716",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/22bc66b484eb2e99a42962c4b8033dea4c050709",
+                "reference": "22bc66b484eb2e99a42962c4b8033dea4c050709",
                 "shasum": ""
             },
             "require": {
@@ -158,24 +158,24 @@
             ],
             "support": {
                 "issues": "https://github.com/GenesisGateway/genesis_php/issues",
-                "source": "https://github.com/GenesisGateway/genesis_php/tree/1.21.6"
+                "source": "https://github.com/GenesisGateway/genesis_php/tree/1.21.10"
             },
-            "time": "2023-02-24T10:57:03+00:00"
+            "time": "2023-06-14T13:39:59+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "fakerphp/faker",
-            "version": "v1.21.0",
+            "version": "v1.23.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/FakerPHP/Faker.git",
-                "reference": "92efad6a967f0b79c499705c69b662f738cc9e4d"
+                "reference": "e3daa170d00fde61ea7719ef47bb09bb8f1d9b01"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FakerPHP/Faker/zipball/92efad6a967f0b79c499705c69b662f738cc9e4d",
-                "reference": "92efad6a967f0b79c499705c69b662f738cc9e4d",
+                "url": "https://api.github.com/repos/FakerPHP/Faker/zipball/e3daa170d00fde61ea7719ef47bb09bb8f1d9b01",
+                "reference": "e3daa170d00fde61ea7719ef47bb09bb8f1d9b01",
                 "shasum": ""
             },
             "require": {
@@ -228,9 +228,9 @@
             ],
             "support": {
                 "issues": "https://github.com/FakerPHP/Faker/issues",
-                "source": "https://github.com/FakerPHP/Faker/tree/v1.21.0"
+                "source": "https://github.com/FakerPHP/Faker/tree/v1.23.0"
             },
-            "time": "2022-12-13T13:54:32+00:00"
+            "time": "2023-06-12T08:44:38+00:00"
         },
         {
             "name": "psr/container",
@@ -359,8 +359,8 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*"
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.2.0"
 }

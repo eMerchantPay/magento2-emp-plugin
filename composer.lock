@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "86c0433601208e63e6ba9a6096854498",
+    "content-hash": "60cd86476db39d3411b68637430d8908",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "1.21.10",
+            "version": "1.21.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "22bc66b484eb2e99a42962c4b8033dea4c050709"
+                "reference": "bfa424bd2af6e5e93bd653d6450f2985c34df9ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/22bc66b484eb2e99a42962c4b8033dea4c050709",
-                "reference": "22bc66b484eb2e99a42962c4b8033dea4c050709",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/bfa424bd2af6e5e93bd653d6450f2985c34df9ee",
+                "reference": "bfa424bd2af6e5e93bd653d6450f2985c34df9ee",
                 "shasum": ""
             },
             "require": {
@@ -158,9 +158,9 @@
             ],
             "support": {
                 "issues": "https://github.com/GenesisGateway/genesis_php/issues",
-                "source": "https://github.com/GenesisGateway/genesis_php/tree/1.21.10"
+                "source": "https://github.com/GenesisGateway/genesis_php/tree/1.21.11"
             },
-            "time": "2023-06-14T13:39:59+00:00"
+            "time": "2023-07-07T09:11:43+00:00"
         }
     ],
     "packages-dev": [
@@ -362,5 +362,5 @@
         "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }

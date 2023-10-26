@@ -35,6 +35,7 @@ class BankCode implements ArrayInterface
     public static $availableBankCodes = [
         Banks::CPI => 'Interac Combined Pay-in',
         Banks::BCT => 'Bancontact',
+        Banks::BLK => 'Blik One Click',
     ];
 
     /**

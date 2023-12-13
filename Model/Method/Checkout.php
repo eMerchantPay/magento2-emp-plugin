@@ -273,6 +273,15 @@ class Checkout extends Base
                         $this->getConfigHelper()->getBankCodes()
                     );
                     break;
+                case GenesisTransactionTypes::PAYSAFECARD:
+                    $helper        = $this->getModuleHelper();
+                    $userId        = $helper->getCurrentUserId();
+                    $customerId = empty($userId) ? $helper->getCurrentUserIdHash() : $userId;
+
+                    $parameters = [
+                        'customer_id' => $customerId
+                    ];
+                    break;
             }
 
             if (!isset($parameters)) {

@@ -38,7 +38,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
     const CUSTOMER_PWD                      = '1234567890123456789012345678901234567890';
 
     const RECONCILIATION_TRANSACTION_ID     = '123-456';
-    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\API\Constants\Transaction\Types::AUTHORIZE;
+    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\Api\Constants\Transaction\Types::AUTHORIZE;
     const RECONCILIATION_MESSAGE            = 'sample reconciliation message';
     const RECONCILIATION_AMOUNT             = 271.97;
 
@@ -92,7 +92,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
         $this->reconciliationObj = new \stdClass();
         $this->reconciliationObj->unique_id             = $this->postParams[self::UNIQUE_ID_NAME];
         $this->reconciliationObj->transaction_id        = self::RECONCILIATION_TRANSACTION_ID;
-        $this->reconciliationObj->status                = \Genesis\API\Constants\Transaction\States::APPROVED;
+        $this->reconciliationObj->status                = \Genesis\Api\Constants\Transaction\States::APPROVED;
         $this->reconciliationObj->message               = __('Module') . ' ' . self::RECONCILIATION_MESSAGE;
         $this->reconciliationObj->transaction_type      = self::RECONCILIATION_TRANSACTION_TYPE;
         $this->reconciliationObj->amount                = self::RECONCILIATION_AMOUNT;

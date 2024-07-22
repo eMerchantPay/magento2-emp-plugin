@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.3.7",
+    "version": "1.3.8",
     "license": [
         "GPL-2.0"
     ],
@@ -14,8 +14,8 @@
         }
     ],
     "require": {
-        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*",
-        "genesisgateway/genesis_php": "1.24.1"
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*|8.3.*",
+        "genesisgateway/genesis_php": "2.0.1"
     },
     "keywords": [
         "emerchantpay",
@@ -72,7 +72,6 @@
         "fx_search",
         "fx_tier",
         "fx_tiers",
-        "giropay",
         "google_pay",
         "ideal",
         "idebit",
@@ -135,6 +134,55 @@
         }
     },
     "require-dev": {
-        "fakerphp/faker": "^1.20"
+        "fakerphp/faker": "^1.20",
+        "magento/magento-coding-standard": "*",
+        "squizlabs/php_codesniffer": "~3.6.0",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
+        "phpmd/phpmd": "^2.9.1"
+    },
+    "scripts": {
+        "install-magento": [
+            "bin/install"
+        ],
+        "install-dev": [
+            "@putenv PLUGIN_ENV=linter",
+            "composer install"
+        ],
+        "test": [
+            "@install-magento",
+            "@php-unit"
+        ],
+        "php-unit": [
+            "Test/Dummy/vendor/bin/phpunit -c Test/Dummy/app/code/EMerchantPay/Genesis/phpunit.xml Test/Dummy/app/code/EMerchantPay/Genesis/Test/Unit --bootstrap Test/Dummy/bootstrap.php "
+        ],
+        "php-cs": [
+            "@install-dev",
+            "vendor/bin/phpcs . --report=full --colors --extensions=php --standard=Magento2,.phpcs.xml"
+        ],
+        "php-md": [
+            "@install-dev",
+            "vendor/bin/phpmd . ansi ./.phpmd.xml --not-strict"
+        ],
+        "php-unit-jenkins": [
+            "Test/Dummy/vendor/bin/phpunit -c Test/Dummy/app/code/EMerchantPay/Genesis/phpunit.xml --log-junit phpunit_report.xml Test/Dummy/app/code/EMerchantPay/Genesis/Test/Unit --bootstrap Test/Dummy/bootstrap.php "
+        ],
+        "php-cs-jenkins": [
+            "PLUGIN_ENV=linter vendor/bin/phpcs . --extensions=php --standard=Magento2,.phpcs.xml --report=checkstyle --report-file=phpcs_report.xml"
+        ],
+        "php-md-jenkins": [
+            "PLUGIN_ENV=linter vendor/bin/phpmd . xml ./.phpmd.xml --not-strict --reportfile phpmd_report.xml --ignore-violations-on-exit"
+        ],
+        "styles": [
+            "@php-cs",
+            "@php-md"
+        ],
+        "pack": [
+            "bin/pack"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
 }

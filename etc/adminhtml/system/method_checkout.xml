@@ -62,7 +62,13 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="transaction_types" translate="label" type="multiselect" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="iframe_processing_enabled" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Enable payment processing into an iframe</label>
+            <comment><![CDATA[Enable payment processing into an iframe by removing the redirects to the Gateway Web Payment Form Page. The iFrame processing requires a specific setting inside Merchant Console. For more info ask: tech-support@emerchantpay.com]]></comment>
+            <config_path>payment/emerchantpay_checkout/iframe_processing_enabled</config_path>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+        </field>
+        <field id="transaction_types" translate="label" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Transaction Types</label>
             <comment><![CDATA[Select the transaction types that must be attempted during the customer's Checkout session.]]></comment>
             <tooltip><![CDATA[The first transaction type that is available will be selected by the gateway.]]></tooltip>
@@ -74,7 +80,7 @@ GNU General Public License for more details.
             </depends>
             <can_be_empty>0</can_be_empty>
         </field>
-        <field id="online_banking_payment_methods" translate="label" type="multiselect" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="online_banking_payment_methods" translate="label" type="multiselect" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Bank code(s) for Online banking</label>
             <comment><![CDATA[Select the Bank codes for Online banking]]></comment>
             <tooltip><![CDATA[You can select Bank codes for Online banking transaction type.]]></tooltip>
@@ -82,12 +88,12 @@ GNU General Public License for more details.
             <source_model>EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\BankCode</source_model>
             <can_be_empty>1</can_be_empty>
         </field>
-        <field id="tokenization" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="tokenization" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable Tokenization</label>
             <config_path>payment/emerchantpay_checkout/tokenization</config_path>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
         </field>
-        <field id="order_status" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="order_status" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>New Order Status</label>
             <comment><![CDATA[Select the default order status for new orders.]]></comment>
             <config_path>payment/emerchantpay_checkout/order_status</config_path>
@@ -98,7 +104,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="allowspecific" translate="label" type="allowspecific" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="allowspecific" translate="label" type="allowspecific" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Payment from Applicable Countries</label>
             <config_path>payment/emerchantpay_checkout/allowspecific</config_path>
             <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
@@ -106,7 +112,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="specificcountry" translate="label" type="multiselect" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="specificcountry" translate="label" type="multiselect" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Payment from Specific Countries</label>
             <config_path>payment/emerchantpay_checkout/specificcountry</config_path>
             <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
@@ -117,7 +123,7 @@ GNU General Public License for more details.
                 <field id="allowspecific">1</field>
             </depends>
         </field>
-        <field id="allow_specific_currency" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="allow_specific_currency" translate="label" type="select" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Allow Specific Currencies</label>
             <comment><![CDATA[Define if you wish to enable the method for some of the global allowed currencies.]]></comment>
             <config_path>payment/emerchantpay_checkout/allow_specific_currency</config_path>
@@ -126,7 +132,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="specific_currencies" translate="label" type="multiselect" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="specific_currencies" translate="label" type="multiselect" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Specific Currencies</label>
             <comment><![CDATA[Select the currencies, for which you would like to enable payment method.]]></comment>
             <tooltip><![CDATA[Hint: You should have in mind that, you'd better allow only the currencies, which can be processed from your configured Merchant-Terminals.]]></tooltip>
@@ -139,7 +145,7 @@ GNU General Public License for more details.
             </depends>
             <can_be_empty>0</can_be_empty>
         </field>
-        <field id="min_order_total" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="min_order_total" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Minimum Order Total</label>
             <config_path>payment/emerchantpay_checkout/min_order_total</config_path>
             <validate>validate-zero-or-greater</validate>
@@ -148,7 +154,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="max_order_total" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="max_order_total" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Maximum Order Total</label>
             <config_path>payment/emerchantpay_checkout/max_order_total</config_path>
             <validate>validate-zero-or-greater</validate>
@@ -157,7 +163,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="sort_order" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sort_order" translate="label" type="text" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Sort Order</label>
             <config_path>payment/emerchantpay_checkout/sort_order</config_path>
             <frontend_class>validate-number</frontend_class>
@@ -167,7 +173,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="payment_confirmation_email_enabled" translate="label" type="select" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="payment_confirmation_email_enabled" translate="label" type="select" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable e-mail notifications</label>
             <comment><![CDATA[If checked, the New Order e-mails are received upon successful payment.<br>Notes: Make sure to enable New Order e-mails from Store > Configuration > Sales > Sales Emails > Order > Enabled]]></comment>
             <config_path>payment/emerchantpay_checkout/payment_confirmation_email_enabled</config_path>
@@ -176,7 +182,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="threeds_allowed" translate="label" type="select" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="threeds_allowed" translate="label" type="select" sortOrder="19" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable 3DSv2 parameters</label>
             <comment><![CDATA[Enable the plugin extraction of the 3DSv2 parameters and sent them to the Gateway]]></comment>
             <config_path>payment/emerchantpay_checkout/threeds_allowed</config_path>
@@ -185,7 +191,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="threeds_challenge_indicator" translate="label" type="select" sortOrder="19" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="threeds_challenge_indicator" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Challenge Indicator</label>
             <comment><![CDATA[Select the 3DSv2 Challenge weight]]></comment>
             <tooltip><![CDATA[Hint: The value has weight and might impact the decision whether a challenge will be required for the transaction or not.]]></tooltip>
@@ -196,7 +202,7 @@ GNU General Public License for more details.
                 <field id="threeds_allowed">1</field>
             </depends>
         </field>
-        <field id="sca_exemption" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sca_exemption" translate="label" type="select" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>SCA Exemption</label>
             <comment><![CDATA[Exemption for the Strong Customer Authentication]]></comment>
             <config_path>payment/emerchantpay_checkout/sca_exemption</config_path>
@@ -206,7 +212,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="sca_exemption_amount" translate="label" type="text" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sca_exemption_amount" translate="label" type="text" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Exemption Amount</label>
             <comment><![CDATA[Exemption Amount determinate if the SCA Exemption should be included in the request to the Gateway]]></comment>
             <config_path>payment/emerchantpay_checkout/sca_exemption_amount</config_path>

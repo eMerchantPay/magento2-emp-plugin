@@ -32,7 +32,7 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 
 class CheckoutIpnSaleRefundTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\CheckoutIpnTest
 {
-    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\API\Constants\Transaction\Types::SALE;
+    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\Api\Constants\Transaction\Types::SALE;
 
     /**
      * Creates reconciliation object
@@ -42,7 +42,7 @@ class CheckoutIpnSaleRefundTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ip
     {
         $this->reconciliationObj = parent::createReconciliationObj();
 
-        $this->reconciliationObj->status           = \Genesis\API\Constants\Transaction\States::REFUNDED;
+        $this->reconciliationObj->status           = \Genesis\Api\Constants\Transaction\States::REFUNDED;
         $this->reconciliationObj->transaction_type = self::RECONCILIATION_TRANSACTION_TYPE;
 
         return $this->reconciliationObj;

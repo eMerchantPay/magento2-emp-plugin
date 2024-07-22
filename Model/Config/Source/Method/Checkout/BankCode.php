@@ -19,7 +19,7 @@
 
 namespace EMerchantPay\Genesis\Model\Config\Source\Method\Checkout;
 
-use Genesis\API\Constants\Banks;
+use Genesis\Api\Constants\Banks;
 use \Magento\Framework\Option\ArrayInterface;
 
 /**

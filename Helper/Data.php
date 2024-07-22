@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2018-2024 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,20 +13,33 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2018-2024 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
 namespace EMerchantPay\Genesis\Helper;
 
-use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
-use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
-use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
-use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
-use Magento\Framework\App\ObjectManager;
+use EMerchantPay\Genesis\Block\Frontend\Config;
+use EMerchantPay\Genesis\Model\ConfigFactory;
+use Exception;
+use Genesis\Api\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
+use Genesis\Api\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
+use Genesis\Api\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
+use Genesis\Genesis;
+use Magento\Customer\Model\Session;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Helper\AbstractHelper;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
+use Magento\Framework\Locale\ResolverInterface;
+use Magento\Framework\ObjectManagerInterface;
+use Magento\Framework\UrlInterface;
+use Magento\Payment\Helper\Data as PaymentData;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Service\CreditmemoService;
+use Magento\Store\Model\StoreManagerInterface;
+use \Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
 
 /**
  * Helper Class for all Payment Methods
@@ -38,7 +51,7 @@ use Magento\Sales\Model\Service\CreditmemoService;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
  */
-class Data extends \Magento\Framework\App\Helper\AbstractHelper
+class Data extends AbstractHelper
 {
     const SECURE_TRANSACTION_TYPE_SUFFIX = '3D';
 
@@ -70,70 +83,82 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     const PLATFORM_TRANSACTION_SUFFIX = '-mg2';
 
+    private const INCOMING_CONTROLLER_REDIRECT = 'redirect';
+    private const INCOMING_CONTROLLER_IFRAME   = 'iframe';
+
     /**
-     * @var \Magento\Framework\ObjectManagerInterface
+     * @var ObjectManagerInterface
      */
     protected $_objectManager;
     /**
-     * @var \Magento\Payment\Helper\Data
+     * @var PaymentData
      */
     protected $_paymentData;
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeManager;
     /**
-     * @var \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress
+     * @var RemoteAddress
      */
     protected $_configFactory;
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     * @var ScopeConfigInterface
      */
     protected $_scopeConfig;
     /**
-     * @var \Magento\Framework\Locale\ResolverInterface
+     * @var ResolverInterface
      */
     protected $_localeResolver;
 
     /**
-     * @var \Magento\Customer\Model\Session
+     * @var Session
      */
     protected $_customerSession;
 
     /**
-     * @param \Magento\Framework\ObjectManagerInterface $objectManager
-     * @param \Magento\Framework\App\Helper\Context $context
-     * @param \Magento\Payment\Helper\Data $paymentData
-     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
-     * @param \EMerchantPay\Genesis\Model\ConfigFactory $configFactory
-     * @param \Magento\Framework\Locale\ResolverInterface $localeResolver
-     * @param \Magento\Customer\Model\Session $customerSession
+     * @var Config
+     */
+    protected $_config;
+
+    /**
+     * @param ObjectManagerInterface $objectManager
+     * @param Context                $context
+     * @param PaymentData            $paymentData
+     * @param StoreManagerInterface  $storeManager
+     * @param ConfigFactory          $configFactory
+     * @param ResolverInterface      $localeResolver
+     * @param Session                $customerSession
+     * @param Config                 $config
      */
     public function __construct(
-        \Magento\Framework\ObjectManagerInterface $objectManager,
-        \Magento\Framework\App\Helper\Context $context,
-        \Magento\Payment\Helper\Data $paymentData,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \EMerchantPay\Genesis\Model\ConfigFactory $configFactory,
-        \Magento\Framework\Locale\ResolverInterface $localeResolver,
-        \Magento\Customer\Model\Session $customerSession
+        ObjectManagerInterface $objectManager,
+        Context                $context,
+        PaymentData            $paymentData,
+        StoreManagerInterface  $storeManager,
+        ConfigFactory          $configFactory,
+        ResolverInterface      $localeResolver,
+        Session                $customerSession,
+        Config                 $config
     ) {
-        $this->_objectManager = $objectManager;
-        $this->_paymentData   = $paymentData;
-        $this->_storeManager  = $storeManager;
-        $this->_configFactory = $configFactory;
-        $this->_localeResolver = $localeResolver;
+        $this->_objectManager   = $objectManager;
+        $this->_paymentData     = $paymentData;
+        $this->_storeManager    = $storeManager;
+        $this->_configFactory   = $configFactory;
+        $this->_localeResolver  = $localeResolver;
         $this->_customerSession = $customerSession;
-
-        $this->_scopeConfig   = $context->getScopeConfig();
+        $this->_scopeConfig     = $context->getScopeConfig();
+        $this->_config          = $config;
 
         parent::__construct($context);
     }
 
     /**
      * Creates an Instance of the Helper
-     * @param  \Magento\Framework\ObjectManagerInterface $objectManager
-     * @return \EMerchantPay\Genesis\Helper\Data
+     *
+     * @param  ObjectManagerInterface $objectManager
+     *
+     * @return Data
      */
     public static function getInstance($objectManager)
     {
@@ -144,7 +169,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Magento Object Manager
-     * @return \Magento\Framework\ObjectManagerInterface
+     *
+     * @return ObjectManagerInterface
      */
     protected function getObjectManager()
     {
@@ -153,7 +179,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Magento Store Manager
-     * @return \Magento\Store\Model\StoreManagerInterface
+     *
+     * @return StoreManagerInterface
      */
     protected function getStoreManager()
     {
@@ -162,7 +189,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Config Factory Class
-     * @return \EMerchantPay\Genesis\Model\ConfigFactory
+     *
+     * @return ConfigFactory
      */
     protected function getConfigFactory()
     {
@@ -171,7 +199,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Magento UrlBuilder
-     * @return \Magento\Framework\UrlInterface
+     *
+     * @return UrlInterface
      */
     public function getUrlBuilder()
     {
@@ -180,7 +209,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Magento Scope Config
-     * @return \Magento\Framework\App\Config\ScopeConfigInterface
+     *
+     * @return ScopeConfigInterface
      */
     protected function getScopeConfig()
     {
@@ -189,7 +219,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Magento Core Locale Object
-     * @return \Magento\Framework\Locale\ResolverInterface
+     *
+     * @return ResolverInterface
      */
     protected function getLocaleResolver()
     {
@@ -198,7 +229,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * Get an Instance of the Magento Customer Session
-     * @return \Magento\Customer\Model\Session
+     *
+     * @return Session
      */
     protected function getCustomerSession()
     {
@@ -302,9 +334,14 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getReturnUrl($moduleCode, $returnAction)
     {
+        $isIframeProcessingEnabled = $this->_config->isIframeProcessingEnabled();
+        $controller = $isIframeProcessingEnabled ?
+            self::INCOMING_CONTROLLER_IFRAME :
+            self::INCOMING_CONTROLLER_REDIRECT;
+
         return $this->getUrl(
             $moduleCode,
-            'redirect',
+            $controller,
             [
                 'action' => $returnAction
             ]
@@ -496,10 +533,10 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Hides generated Exception and raises WebApiException in order to
      * display the message to user
-     * @param \Exception $exception
+     * @param Exception $exception
      * @throws \Magento\Framework\Webapi\Exception
      */
-    public function maskException(\Exception $exception)
+    public function maskException(Exception $exception)
     {
         $this->throwWebApiException(
             $exception->getMessage(),
@@ -688,7 +725,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function setOrderState($order, $status, $message = '')
     {
         switch ($status) {
-            case \Genesis\API\Constants\Transaction\States::APPROVED:
+            case \Genesis\Api\Constants\Transaction\States::APPROVED:
                 $this->setOrderStatusByState(
                     $order,
                     \Magento\Sales\Model\Order::STATE_PROCESSING
@@ -696,8 +733,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $order->save();
                 break;
 
-            case \Genesis\API\Constants\Transaction\States::PENDING:
-            case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
+            case \Genesis\Api\Constants\Transaction\States::PENDING:
+            case \Genesis\Api\Constants\Transaction\States::PENDING_ASYNC:
                 $this->setOrderStatusByState(
                     $order,
                     \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT
@@ -705,8 +742,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 $order->save();
                 break;
 
-            case \Genesis\API\Constants\Transaction\States::ERROR:
-            case \Genesis\API\Constants\Transaction\States::DECLINED:
+            case \Genesis\Api\Constants\Transaction\States::ERROR:
+            case \Genesis\Api\Constants\Transaction\States::DECLINED:
                 $this->buildInvoiceCancelation($order);
                 $this->setOrderStatusByState(
                     $order,
@@ -714,8 +751,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 );
                 $order->save();
                 break;
-            case \Genesis\API\Constants\Transaction\States::VOIDED:
-            case \Genesis\API\Constants\Transaction\States::TIMEOUT:
+            case \Genesis\Api\Constants\Transaction\States::VOIDED:
+            case \Genesis\Api\Constants\Transaction\States::TIMEOUT:
                 $this->buildInvoiceCancelation($order);
                 $this->setOrderStatusByState(
                     $order,
@@ -723,7 +760,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
                 );
                 $order->save();
                 break;
-            case \Genesis\API\Constants\Transaction\States::REFUNDED:
+            case \Genesis\Api\Constants\Transaction\States::REFUNDED:
                 if ($order->canCreditmemo()) {
                     /** @var CreditmemoFactory $creditMemoFactory */
                     $creditMemoFactory = $this->getObjectManager()
@@ -961,11 +998,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
         $languageCode = substr($languageCode, 0, 2);
 
-        if (!\Genesis\API\Constants\i18n::isValidLanguageCode($languageCode)) {
+        if (!\Genesis\Api\Constants\i18n::isValidLanguageCode($languageCode)) {
             $languageCode = $default;
         }
 
-        if (!\Genesis\API\Constants\i18n::isValidLanguageCode($languageCode)) {
+        if (!\Genesis\Api\Constants\i18n::isValidLanguageCode($languageCode)) {
             $this->throwWebApiException(
                 __('The provided argument is not a valid ISO-639-1 language code ' .
                    'or is not supported by the Payment Gateway!')
@@ -1051,7 +1088,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param \Genesis\API\Response $genesisApiResponse
+     * @param \Genesis\Api\Response $genesisApiResponse
      * @return \stdClass
      */
     public function getGatewayResponseObject($genesisApiResponse)
@@ -1062,12 +1099,18 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Executes a request to the Genesis Payment Gateway
      *
-     * @param \Genesis\Genesis $genesis
-     * @return \Genesis\Genesis
+     * @param Genesis $genesis
+     *
+     * @return Genesis
+     *
+     * @throws Exception
      */
-    public function executeGatewayRequest(\Genesis\Genesis $genesis)
+    public function executeGatewayRequest(Genesis $genesis)
     {
         $genesis->execute();
+        if (!$genesis->response()->isSuccessful()) {
+            throw new Exception($genesis->response()->getErrorDescription());
+        }
 
         return $genesis;
     }
@@ -1076,11 +1119,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * Creates Notification Object
      *
      * @param array $data - Incoming notification ($_POST)
-     * @return \Genesis\API\Notification
+     * @return \Genesis\Api\Notification
      */
     public function createNotificationObject($data)
     {
-        $notification = new \Genesis\API\Notification($data);
+        $notification = new \Genesis\Api\Notification($data);
 
         return $notification;
     }
@@ -1113,15 +1156,15 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * @param Order $order
-     * @return \Genesis\API\Request\Financial\Alternatives\Klarna\Items
+     * @return \Genesis\Api\Request\Financial\Alternatives\Klarna\Items
      * @throws \Genesis\Exceptions\ErrorParameter
      */
     public function getKlarnaCustomParamItems($order)
     {
-        $items     = new \Genesis\API\Request\Financial\Alternatives\Klarna\Items($order->getOrderCurrencyCode());
+        $items     = new \Genesis\Api\Request\Financial\Alternatives\Klarna\Items($order->getOrderCurrencyCode());
         $itemsList = $this->getItemListArray($order);
         foreach ($itemsList as $item) {
-            $klarnaItem = new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+            $klarnaItem = new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
                 $item['name'],
                 $item['type'],
                 $item['qty'],
@@ -1133,9 +1176,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $taxes = floatval($order->getTaxAmount());
         if ($taxes) {
             $items->addItem(
-                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
                     'Taxes',
-                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SURCHARGE,
+                    \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SURCHARGE,
                     1,
                     $taxes
                 )
@@ -1145,9 +1188,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $discount = floatval($order->getDiscountAmount());
         if ($discount) {
             $items->addItem(
-                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
                     'Discount',
-                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DISCOUNT,
+                    \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DISCOUNT,
                     1,
                     -$discount
                 )
@@ -1157,9 +1200,9 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $shipping_cost = floatval($order->getShippingAmount());
         if ($shipping_cost) {
             $items->addItem(
-                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
                     'Shipping Costs',
-                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SHIPPING_FEE,
+                    \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SHIPPING_FEE,
                     1,
                     $shipping_cost
                 )
@@ -1182,8 +1225,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
             $product = $item->getProduct();
 
             $type = $item->getIsVirtual() ?
-                \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DIGITAL :
-                \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_PHYSICAL;
+                \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DIGITAL :
+                \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_PHYSICAL;
 
             $productResult[] = [
                 'sku'  =>

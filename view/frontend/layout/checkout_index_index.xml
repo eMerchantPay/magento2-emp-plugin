@@ -17,7 +17,13 @@ GNU General Public License for more details.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="1column" xsi:noNamespaceSchemaLocation="../../../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="EMerchantPay_Genesis::css/emp-iframe.css"/>
+    </head>
     <body>
+        <referenceContainer name="content">
+            <block class="EMerchantPay\Genesis\Block\Frontend\Config" name="emp_iframe_settings" template="EMerchantPay_Genesis::checkout/emp_iframe_settings.phtml"/>
+        </referenceContainer>
         <referenceBlock name="checkout.root">
             <arguments>
                 <argument name="jsLayout" xsi:type="array">

@@ -19,6 +19,7 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Ipn;
 
+use Genesis\Api\Constants\Transaction\States;
 use Magento\Framework\App\Action\Context;
 use Magento\Sales\Model\Order\Status\History;
 use Magento\Sales\Model\OrderFactory;
@@ -28,7 +29,7 @@ use Psr\Log\LoggerInterface as Logger;
 use EMerchantPay\Genesis\Helper\Data as DataHelper;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Sales\Model\Order;
-use Genesis\API\Notification as Notification;
+use Genesis\Api\Notification as Notification;
 
 /**
  * Class AbstractIpnTest
@@ -88,7 +89,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     protected $dataHelperMock;
 
     /**
-     * @var \Genesis\API\Notification|\PHPUnit_Framework_MockObject_MockObject
+     * @var \Genesis\Api\Notification|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $notificationMock;
 
@@ -269,12 +270,12 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     {
         $result=null;
         switch ($transaction_type) {
-            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
+            case \Genesis\Api\Constants\Transaction\Types::AUTHORIZE:
+            case \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D:
                 $result = 'registerAuthorizationNotification';
                 break;
-            case \Genesis\API\Constants\Transaction\Types::SALE:
-            case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+            case \Genesis\Api\Constants\Transaction\Types::SALE:
+            case \Genesis\Api\Constants\Transaction\Types::SALE_3D:
                 $result = 'registerCaptureNotification';
                 break;
             default:
@@ -289,8 +290,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
      */
     protected function getShouldSetCurrentTranPending($responseObject)
     {
-        return
-            $responseObject->status != \Genesis\API\Constants\Transaction\States::APPROVED;
+        return $responseObject->status != States::APPROVED;
     }
 
     /**
@@ -302,7 +302,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
      */
     protected function getShouldExecuteAuthoirizeCaptureEvent($status)
     {
-        if (\Genesis\API\Constants\Transaction\States::APPROVED == $status) {
+        if (States::APPROVED == $status) {
             return self::once();
         }
 
@@ -316,8 +316,8 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     protected function getShouldCloseCurrentTransaction($responseObject)
     {
         $voidableTransactions = [
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D
+            \Genesis\Api\Constants\Transaction\Types::AUTHORIZE,
+            \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D
         ];
 
         return !in_array($responseObject->transaction_type, $voidableTransactions);
@@ -335,7 +335,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Get mock for notification
-     * @return \Genesis\API\Notification|\PHPUnit_Framework_MockObject_MockObject
+     * @return \Genesis\Api\Notification|\PHPUnit_Framework_MockObject_MockObject
      */
     protected function getNotificationMock()
     {

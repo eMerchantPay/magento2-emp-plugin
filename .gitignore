@@ -1,2 +1,8 @@
 .idea
 vendor
+auth.json
+/Test/Dummy
+phpunit_report.xml
+phpcs_report.xml
+phpmd_report.xml
+*.zip

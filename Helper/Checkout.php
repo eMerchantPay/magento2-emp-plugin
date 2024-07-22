@@ -19,7 +19,7 @@
 
 namespace EMerchantPay\Genesis\Helper;
 
-use Genesis\API\Constants\Transaction\Types;
+use Genesis\Api\Constants\Transaction\Types;
 use Magento\Sales\Model\Order;
 
 /**

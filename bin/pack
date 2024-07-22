@@ -1,0 +1,25 @@
+#!/bin/bash -l
+
+PACK_VERSION="$(cat VERSION)"
+ZIP_NAME="magento2-emp-plugin-$PACK_VERSION.zip"
+
+[ -f "$ZIP_NAME" ] && rm "$ZIP_NAME"
+
+zip -r $ZIP_NAME \
+    Block \
+    Controller \
+    Helper \
+    Logger \
+    Model \
+    Plugin \
+    README.md \
+    Setup \
+    Test/Unit \
+    Test/bootstrap.php \
+    composer.json \
+    composer.lock \
+    etc \
+    i18n \
+    phpunit.xml \
+    registration.php \
+    view

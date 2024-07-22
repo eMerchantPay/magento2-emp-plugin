@@ -20,7 +20,8 @@
 namespace EMerchantPay\Genesis\Model\Ipn;
 
 use EMerchantPay\Genesis\Helper\Data;
-use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
 
 /**
  * Base IPN Handler Class
@@ -285,8 +286,7 @@ abstract class AbstractIpn
      */
     protected function getShouldSetCurrentTranPending($responseObject)
     {
-        return
-            $responseObject->status != \Genesis\API\Constants\Transaction\States::APPROVED;
+        return $responseObject->status != States::APPROVED;
     }
 
     /**

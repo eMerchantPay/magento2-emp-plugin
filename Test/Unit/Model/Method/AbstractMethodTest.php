@@ -21,7 +21,7 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Method;
 
 use Magento\Sales\Model\Order;
 use EMerchantPay\Genesis\Helper\Data as EMerchantPayDataHelper;
-use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
 
 /**
  * Base Test Method Class for Payment Method Models

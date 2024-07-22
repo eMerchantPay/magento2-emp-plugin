@@ -2,24 +2,17 @@
 <ruleset name="emerchantpay Gateway Module Coding Standards">
     <description>Generally-applicable sniffs for emerchantpay Gateway Module</description>
 
-    <rule ref="EcgM2"/>
-
-    <rule ref="MEQP2">
-        <!-- Disable Rule: Use of protected class members is discouraged -->
-        <exclude name="MEQP2.PHP.ProtectedClassMember.FoundProtected" />
-        <!-- Allow passing Session Objects to Constructors (it is in this way in Magento2 Core) -->
-        <exclude name="MEQP2.Classes.MutableObjects.MutableObjects" />
-        <exclude name="MEQP2.Classes.ObjectInstantiation.FoundDirectInstantiation" />
-        <exclude name="MEQP2.Classes.ConstructorOperations.CustomOperationsFound" />
-        <exclude name="MEQP2.Classes.ObjectManager.ObjectManagerFound" />
-    </rule>
-
-    <rule ref="MEQP2.Classes.PublicNonInterfaceMethods.PublicMethodFound">
-        <exclude-pattern>./Test/*</exclude-pattern>
-    </rule>
+    <rule ref="Magento2"/>
 
     <rule ref="PSR2">
         <!-- Allow protected properties (Magento 2 also use them in base classes) -->
         <exclude name="PSR2.Classes.PropertyDeclaration.Underscore" />
     </rule>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+    <exclude-pattern>*/setup/*</exclude-pattern>
+    <exclude-pattern>*/pub/*</exclude-pattern>
+    <exclude-pattern>*/phpserver/*</exclude-pattern>
+    <exclude-pattern>*/Test/Dummy/*</exclude-pattern>
 </ruleset>

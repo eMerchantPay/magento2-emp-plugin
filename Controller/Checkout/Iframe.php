@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2018-2024 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,27 +13,34 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2018-2024 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
 namespace EMerchantPay\Genesis\Controller\Checkout;
 
 /**
- * Return Action Controller (used to handle Redirects from the Payment Gateway)
+ * Iframe jail break controller
  *
- * Class Redirect
+ * Class Iframe
  */
-class Redirect extends \EMerchantPay\Genesis\Controller\AbstractCheckoutRedirectAction
+
+use EMerchantPay\Genesis\Controller\AbstractCheckoutRedirectAction;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
+
+class Iframe extends AbstractCheckoutRedirectAction
 {
+
     /**
-     * Handle the result from the Payment Gateway
+     * Return html <script> to break the iframe jail
      *
-     * @return void
+     * @return ResponseInterface|ResultInterface|null
      */
     public function execute()
     {
         $action = $this->getReturnAction();
-        $this->redirectAction($action);
+
+        return $this->redirectAction($action, true);
     }
 }

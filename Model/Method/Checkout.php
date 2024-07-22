@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2018-2024 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,23 +13,22 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2018-2024 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
 namespace EMerchantPay\Genesis\Model\Method;
 
 use EMerchantPay\Genesis\Helper\Data;
-use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\BankCode;
-use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes;
-use Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\DeliveryTimeframes;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\Purchase\Categories;
-use Genesis\API\Constants\Transaction\States;
-use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
-use Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
-use Genesis\API\Request;
+use EMerchantpay\Genesis\Helper\Threeds;
+use Exception;
+use Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\DeliveryTimeframes;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\Purchase\Categories;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Api\Request;
 use Genesis\Genesis;
 use Magento\Customer\Api\Data\CustomerInterface;
 
@@ -50,6 +49,11 @@ class Checkout extends Base
     protected $_code = self::CODE;
 
     /**
+     * @var Threeds
+     */
+    protected $_threedsHelper;
+
+    /**
      * Checkout constructor.
      * @param \Magento\Framework\Model\Context $context
      * @param \Magento\Framework\App\Action\Context $actionContext
@@ -60,7 +64,7 @@ class Checkout extends Base
      * @param \Magento\Checkout\Model\Session $checkoutSession
      * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
      * @param \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface
-     * @param \EMerchantpay\Genesis\Helper\Threeds $threedsHelper
+     * @param Threeds $threedsHelper
      * @param \Magento\Framework\Model\ResourceModel\AbstractResource|null $resource
      * @param \Magento\Framework\Data\Collection\AbstractDb|null $resourceCollection
      * @param array $data
@@ -77,7 +81,7 @@ class Checkout extends Base
         \Magento\Checkout\Model\Session $checkoutSession,
         \EMerchantPay\Genesis\Helper\Data $moduleHelper,
         \Magento\Customer\Api\CustomerRepositoryInterface $customerRepositoryInterface,
-        \EMerchantPay\Genesis\Helper\Threeds $threedsHelper,
+        Threeds $threedsHelper,
         \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
         \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
         array $data = []
@@ -188,7 +192,7 @@ class Checkout extends Base
      */
     protected function checkout($data)
     {
-        $genesis = $this->prepareGenesisWPFRequest($data);
+        $genesis = $this->prepareGenesisWpfRequest($data);
 
         if ($this->_configHelper->isThreedsAllowed()) {
             $this->prepareThreedsV2Parameters($genesis, $data);
@@ -227,25 +231,6 @@ class Checkout extends Base
             }
 
             switch ($transactionType) {
-                case GenesisTransactionTypes::PAYBYVOUCHER_SALE:
-                    $parameters = [
-                        'card_type'   => CardTypes::VIRTUAL,
-                        'redeem_type' => RedeemTypes::INSTANT
-                    ];
-                    break;
-                case GenesisTransactionTypes::PAYBYVOUCHER_YEEPAY:
-                    $parameters = [
-                        'card_type'        => CardTypes::VIRTUAL,
-                        'redeem_type'      => RedeemTypes::INSTANT,
-                        'product_name'     => $data['order']['description'],
-                        'product_category' => $data['order']['description']
-                    ];
-                    break;
-                case GenesisTransactionTypes::CITADEL_PAYIN:
-                    $parameters = [
-                        'merchant_customer_id' => $this->getModuleHelper()->getCurrentUserIdHash()
-                    ];
-                    break;
                 case GenesisTransactionTypes::IDEBIT_PAYIN:
                 case GenesisTransactionTypes::INSTA_DEBIT_PAYIN:
                     $parameters = [
@@ -306,9 +291,9 @@ class Checkout extends Base
      * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function prepareGenesisWPFRequest($data)
+    protected function prepareGenesisWpfRequest($data)
     {
-        $genesis = new \Genesis\Genesis('WPF\Create');
+        $genesis = new \Genesis\Genesis('Wpf\Create');
 
         $genesis
             ->request()
@@ -525,7 +510,7 @@ class Checkout extends Base
             }
 
             return $response->consumer_id;
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return null;
         }
     }
@@ -613,9 +598,7 @@ class Checkout extends Base
         try {
             $responseObject = $this->checkout($data);
 
-            $isWpfSuccessful =
-                ($responseObject->status == \Genesis\API\Constants\Transaction\States::NEW_STATUS) &&
-                isset($responseObject->redirect_url);
+            $isWpfSuccessful = ($responseObject->status == States::NEW_STATUS) && isset($responseObject->redirect_url);
 
             if (!$isWpfSuccessful) {
                 $errorMessage = $this->getModuleHelper()->getErrorMessageFromGatewayResponse(
@@ -651,7 +634,7 @@ class Checkout extends Base
             );
 
             return $this;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()
             );
@@ -700,7 +683,7 @@ class Checkout extends Base
 
         try {
             $this->doCapture($payment, $amount, $authTransaction);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()
             );
@@ -773,7 +756,7 @@ class Checkout extends Base
      */
     protected function prepareThreedsV2Parameters($genesis, $data)
     {
-        /** @var \Genesis\API\Request\WPF\Create $request */
+        /** @var \Genesis\Api\Request\Wpf\Create $request */
         $request = $genesis->request();
 
         /** @var \Magento\Sales\Model\Order $order */
@@ -865,7 +848,7 @@ class Checkout extends Base
         $scaValue       = $this->getConfigHelper()->getScaExemption();
         $scaAmountValue = $this->getConfigHelper()->getScaExemptionAmount();
         $wpfAmount      = (float) $genesis->request()->getAmount();
-        /** @var \Genesis\API\Request\WPF\Create $request */
+        /** @var \Genesis\Api\Request\Wpf\Create $request */
         $request        = $genesis->request();
 
         if ($wpfAmount <= $scaAmountValue) {

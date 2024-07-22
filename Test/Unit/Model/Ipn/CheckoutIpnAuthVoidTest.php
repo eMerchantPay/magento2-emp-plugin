@@ -32,7 +32,7 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 
 class CheckoutIpnAuthVoidTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\CheckoutIpnTest
 {
-    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\API\Constants\Transaction\Types::AUTHORIZE;
+    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\Api\Constants\Transaction\Types::AUTHORIZE;
 
     /**
      * Creates reconciliation object
@@ -42,7 +42,7 @@ class CheckoutIpnAuthVoidTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\
     {
         $this->reconciliationObj = parent::createReconciliationObj();
 
-        $this->reconciliationObj->status           = \Genesis\API\Constants\Transaction\States::VOIDED;
+        $this->reconciliationObj->status           = \Genesis\Api\Constants\Transaction\States::VOIDED;
         $this->reconciliationObj->transaction_type = self::RECONCILIATION_TRANSACTION_TYPE;
 
         return $this->reconciliationObj;

@@ -20,7 +20,7 @@
 namespace Unit\Model\Config\Source\Method\Checkout;
 
 use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ChallengeIndicator;
-use Genesis\API\Constants\Transaction\Parameters\Threeds\V2\Control\ChallengeIndicators;
+use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\Control\ChallengeIndicators;
 use PHPUnit\Framework\TestCase;
 
 /**

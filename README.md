@@ -1,7 +1,6 @@
 emerchantpay Gateway Module for Magento 2 CE, EE, ECE
 =============================
 
-[![Build Status](https://img.shields.io/travis/eMerchantPay/magento2-emp-plugin.svg?style=flat)](https://travis-ci.org/eMerchantPay/magento2-emp-plugin)
 [![Latest Stable Version](https://poser.pugx.org/emerchantpay/magento2-emp-plugin/v/stable)](https://packagist.org/packages/emerchantpay/magento2-emp-plugin)
 [![Total Downloads](https://img.shields.io/packagist/dt/emerchantpay/magento2-emp-plugin.svg?style=flat)](https://packagist.org/packages/emerchantpay/magento2-emp-plugin)
 [![Software License](https://img.shields.io/badge/license-GPL-green.svg?style=flat)](http://opensource.org/licenses/gpl-2.0.php)
@@ -11,8 +10,8 @@ This is a Payment Module for Magento 2, that gives you the ability to process pa
 Requirements
 ------------
 
-* Magento 2 CE, EE, ECE or higher (Tested up to __ 2.4.6-p3__)
-* [GenesisPHP v1.24.1](https://github.com/GenesisGateway/genesis_php/releases/tag/1.24.1) - (Integrated in Module)
+* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p1__)
+* [GenesisPHP v2.0.1](https://github.com/GenesisGateway/genesis_php/releases/tag/2.0.1) - (Integrated in Module)
 
 Installation (composer)
 ---------------------
@@ -117,7 +116,6 @@ Supported Transactions
     * __eps__
     * __eZeeWallet__
     * __Fashioncheque__
-    * __GiroPay__
     * __Google Pay__
     * __iDeal__
     * __iDebit__
@@ -168,3 +166,45 @@ _Note_: If you have trouble with your credentials or terminal configuration, get
 You're now ready to process payments through our gateway.
 
 [support]: mailto:tech-support@emerchantpay.net
+
+Development
+------------
+*  Composer script to install Magento and emerchantpay Payment Gateway in Test/Dummy folder.
+
+    ```sh
+    $ composer install-magento
+    ```
+    If the Test/Dummy folder already exists the script will only update the emerchantpay Payment Gateway without installing Magento.   
+    
+    The credentials for `repo.magento.com` can be provided in an `auth.json` file inside the root of the project or by passing `repo_user` and `repo_name`.
+  
+    ```sh
+    $ composer install-magento repo_user=XXX repo_pass=XXX
+    ```
+
+* Composer script to run PHPUnit tests
+
+    ```sh
+    $ composer test-phpunit
+    ```
+
+* Composer script to install Magento and run PHPUnit tests
+
+    ```sh
+    $ composer test-magento
+    ```
+    or 
+  
+    ```sh
+    $ composer test-magento repo_user=XXX repo_pass=XXX
+    ```
+* Composer script to run PHP Code Sniffer
+
+    ```sh
+    $ composer test-phpcs
+    ```
+* Composer script to run PHP Mess Detector
+
+    ```sh
+    $ composer test-phpmd
+    ```

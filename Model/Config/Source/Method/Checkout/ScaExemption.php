@@ -19,7 +19,7 @@
 
 namespace EMerchantPay\Genesis\Model\Config\Source\Method\Checkout;
 
-use Genesis\API\Constants\Transaction\Parameters\ScaExemptions;
+use Genesis\Api\Constants\Transaction\Parameters\ScaExemptions;
 use Magento\Framework\Data\OptionSourceInterface;
 
 /**

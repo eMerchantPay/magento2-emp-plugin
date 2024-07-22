@@ -70,7 +70,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     public function initGatewayClient()
     {
         \Genesis\Config::setEndpoint(
-            \Genesis\API\Constants\Endpoints::EMERCHANTPAY
+            \Genesis\Api\Constants\Endpoints::EMERCHANTPAY
         );
 
         \Genesis\Config::setUsername(
@@ -90,8 +90,8 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
         \Genesis\Config::setEnvironment(
             $this->getIsStagingMode() ?
-                \Genesis\API\Constants\Environments::STAGING :
-                \Genesis\API\Constants\Environments::PRODUCTION
+                \Genesis\Api\Constants\Environments::STAGING :
+                \Genesis\Api\Constants\Environments::PRODUCTION
         );
     }
 
@@ -414,5 +414,15 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     public function getScaExemptionAmount()
     {
         return (float) $this->getValue('sca_exemption_amount');
+    }
+
+    /**
+     * Get is payment processing in iframe enabled
+     *
+     * @return bool
+     */
+    public function isIframeProcessingEnabled(): bool
+    {
+        return $this->isFlagChecked($this->_methodCode, 'iframe_processing_enabled');
     }
 }

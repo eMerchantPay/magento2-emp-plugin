@@ -20,8 +20,8 @@
 namespace EMerchantPay\Genesis\Test\Unit\Helper;
 
 use EMerchantPay\Genesis\Helper\Data as EMerchantPayDataHelper;
-use Genesis\API\Constants\Transaction\States as GenesisTransactionStates;
-use Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Api\Constants\Transaction\States as GenesisTransactionStates;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
 
 /**
  * Class DataTest
@@ -443,7 +443,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $this->expectExceptionMessage($exceptionMessage);
 
         $this->moduleHelper->maskException(
-            new \Genesis\Exceptions\ErrorAPI(
+            new \Exception(
                 $exceptionMessage,
                 \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR
             )
@@ -458,7 +458,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $gatewayResponse = new \stdClass();
         $gatewayResponse->status = GenesisTransactionStates::APPROVED;
         $gatewayResponse->message = 'Gateway Response Message Text';
-        $gatewayResponse->transaction_type = GenesisTransactionTypes::PAYBYVOUCHER_SALE;
+        $gatewayResponse->transaction_type = GenesisTransactionTypes::PAYSAFECARD;
 
         $arrObj = $this->moduleHelper->getArrayFromGatewayResponse($gatewayResponse);
 
@@ -750,7 +750,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $gatewayLocale = $this->moduleHelper->getLocale('de');
 
         $this->assertTrue(
-            \Genesis\API\Constants\i18n::isValidLanguageCode($gatewayLocale)
+            \Genesis\Api\Constants\i18n::isValidLanguageCode($gatewayLocale)
         );
 
         $this->assertEquals(
@@ -780,7 +780,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $gatewayLocale = $this->moduleHelper->getLocale($defaultLocale);
 
         $this->assertTrue(
-            \Genesis\API\Constants\i18n::isValidLanguageCode($gatewayLocale)
+            \Genesis\Api\Constants\i18n::isValidLanguageCode($gatewayLocale)
         );
 
         $this->assertEquals(
@@ -803,7 +803,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
-                        \Genesis\API\Constants\Transaction\Types::CAPTURE
+                        \Genesis\Api\Constants\Transaction\Types::CAPTURE
                 ]
             );
 
@@ -828,7 +828,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
-                        \Genesis\API\Constants\Transaction\Types::PAYSAFECARD
+                        \Genesis\Api\Constants\Transaction\Types::PAYSAFECARD
                 ]
             );
 
@@ -853,7 +853,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
-                        \Genesis\API\Constants\Transaction\Types::SALE
+                        \Genesis\Api\Constants\Transaction\Types::SALE
                 ]
             );
 
@@ -871,25 +871,25 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $this->assertTrue(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D
+                \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D
             )
         );
 
         $this->assertFalse(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\API\Constants\Transaction\Types::AUTHORIZE
+                \Genesis\Api\Constants\Transaction\Types::AUTHORIZE
             )
         );
 
         $this->assertTrue(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\API\Constants\Transaction\Types::SALE_3D
+                \Genesis\Api\Constants\Transaction\Types::SALE_3D
             )
         );
 
         $this->assertFalse(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\API\Constants\Transaction\Types::SALE
+                \Genesis\Api\Constants\Transaction\Types::SALE
             )
         );
     }
@@ -903,8 +903,8 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $successfulGatewayResponseTechMessage = 'Transaction has been processed successfully!';
 
         $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
-            \Genesis\API\Constants\Transaction\States::APPROVED,
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE,
+            \Genesis\Api\Constants\Transaction\States::APPROVED,
+            \Genesis\Api\Constants\Transaction\Types::AUTHORIZE,
             $successfulGatewayResponseMessage,
             $successfulGatewayResponseTechMessage
         );
@@ -930,8 +930,8 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     public function testGetFailedErrorMessageFromGatewayResponse()
     {
         $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
-            \Genesis\API\Constants\Transaction\States::DECLINED,
-            \Genesis\API\Constants\Transaction\Types::SALE
+            \Genesis\Api\Constants\Transaction\States::DECLINED,
+            \Genesis\Api\Constants\Transaction\Types::SALE
         );
 
         $gatewayResponseMessage = $this->moduleHelper->getErrorMessageFromGatewayResponse(
@@ -953,8 +953,8 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $successfulGatewayResponseTechnicalMessage = 'Transaction has been processed successfully!';
 
         $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
-            \Genesis\API\Constants\Transaction\States::PENDING_ASYNC,
-            \Genesis\API\Constants\Transaction\Types::REFUND,
+            \Genesis\Api\Constants\Transaction\States::PENDING_ASYNC,
+            \Genesis\Api\Constants\Transaction\Types::REFUND,
             $successfulGatewayResponseMessage,
 	        $successfulGatewayResponseTechnicalMessage
         );
@@ -972,5 +972,50 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 	        $successfulGatewayResponseTechnicalMessage,
             $gatewayResponseMessage
         );
+    }
+
+    /**
+     * @covers EMerchantPayDataHelper::getReturnUrl
+     */
+    public function testGetReturnUrl()
+    {
+        $moduleCode = 'emerchantpay_checkout';
+        $returnAction = EMerchantPayDataHelper::ACTION_RETURN_SUCCESS;
+        $expectedUrlIframe = 'https://example.com/emerchantpay/checkout/iframe/action/success';
+        $expectedUrlRedirect = 'https://example.com/emerchantpay/checkout/redirect/action/success';
+
+        // Mocking the Config class to return true for isIframeProcessingEnabled
+        $configMock = $this->createMock(\EMerchantPay\Genesis\Block\Frontend\Config::class);
+        $configMock->expects($this->exactly(2))
+            ->method('isIframeProcessingEnabled')
+            ->willReturnOnConsecutiveCalls(true, false);
+
+        // Use reflection to set the protected property _config
+        $reflectionClass = new \ReflectionClass(EMerchantPayDataHelper::class);
+        $configProperty = $reflectionClass->getProperty('_config');
+        $configProperty->setAccessible(true);
+        $configProperty->setValue($this->moduleHelper, $configMock);
+
+        // Mocking store
+        $this->storeManagerMock->expects($this->any())
+            ->method('getStore')
+            ->willReturn($this->storeMock);
+
+        // Mocking getUrl with correct parameters
+        $this->urlBuilderMock->expects($this->exactly(2))
+            ->method('getUrl')
+            ->withConsecutive(
+                ['emerchantpay/checkout/iframe', ['_store' => $this->storeMock, '_secure' => null, 'action' => $returnAction]],
+                ['emerchantpay/checkout/redirect', ['_store' => $this->storeMock, '_secure' => null, 'action' => $returnAction]]
+            )
+            ->willReturnOnConsecutiveCalls($expectedUrlIframe, $expectedUrlRedirect);
+
+        // Test iframe URL generation
+        $actualUrlIframe = $this->moduleHelper->getReturnUrl($moduleCode, $returnAction);
+        $this->assertEquals($expectedUrlIframe, $actualUrlIframe);
+
+        // Test redirect URL generation
+        $actualUrlRedirect = $this->moduleHelper->getReturnUrl($moduleCode, $returnAction);
+        $this->assertEquals($expectedUrlRedirect, $actualUrlRedirect);
     }
 }

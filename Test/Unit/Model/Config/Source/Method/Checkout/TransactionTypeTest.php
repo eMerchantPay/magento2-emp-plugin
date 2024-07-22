@@ -21,12 +21,12 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout;
 
 use EMerchantPay\Genesis\Helper\Checkout;
 use EMerchantPay\Genesis\Helper\Data;
-use Genesis\API\Constants\Transaction\Names;
-use Genesis\API\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
-use Genesis\API\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
-use Genesis\API\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
-use \Genesis\API\Constants\Transaction\Types as GenesisTransactionTypes;
-use \Genesis\API\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\Api\Constants\Transaction\Names;
+use Genesis\Api\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
+use Genesis\Api\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
+use Genesis\Api\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
+use \Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use \Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
 
 /**
  * Class TransactionTypeTest

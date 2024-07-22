@@ -9,3 +9,4 @@ Collapse,Collapse
 "Payment via","Payment via"
 "Pending approval","Pending approval"
 "Credit Memo is not created! The Refund is pending approval on the Gateway.","Credit Memo is not created! The Refund is pending approval on the Gateway."
+"The payment is being processed<br><span>Please, wait</span>", "The payment is being processed<br><span>Please, wait</span>"

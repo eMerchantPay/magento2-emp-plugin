@@ -20,7 +20,7 @@
 namespace Unit\Model\Config\Source\Method\Checkout;
 
 use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ScaExemption;
-use Genesis\API\Constants\Transaction\Parameters\ScaExemptions;
+use Genesis\Api\Constants\Transaction\Parameters\ScaExemptions;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -25,6 +25,7 @@ GNU General Public License for more details.
                 <order_status>payment_review</order_status>
                 <title>emerchantpay Checkout</title>
                 <test_mode>1</test_mode>
+                <iframe_processing_enabled>0</iframe_processing_enabled>
                 <transaction_types>sale</transaction_types>
                 <allowspecific>0</allowspecific>
                 <allow_specific_currency>0</allow_specific_currency>

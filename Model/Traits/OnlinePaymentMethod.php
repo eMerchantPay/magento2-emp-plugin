@@ -19,7 +19,9 @@
 
 namespace EMerchantPay\Genesis\Model\Traits;
 
-use Genesis\API\Constants\Transaction\Types;
+use Exception;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types;
 
 /**
  * Trait for defining common variables and methods for all Payment Solutions
@@ -144,13 +146,16 @@ trait OnlinePaymentMethod
      * @param $transactionClass
      * @param \Magento\Payment\Model\InfoInterface $payment
      * @param array $data
+     *
      * @return \stdClass
+     *
      * @throws \Genesis\Exceptions\DeprecatedMethod
      * @throws \Genesis\Exceptions\ErrorAPI
      * @throws \Genesis\Exceptions\InvalidArgument
      * @throws \Genesis\Exceptions\InvalidMethod
      * @throws \Genesis\Exceptions\InvalidResponse
      * @throws \Genesis\Exceptions\ErrorParameter
+     * @throws Exception
      */
     protected function processReferenceTransaction(
         $transactionClass,
@@ -191,6 +196,9 @@ trait OnlinePaymentMethod
         }
 
         $genesis->execute();
+        if (!$genesis->response()->isSuccessful()) {
+            throw new Exception($genesis->response()->getErrorDescription());
+        }
 
         $responseObject = $genesis->response()->getResponseObject();
 
@@ -269,7 +277,7 @@ trait OnlinePaymentMethod
             $data
         );
 
-        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+        if ($responseObject->status == States::APPROVED) {
             $this->getMessageManager()->addSuccess(
                 __('Successful Capture') .
                 (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
@@ -350,9 +358,8 @@ trait OnlinePaymentMethod
             $data
         );
 
-
-        switch ($responseObject->status) {
-            case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
+        switch ($responseObject->status ?? null) {
+            case States::PENDING_ASYNC:
                 $this->getMessageManager()->addNoticeMessage(
                     __('Pending approval') .
                     (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
@@ -361,7 +368,7 @@ trait OnlinePaymentMethod
                     __('Credit Memo is not created! The Refund is pending approval on the Gateway.')
                 );
                 break;
-            case \Genesis\API\Constants\Transaction\States::APPROVED:
+            case States::APPROVED:
                 $this->getMessageManager()->addSuccessMessage(
                     __('Successful Refund') .
                     (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')
@@ -420,7 +427,7 @@ trait OnlinePaymentMethod
             $data
         );
 
-        if ($responseObject->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+        if ($responseObject->status == States::APPROVED) {
             $this->getMessageManager()->addSuccess(
                 __('Successful Void') .
                 (isset($responseObject->message) ? ' (' . $responseObject->message . ')' : '')

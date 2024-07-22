@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2018 emerchantpay Ltd.
+Copyright (C) 2018-2024 emerchantpay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -13,17 +13,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 @author      emerchantpay
-@copyright   2018 emerchantpay Ltd.
+@copyright   2018-2024 emerchantpay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../../lib/internal/Magento/Framework/Module/etc/module.xsd">
-    <module name="EMerchantPay_Genesis" setup_version="1.3.8">
-        <sequence>
-            <module name="Magento_Checkout"/>
-            <module name="Magento_Sales"/>
-            <module name="Magento_Payment"/>
-            <module name="Magento_Directory" />
-            <module name="Magento_Config" />
-        </sequence>
-    </module>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\Stdlib\Cookie\PhpCookieManager">
+        <plugin name="custom_cookie_manager" type="EMerchantPay\Genesis\Plugin\CookieManager"/>
+    </type>
 </config>

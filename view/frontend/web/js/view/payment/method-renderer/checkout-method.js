@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2018-2024 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2018-2024 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -30,6 +30,7 @@ define(
         'Magento_Checkout/js/checkout-data',
         'Magento_Checkout/js/model/payment/additional-validators',
         'mage/url',
+        'mage/translate',
     ],
     function (
         $,
@@ -43,7 +44,8 @@ define(
         customer,
         checkoutData,
         additionalValidators,
-        url
+        url,
+        $t
     ) {
         'use strict';
 
@@ -53,8 +55,6 @@ define(
             },
 
             placeOrder: function (data, event) {
-
-
                 if (event) {
                     event.preventDefault();
                 }
@@ -85,9 +85,46 @@ define(
             },
 
             afterPlaceOrder: function () {
-                window.location.replace(url.build('emerchantpay/checkout/index'));
-            }
+                if (this.isIframeProcessingEnabled()) {
+                    const iframe = this.empCreateIframeElement();
+                    iframe.src = url.build('emerchantpay/checkout/index');
+                } else {
+                    window.location.replace(url.build('emerchantpay/checkout/index'));
+                }
+            },
 
+            empCreateIframeElement() {
+                const div    = document.createElement('div');
+                const header = document.createElement('div');
+                const iframe = document.createElement('iframe');
+
+                div.className    = 'emp-threeds-modal';
+                header.className = 'emp-threeds-iframe-header';
+                iframe.className = 'emp-threeds-iframe';
+
+                iframe.setAttribute('name', 'emp-threeds-iframe');
+                header.innerHTML = '<h3>' + $t('The payment is being processed<br><span>Please, wait</span>') + '</h3>';
+                iframe.onload    = function () {
+                    header.style.display = 'none';
+                    div.style.display    = 'block';
+                }
+
+                div.appendChild(header);
+                div.appendChild(iframe);
+
+                document.body.appendChild(div);
+
+                div.style.display = 'block';
+
+                return iframe;
+            },
+
+            isIframeProcessingEnabled() {
+                const iframeProcessingDataDiv = document.getElementById('iframeProcessingData');
+                let isIframeProcessingEnabled = iframeProcessingDataDiv.getAttribute('data-iframe-processing-enabled');
+
+                return isIframeProcessingEnabled === '1';
+            }
         });
     }
 );

@@ -19,6 +19,15 @@
 
 namespace EMerchantPay\Genesis\Controller;
 
+use Magento\Checkout\Model\Session;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\Result\Raw;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Sales\Model\OrderFactory;
+use Psr\Log\LoggerInterface;
+use Magento\Framework\UrlInterface;
+
 /**
  * Base Checkout Controller Class
  * Class AbstractCheckoutAction
@@ -36,35 +45,53 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
     const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS = ['_fragment' => 'payment'];
 
     /**
-     * @var \Magento\Checkout\Model\Session
+     * @var Session
      */
     protected $_checkoutSession;
 
     /**
-     * @var \Magento\Sales\Model\OrderFactory
+     * @var OrderFactory
      */
     protected $_orderFactory;
 
     /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \Magento\Checkout\Model\Session $checkoutSession
-     * @param \Magento\Sales\Model\OrderFactory $orderFactory
+     * @var ResultFactory
+     */
+    private $_resultFactory;
+
+    /**
+     * @var UrlInterface
+     */
+    private $_urlBuilder;
+
+    /**
+     * @param Context         $context
+     * @param LoggerInterface $logger
+     * @param Session         $checkoutSession
+     * @param OrderFactory    $orderFactory
+     * @param ResultFactory   $resultFactory
+     * @param UrlInterface    $urlBuilder
      */
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Checkout\Model\Session $checkoutSession,
-        \Magento\Sales\Model\OrderFactory $orderFactory
+        Context         $context,
+        LoggerInterface $logger,
+        Session         $checkoutSession,
+        OrderFactory    $orderFactory,
+        ResultFactory   $resultFactory,
+        UrlInterface    $urlBuilder
     ) {
         parent::__construct($context, $logger);
+
         $this->_checkoutSession = $checkoutSession;
-        $this->_orderFactory = $orderFactory;
+        $this->_orderFactory    = $orderFactory;
+        $this->_resultFactory   = $resultFactory;
+        $this->_urlBuilder      = $urlBuilder;
     }
 
     /**
      * Get an Instance of the Magento Checkout Session
-     * @return \Magento\Checkout\Model\Session
+     *
+     * @return Session
      */
     protected function getCheckoutSession()
     {
@@ -73,8 +100,10 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
 
     /**
      * Get an Instance of the Magento Order Factory
+     *
      * It can be used to instantiate an order
-     * @return \Magento\Sales\Model\OrderFactory
+     *
+     * @return OrderFactory
      */
     protected function getOrderFactory()
     {
@@ -118,25 +147,84 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
 
     /**
      * Does a redirect to the Checkout Success Page
-     * @return void
+     *
+     * @param bool $iframeRedirect
+     *
+     * @return ResponseInterface|Raw
      */
-    protected function redirectToCheckoutOnePageSuccess()
+    protected function redirectToCheckoutOnePageSuccess(bool $iframeRedirect)
     {
-        $this->_redirect(
-            self::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH,
-            self::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS
+        return $this->selectResponse(
+            $iframeRedirect,
+            [
+                self::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH,
+                self::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS
+            ]
         );
     }
 
     /**
      * Does a redirect to the Checkout Cart Page
-     * @return void
+     *
+     * @param bool $iframeRedirect
+     *
+     * @return ResponseInterface|Raw
      */
-    protected function redirectToCheckoutCart()
+    protected function redirectToCheckoutCart(bool $iframeRedirect)
     {
-        $this->_redirect(
-            self::ROUTE_PATTERN_CHECKOUT_CART_PATH,
-            self::ROUTE_PATTERN_CHECKOUT_CART_ARGS
+        return $this->selectResponse(
+            $iframeRedirect,
+            [
+                self::ROUTE_PATTERN_CHECKOUT_CART_PATH,
+                self::ROUTE_PATTERN_CHECKOUT_CART_ARGS
+            ]
         );
+    }
+
+    /**
+     * Return html code with embedded js in <script> tag to break the iframe jail
+     *
+     * @param string $redirectPath
+     * @param array $params
+     *
+     * @return Raw
+     */
+    private function breakIframeAndRedirect(string $redirectPath, array $params)
+    {
+        $redirectUrl = $this->_urlBuilder->getUrl($redirectPath, ['_query' => $params]);
+
+        $html = '<html><body>';
+        $html .= '<script type="text/javascript">';
+        $html .= 'if (window.top !== window.self) {';
+        $html .= 'window.top.location.href = "' . $redirectUrl . '";';
+        $html .= '} else {';
+        $html .= 'window.location.href = "' . $redirectUrl . '";';
+        $html .= '}';
+        $html .= '</script>';
+        $html .= '</body></html>';
+
+        /** @var Raw $result */
+        $result = $this->_resultFactory->create(ResultFactory::TYPE_RAW);
+        $result->setHeader('Content-Type', 'text/html');
+        $result->setContents($html);
+
+        return $result;
+    }
+
+    /**
+     * Return response based on if iframe payment processing is used or not
+     *
+     * @param bool $iframeRedirect
+     * @param array $returnUrl
+     *
+     * @return ResponseInterface|Raw
+     */
+    private function selectResponse(bool $iframeRedirect, array $returnUrl)
+    {
+        if ($iframeRedirect) {
+            return $this->breakIframeAndRedirect(...$returnUrl);
+        }
+
+        return $this->_redirect(...$returnUrl);
     }
 }

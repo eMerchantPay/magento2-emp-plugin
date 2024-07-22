@@ -97,7 +97,7 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 $payment_transaction
             );
 
-            if (\Genesis\API\Constants\Transaction\States::APPROVED == $payment_transaction->status) {
+            if (\Genesis\Api\Constants\Transaction\States::APPROVED == $payment_transaction->status) {
                 $this->registerPaymentNotification(
                     $payment,
                     $payment_transaction

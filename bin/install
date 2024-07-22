@@ -1,0 +1,43 @@
+#!/bin/bash -l
+
+shopt -s extglob
+
+for ARGUMENT in "$@"
+do
+   KEY=$(echo $ARGUMENT | cut -f1 -d=)
+   KEY=${KEY,,}
+
+   KEY_LENGTH=${#KEY}
+   VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+
+   export "$KEY"="$VALUE"
+done
+
+if [ -z ${repo_user+x} ] || [ -z ${repo_pass+x} ]
+then
+    REPO_URL="https://repo.magento.com/"
+else
+    REPO_URL="https://${repo_user}:${repo_pass}@repo.magento.com/"
+fi
+
+if ! [[ -d Test/Dummy ]]
+then
+    mkdir Test/Dummy
+
+    composer create-project\
+        --repository-url="$REPO_URL"\
+        magento/project-community-edition:2.4.4 Test/Dummy
+    composer install -d Test/Dummy/
+
+else
+    rm -r Test/Dummy/app/code/EMerchantPay/Genesis
+fi
+
+mkdir -p Test/Dummy/app/code/EMerchantPay/Genesis
+
+cp -r !(Test|Dummy) Test/Dummy/app/code/EMerchantPay/Genesis/
+mkdir Test/Dummy/app/code/EMerchantPay/Genesis/Test
+cp -r Test/Unit Test/Dummy/app/code/EMerchantPay/Genesis/Test/
+cp Test/bootstrap.php Test/Dummy/bootstrap.php
+
+composer install -d Test/Dummy/app/code/EMerchantPay/Genesis

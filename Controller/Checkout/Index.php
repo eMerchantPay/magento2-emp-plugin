@@ -19,13 +19,15 @@
 
 namespace EMerchantPay\Genesis\Controller\Checkout;
 
+use EMerchantPay\Genesis\Controller\AbstractCheckoutAction;
+
 /**
  * Front Controller for Checkout Method
  * it does a redirect to the WPF
+ *
  * Class Index
- * @package EMerchantPay\Genesis\Controller\Checkout
  */
-class Index extends \EMerchantPay\Genesis\Controller\AbstractCheckoutAction
+class Index extends AbstractCheckoutAction
 {
     /**
      * Redirect to Genesis WPF

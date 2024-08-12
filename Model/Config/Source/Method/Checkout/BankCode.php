@@ -20,40 +20,40 @@
 namespace EMerchantPay\Genesis\Model\Config\Source\Method\Checkout;
 
 use Genesis\Api\Constants\Banks;
-use \Magento\Framework\Option\ArrayInterface;
+use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Checkout Bank codes Model Source
+ *
  * Class BankCode
- * @package EMerchantPay\Genesis\Model\Config\Source\Method\Checkout
  */
-class BankCode implements ArrayInterface
+class BankCode implements OptionSourceInterface
 {
     /**
      * @var array
      */
-    public static $availableBankCodes = [
+    public $availableBankCodes = [
         Banks::CPI => 'Interac Combined Pay-in',
         Banks::BCT => 'Bancontact',
-        Banks::BLK => 'Blik One Click',
+        Banks::BLK => 'BLIK',
+        Banks::SE  => 'SPEI',
+        Banks::PID => 'LatiPay',
     ];
 
     /**
      * Builds the options for the MultiSelect control in the Admin Zone
+     *
      * @return array
      */
     public function toOptionArray()
     {
         $data = [];
 
-        foreach (self::$availableBankCodes as $value => $label) {
-            array_push(
-                $data,
-                [
-                    'value' => $value,
-                    'label' => __($label)
-                ]
-            );
+        foreach ($this->availableBankCodes as $value => $label) {
+            $data[] = [
+                'value' => $value,
+                'label' => __($label)
+            ];
         }
 
         return $data;

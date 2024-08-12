@@ -20,8 +20,9 @@
 namespace EMerchantPay\Genesis\Test\Unit\Model\Observer;
 
 use EMerchantPay\Genesis\Model\Method\Checkout;
-use Magento\Framework\Event\Observer;
 use EMerchantPay\Genesis\Model\Observer\SalesOrderBeforeSaveObserver;
+use Magento\Framework\Event\Observer;
+use Magento\Framework\Exception\LocalizedException;
 
 class SalesOrderBeforeSaveObserverTest extends AbstractObserverTest
 {
@@ -34,6 +35,8 @@ class SalesOrderBeforeSaveObserverTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testExecute(): void
     {
@@ -48,6 +51,8 @@ class SalesOrderBeforeSaveObserverTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testExecuteWithOurPaymentMethod(): void
     {
@@ -76,6 +81,8 @@ class SalesOrderBeforeSaveObserverTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testExecuteWithOtherPaymentMethod(): void
     {
@@ -101,6 +108,8 @@ class SalesOrderBeforeSaveObserverTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testWithPaymentConfirmationEmailEnabledFalse()
     {
@@ -150,7 +159,7 @@ class SalesOrderBeforeSaveObserverTest extends AbstractObserverTest
 
         $this->observerMock   = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getEvent'])
+            ->onlyMethods(['getEvent'])
             ->getMock();
         $this->observerMock->expects($this->once())
             ->method('getEvent')

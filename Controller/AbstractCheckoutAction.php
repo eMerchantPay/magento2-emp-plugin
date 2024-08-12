@@ -22,27 +22,28 @@ namespace EMerchantPay\Genesis\Controller;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\Result\Raw;
+use Magento\Framework\UrlInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Psr\Log\LoggerInterface;
-use Magento\Framework\UrlInterface;
 
 /**
  * Base Checkout Controller Class
+ *
  * Class AbstractCheckoutAction
- * @package EMerchantPay\Genesis\Controller
  */
-abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\AbstractAction
+abstract class AbstractCheckoutAction extends AbstractAction
 {
-    const ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH = 'checkout/onepage/success';
-    const ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS = [];
+    public const ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH = 'checkout/onepage/success';
+    public const ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS = [];
 
-    const ROUTE_PATTERN_CHECKOUT_CART_PATH = 'checkout/cart';
-    const ROUTE_PATTERN_CHECKOUT_CART_ARGS = [];
+    public const ROUTE_PATTERN_CHECKOUT_CART_PATH = 'checkout/cart';
+    public const ROUTE_PATTERN_CHECKOUT_CART_ARGS = [];
 
-    const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_PATH = 'checkout';
-    const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS = ['_fragment' => 'payment'];
+    public const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_PATH = 'checkout';
+    public const ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS = ['_fragment' => 'payment'];
 
     /**
      * @var Session
@@ -112,7 +113,8 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
 
     /**
      * Get an Instance of the current Checkout Order Object
-     * @return \Magento\Sales\Model\Order
+     *
+     * @return Order
      */
     protected function getOrder()
     {
@@ -135,6 +137,7 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
 
     /**
      * Does a redirect to the Checkout Payment Page
+     *
      * @return void
      */
     protected function redirectToCheckoutFragmentPayment()
@@ -185,7 +188,7 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
      * Return html code with embedded js in <script> tag to break the iframe jail
      *
      * @param string $redirectPath
-     * @param array $params
+     * @param array  $params
      *
      * @return Raw
      */
@@ -214,7 +217,7 @@ abstract class AbstractCheckoutAction extends \EMerchantPay\Genesis\Controller\A
     /**
      * Return response based on if iframe payment processing is used or not
      *
-     * @param bool $iframeRedirect
+     * @param bool  $iframeRedirect
      * @param array $returnUrl
      *
      * @return ResponseInterface|Raw

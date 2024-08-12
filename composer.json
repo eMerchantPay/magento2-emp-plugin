@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.3.8",
+    "version": "1.3.9",
     "license": [
         "GPL-2.0"
     ],
@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*|8.3.*",
-        "genesisgateway/genesis_php": "2.0.1"
+        "genesisgateway/genesis_php": "2.0.2"
     },
     "keywords": [
         "emerchantpay",
@@ -52,6 +52,7 @@
         "bancontact",
         "bitpay",
         "blacklist",
+        "blik",
         "cabal",
         "cashu",
         "cencosud",
@@ -83,6 +84,7 @@
         "insta_debit_payout",
         "interac",
         "intersolve",
+        "latipay",
         "multibanco",
         "mybank",
         "neosurf",
@@ -97,7 +99,6 @@
         "payu",
         "pix",
         "poli",
-        "ppro",
         "preauthorization",
         "preauthorization_incremental",
         "preauthorization_partial",
@@ -113,6 +114,7 @@
         "sdd_recurring",
         "sdd_refund",
         "sofort",
+        "spei",
         "tc40",
         "transfer_to",
         "trustly",

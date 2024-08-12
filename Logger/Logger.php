@@ -19,23 +19,28 @@
 
 namespace EMerchantPay\Genesis\Logger;
 
+use Magento\Payment\Model\Method\Logger as MethodLogger;
+use Monolog\Logger as MonoLogger;
+use Psr\Log\LoggerInterface;
+
 /**
  * Class Logger
  *
  * By default the logger writes to
  * ./var/log/emerchantpay/default.log
- *
- * @package EMerchantPay\Genesis\Logger
  */
-class Logger extends \Magento\Payment\Model\Method\Logger
+class Logger extends MethodLogger
 {
 
+    /**
+     * The constructor
+     */
     public function __construct()
     {
         $handlers = [
             new Handler()
         ];
-        $logger = new \Monolog\Logger(
+        $logger = new MonoLogger(
             'EMP',
             $handlers
         );
@@ -44,7 +49,9 @@ class Logger extends \Magento\Payment\Model\Method\Logger
     }
 
     /**
-     * @return \Psr\Log\LoggerInterface
+     * Returns the logger instance
+     *
+     * @return LoggerInterface
      */
     public function getLogger()
     {
@@ -52,7 +59,10 @@ class Logger extends \Magento\Payment\Model\Method\Logger
     }
 
     /**
+     * Set file name for logging
+     *
      * @param string $fileName
+     *
      * @return bool
      */
     public function setFilename($fileName)

@@ -24,34 +24,24 @@ use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\Control\ChallengeInd
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ChallengeIndicator
- * @package Unit\Model\Config\Source\Method\Checkout
+ * @covers ChallengeIndicator
  */
 class ChallengeIndicatorTest extends TestCase
 {
     /**
-     * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ChallengeIndicator::toOptionArray
+     * @covers ChallengeIndicator::toOptionArray
      */
     public function testToOptionArray()
     {
-        $data = [];
-        $sourceModel = new ChallengeIndicator();
-
-        $availableCHallengeIndicators = [
-            ChallengeIndicators::NO_PREFERENCE          => 'No Preference',
-            ChallengeIndicators::NO_CHALLENGE_REQUESTED => 'No Challenge Requested',
-            ChallengeIndicators::PREFERENCE             => 'Preference',
-            ChallengeIndicators::MANDATE                => 'Mandate'
-        ];
+        $data                         = [];
+        $sourceModel                  = new ChallengeIndicator();
+        $availableCHallengeIndicators = $sourceModel->indicators;
 
         foreach ($availableCHallengeIndicators as $value => $label) {
-            array_push(
-                $data,
-                [
-                    'value' => $value,
-                    'label' => __($label)
-                ]
-            );
+            $data[] = [
+                'value' => $value,
+                'label' => __($label)
+            ];
         }
 
         $this->assertEquals(

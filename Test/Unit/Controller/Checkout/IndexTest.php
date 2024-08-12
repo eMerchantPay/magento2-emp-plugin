@@ -19,17 +19,22 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Controller\Checkout;
 
+use EMerchantPay\Genesis\Controller\AbstractCheckoutAction;
 use EMerchantPay\Genesis\Controller\Checkout\Index as IndexController;
+use EMerchantPay\Genesis\Test\Unit\Controller\AbstractControllerTest;
 
 /**
+ * Test Checkout
+ *
  * Class IndexTest
- * @covers \EMerchantPay\Genesis\Controller\Checkout\Index
- * @package EMerchantPay\Genesis\Test\Unit\Controller\Checkout
+ *
+ * @covers IndexController
  */
-class IndexTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractControllerTest
+class IndexTest extends AbstractControllerTest
 {
     /**
      * Gets controller's fully qualified class name
+     *
      * @return string
      */
     protected function getControllerClassName()
@@ -38,7 +43,7 @@ class IndexTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractContr
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Index::execute()
+     * @covers IndexController::execute()
      */
     public function testExecuteFailWhenLastRealOrderIdIsNull()
     {
@@ -62,7 +67,7 @@ class IndexTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractContr
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Index::execute()
+     * @covers IndexController::execute()
      */
     public function testExecuteFailWhenRedirectUrlIsNull()
     {
@@ -85,15 +90,15 @@ class IndexTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractContr
             ->method('redirect')
             ->with(
                 $this->getControllerInstance()->getResponse(),
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_PATH,
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_PATH,
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_FRAGMENT_PAYMENT_ARGS
             );
 
         $this->getControllerInstance()->execute();
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Index::execute()
+     * @covers IndexController::execute()
      */
     public function testExecuteSuccessfulRedirectToTheRedirectUrl()
     {

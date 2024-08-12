@@ -19,24 +19,30 @@
 
 namespace EMerchantPay\Genesis\Model\Config\Source\Method\Checkout;
 
-use EMerchantPay\Genesis\Helper\Checkout;
 use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Model\Traits\ExcludedTransactionTypes;
+use EMerchantPay\Genesis\Model\Traits\RecurringTransactionTypes;
+use Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
 use Genesis\Api\Constants\Transaction\Names;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
-use \Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
-use \Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use Magento\Framework\Data\OptionSourceInterface;
 
 /**
  * Checkout Transaction Types Model Source
+ *
  * Class TransactionType
- * @package EMerchantPay\Genesis\Model\Config\Source\Method\Checkout
  */
-class TransactionType implements \Magento\Framework\Option\ArrayInterface
+class TransactionType implements OptionSourceInterface
 {
+    use ExcludedTransactionTypes;
+    use RecurringTransactionTypes;
+
     /**
      * Builds the options for the MultiSelect control in the Admin Zone
+     *
      * @return array
      */
     public function toOptionArray()
@@ -44,27 +50,13 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
         $data = [];
 
         $transactionTypes = GenesisTransactionTypes::getWPFTransactionTypes();
-        $excludedTypes    = Checkout::getRecurringTransactionTypes();
-
-        // Exclude PPRO transaction. This is not standalone transaction type
-        array_push($excludedTypes, GenesisTransactionTypes::PPRO);
-        // Exclude GooglePay transaction. In this way Google Pay Payment types will be introduced
-        array_push($excludedTypes, GenesisTransactionTypes::GOOGLE_PAY);
-        // Exclude PayPal transaction. Not standalone transaction type
-        array_push($excludedTypes, GenesisTransactionTypes::PAY_PAL);
-        // Exclude Apple Pay transaction. Not standalone transaction type
-        array_push($excludedTypes, GenesisTransactionTypes::APPLE_PAY);
+        $excludedTypes    = array_merge(
+            $this->getRecurringTransactionTypes(),
+            $this->getExcludedTransactionTypes()
+        );
 
         // Exclude Transaction Types
         $transactionTypes = array_diff($transactionTypes, $excludedTypes);
-
-        // Add PPRO types
-        $pproTypes = array_map(
-            function ($type) {
-                return $type . Data::PPRO_TRANSACTION_SUFFIX;
-            },
-            GenesisPaymentMethods::getMethods()
-        );
 
         // Add Google Payment types
         $googlePayTypes = array_map(
@@ -102,7 +94,6 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
 
         $transactionTypes = array_merge(
             $transactionTypes,
-            $pproTypes,
             $googlePayTypes,
             $payPalTypes,
             $applePayTypes
@@ -115,13 +106,10 @@ class TransactionType implements \Magento\Framework\Option\ArrayInterface
                 $name = strtoupper($type);
             }
 
-            array_push(
-                $data,
-                [
-                    'value' => $type,
-                    'label' => __($name)
-                ]
-            );
+            $data[] = [
+                'value' => $type,
+                'label' => __($name)
+            ];
         }
 
         return $data;

@@ -20,29 +20,30 @@
 namespace EMerchantPay\Genesis\Test\Unit\Model\Ipn;
 
 use EMerchantPay\Genesis\Model\Ipn\CheckoutIpn;
-use EMerchantPay\Genesis\Helper\Data as DataHelper;
-use Magento\Framework\App\Request\Http as HttpRequest;
-use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types;
+use stdClass;
 
 /**
  * Class CheckoutIpnRefundedTest
- * @covers \EMerchantPay\Genesis\Model\Ipn\Checkout
- * @package EMerchantPay\Genesis\Test\Unit\Model\Ipn
+ *
+ * @covers CheckoutIpn
  */
 
-class CheckoutIpnSaleRefundTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\CheckoutIpnTest
+class CheckoutIpnSaleRefundTest extends CheckoutIpnTest
 {
-    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\Api\Constants\Transaction\Types::SALE;
+    public const RECONCILIATION_TRANSACTION_TYPE   = Types::SALE;
 
     /**
      * Creates reconciliation object
-     * @return \stdClass
+     *
+     * @return stdClass
      */
     protected function createReconciliationObj()
     {
         $this->reconciliationObj = parent::createReconciliationObj();
 
-        $this->reconciliationObj->status           = \Genesis\Api\Constants\Transaction\States::REFUNDED;
+        $this->reconciliationObj->status           = States::REFUNDED;
         $this->reconciliationObj->transaction_type = self::RECONCILIATION_TRANSACTION_TYPE;
 
         return $this->reconciliationObj;

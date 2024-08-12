@@ -19,27 +19,35 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Ipn;
 
-use Genesis\Api\Constants\Transaction\States;
-use Magento\Framework\App\Action\Context;
-use Magento\Sales\Model\Order\Status\History;
-use Magento\Sales\Model\OrderFactory;
-use Magento\Sales\Model\Order\Email\Sender\OrderSender;
-use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
-use Psr\Log\LoggerInterface as Logger;
 use EMerchantPay\Genesis\Helper\Data as DataHelper;
-use Magento\Framework\App\Request\Http as HttpRequest;
-use Magento\Sales\Model\Order;
+use EMerchantPay\Genesis\Model\Config;
+use EMerchantPay\Genesis\Model\Ipn\AbstractIpn;
+use EMerchantPay\Genesis\Model\Ipn\CheckoutIpn;
+use EMerchantPay\Genesis\Test\Unit\AbstractTestCase;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types;
 use Genesis\Api\Notification as Notification;
+use Genesis\Config as GenesisConfig;
+use Magento\Framework\App\Action\Context;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order\Status\History;
+use PHPUnit\Framework\MockObject\Rule\InvokedCount;
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface as Logger;
+use stdClass;
 
 /**
  * Class AbstractIpnTest
- * @package EMerchantPay\Genesis\Test\Unit\Model\Ipn
  */
 
-abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
+abstract class AbstractIpnTest extends AbstractTestCase
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Ipn\CheckoutIpn
+     * @var CheckoutIpn
      */
     protected $ipnInstance;
 
@@ -49,7 +57,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     protected $postParams;
 
     /**
-     * @var \stdClass $reconciliationObj
+     * @var stdClass $reconciliationObj
      */
     protected $reconciliationObj;
 
@@ -59,72 +67,77 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     protected $customerPwd;
 
     /**
-     * @var \Magento\Framework\App\Action\Context|\PHPUnit_Framework_MockObject_MockObject
+     * @var Context|MockObject
      */
     protected $contextMock;
 
     /**
-     * @var \Magento\Sales\Model\OrderFactory|\PHPUnit_Framework_MockObject_MockObject
+     * @var OrderFactory|MockObject
      */
     protected $orderFactoryMock;
 
     /**
-     * @var \Magento\Sales\Model\Order\Email\Sender\OrderSender|\PHPUnit_Framework_MockObject_MockObject
+     * @var OrderSender|MockObject
      */
     protected $orderSenderMock;
 
     /**
-     * @var \Magento\Sales\Model\Order\Email\Sender\CreditmemoSender|\PHPUnit_Framework_MockObject_MockObject
+     * @var CreditmemoSender|MockObject
      */
     protected $creditmemoSenderMock;
 
     /**
-     * @var \Psr\Log\LoggerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var Logger|MockObject
      */
     protected $loggerMock;
 
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
+     * @var DataHelper|MockObject
      */
     protected $dataHelperMock;
 
     /**
-     * @var \Genesis\Api\Notification|\PHPUnit_Framework_MockObject_MockObject
+     * @var Notification|MockObject
      */
     protected $notificationMock;
 
     /**
-     * @var \EMerchantPay\Genesis\Model\Config|\PHPUnit_Framework_MockObject_MockObject
+     * @var Config|MockObject
      */
     protected $configHelperMock;
 
     /**
      * Gets IPN model class name
+     *
      * @return string
      */
     abstract protected function getIpnClassName();
 
     /**
      * Creates reconciliation object
-     * @return \stdClass
+     *
+     * @return stdClass
      */
     abstract protected function createReconciliationObj();
 
     /**
      * Get mock for data helper
-     * @return \EMerchantPay\Genesis\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return DataHelper|MockObject
      */
     abstract protected function getDataHelperMock();
 
     /**
      * Get mock for payment
-     * @return \Magento\Sales\Api\Data\OrderPaymentInterface|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return OrderPaymentInterface|MockObject
      */
     abstract protected function getPaymentMock();
 
     /**
      * Gets IPN model instance
-     * @return \EMerchantPay\Genesis\Model\Ipn\CheckoutIpn
+     *
+     * @return CheckoutIpn
      */
     protected function getIpnInstance()
     {
@@ -133,8 +146,10 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Creates signature param for the IPN POST request
+     *
      * @param string $unique_id
      * @param string $customerPwd
+     *
      * @return string
      */
     protected static function createSignature($unique_id, $customerPwd)
@@ -144,7 +159,8 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Get mock for context
-     * @return \Magento\Framework\App\Action\Context|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return Context|MockObject
      */
     protected function getContextMock()
     {
@@ -157,13 +173,14 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Get mock for order factory
-     * @return \Magento\Sales\Model\OrderFactory|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return OrderFactory|MockObject
      */
     protected function getOrderFactoryMock()
     {
         $this->orderFactoryMock = $this->getMockBuilder(OrderFactory::class)
             ->disableOriginalConstructor()
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
 
         $this->orderFactoryMock->expects(self::once())
@@ -175,43 +192,43 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Get mock for order sender
-     * @return \Magento\Sales\Model\Order\Email\Sender\OrderSender|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return OrderSender|MockObject
      */
     protected function getOrderSenderMock()
     {
         return $this->orderSenderMock = $this->getMockBuilder(OrderSender::class)
             ->disableOriginalConstructor()
-            ->setMethods([])
             ->getMock();
     }
 
     /**
-     * Get mock for credit memo sedner
-     * @return \Magento\Sales\Model\Order\Email\Sender\CreditmemoSender|\PHPUnit_Framework_MockObject_MockObject
+     * Get mock for credit memo sender
+     *
+     * @return CreditmemoSender|MockObject
      */
     protected function getCreditmemoSenderMock()
     {
         return $this->creditmemoSenderMock = $this->getMockBuilder(CreditmemoSender::class)
             ->disableOriginalConstructor()
-            ->setMethods([])
             ->getMock();
     }
 
     /**
      * Get mock for logger
-     * @return \Psr\Log\LoggerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @return Logger|MockObject
      */
     protected function getLoggerMock()
     {
         return $this->loggerMock = $this->getMockBuilder(Logger::class)
             ->disableOriginalConstructor()
-            ->setMethods([])
             ->getMockForAbstractClass();
     }
 
     /**
      * Get mock for order
-     * @return \Magento\Sales\Model\Order|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return Order|MockObject
      */
     protected function getOrderMock()
     {
@@ -219,7 +236,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
         $orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->setMethods(['loadByIncrementId','getId','getPayment', 'addStatusHistoryComment'])
+            ->onlyMethods(['loadByIncrementId','getId','getPayment', 'addCommentToStatusHistory'])
             ->getMock();
 
         $orderMock->expects(self::atLeastOnce())
@@ -236,7 +253,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
                 ->willReturn($orderMock);
 
         $orderMock->expects(self::once())
-            ->method('addStatusHistoryComment')
+            ->method('addCommentToStatusHistory')
                 ->willReturn($this->getOrderStatusHistoryMock());
 
         return $orderMock;
@@ -245,13 +262,13 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     /**
      * Get Mock for OrderStatusHistory
      *
-     * @return \Magento\Sales\Model\Order\Status\History|\PHPUnit\Framework\MockObject\MockObject
+     * @return History|MockObject
      */
     protected function getOrderStatusHistoryMock()
     {
         $statusHistory = $this->getMockBuilder(History::class)
             ->disableOriginalConstructor()
-            ->setMethods(['setIsCustomerNotified'])
+            ->onlyMethods(['setIsCustomerNotified'])
             ->getMock();
 
         $statusHistory->expects(self::once())
@@ -263,29 +280,32 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Get notification function name based on transaction type
+     *
      * @param string $transaction_type
+     *
      * @return string
      */
     protected function getNotificationFunctionName($transaction_type)
     {
         $result=null;
         switch ($transaction_type) {
-            case \Genesis\Api\Constants\Transaction\Types::AUTHORIZE:
-            case \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D:
+            case Types::AUTHORIZE:
+            case Types::AUTHORIZE_3D:
                 $result = 'registerAuthorizationNotification';
                 break;
-            case \Genesis\Api\Constants\Transaction\Types::SALE:
-            case \Genesis\Api\Constants\Transaction\Types::SALE_3D:
+            case Types::SALE:
+            case Types::SALE_3D:
                 $result = 'registerCaptureNotification';
                 break;
             default:
                 break;
         }
+
         return $result;
     }
 
     /**
-     * @param \stdClass $responseObject
+     * @param stdClass $responseObject
      * @return bool
      */
     protected function getShouldSetCurrentTranPending($responseObject)
@@ -298,7 +318,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
      *
      * @param $status
      *
-     * @return \PHPUnit\Framework\MockObject\Matcher\InvokedCount
+     * @return InvokedCount
      */
     protected function getShouldExecuteAuthoirizeCaptureEvent($status)
     {
@@ -310,14 +330,15 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     }
 
     /**
-     * @param \stdClass $responseObject
+     * @param stdClass $responseObject
+     *
      * @return bool
      */
     protected function getShouldCloseCurrentTransaction($responseObject)
     {
         $voidableTransactions = [
-            \Genesis\Api\Constants\Transaction\Types::AUTHORIZE,
-            \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D
+            Types::AUTHORIZE,
+            Types::AUTHORIZE_3D
         ];
 
         return !in_array($responseObject->transaction_type, $voidableTransactions);
@@ -328,14 +349,15 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
      */
     protected function initGatewayClientMock()
     {
-        \Genesis\Config::setPassword(
+        GenesisConfig::setPassword(
             $this->customerPwd
         );
     }
 
     /**
      * Get mock for notification
-     * @return \Genesis\Api\Notification|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return Notification|MockObject
      */
     protected function getNotificationMock()
     {
@@ -359,7 +381,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
         $this->notificationMock->expects(self::once())
             ->method('initReconciliation')
-                ->willReturn(new \stdClass());
+                ->willReturn(new stdClass());
 
         $this->notificationMock->expects(self::once())
             ->method('getReconciliationObject')
@@ -370,13 +392,20 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Get mock for model config
-     * @return \EMerchantPay\Genesis\Model\Config|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return Config|MockObject
      */
     protected function getConfigHelperMock()
     {
         $this->configHelperMock = $this->getMockBuilder('EMerchantPay\Genesis\Model\Config')
             ->disableOriginalConstructor()
-            ->setMethods(['initGatewayClient', 'initReconciliation', 'getCheckoutTitle'])
+            ->onlyMethods(
+                [
+                    'initGatewayClient',
+                    'getCheckoutTitle'
+                ]
+            )
+            ->addMethods(['initReconciliation'])
             ->getMock();
 
         $this->configHelperMock->expects(self::once())
@@ -413,7 +442,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Model\Ipn\AbstractIpn::handleGenesisNotification()
+     * @covers AbstractIpn::handleGenesisNotification()
      */
     public function testGenesisNotification()
     {
@@ -422,6 +451,7 @@ abstract class AbstractIpnTest extends \EMerchantPay\Genesis\Test\Unit\AbstractT
 
     /**
      * Creates constructor parameters
+     *
      * @return array
      */
     public function createParams()

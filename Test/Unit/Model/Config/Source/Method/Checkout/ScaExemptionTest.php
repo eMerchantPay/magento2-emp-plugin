@@ -19,37 +19,30 @@
 
 namespace Unit\Model\Config\Source\Method\Checkout;
 
+use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ChallengeIndicator;
 use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ScaExemption;
 use Genesis\Api\Constants\Transaction\Parameters\ScaExemptions;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ScaExemption
- * @package Unit\Model\Config\Source\Method\Checkout
+ * @covers ScaExemption
  */
 class ScaExemptionTest extends TestCase
 {
     /**
-     * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\ChallengeIndicator::toOptionArray
+     * @covers ChallengeIndicator::toOptionArray
      */
     public function testToOptionArray()
     {
-        $data = [];
-        $sourceModel = new ScaExemption();
-
-        $availableExemptions = [
-            ScaExemptions::EXEMPTION_LOW_RISK  => 'Low Risk',
-            ScaExemptions::EXEMPTION_LOW_VALUE => 'Low Value'
-        ];
+        $data                = [];
+        $sourceModel         = new ScaExemption();
+        $availableExemptions = $sourceModel->exemptions;
 
         foreach ($availableExemptions as $value => $label) {
-            array_push(
-                $data,
-                [
-                    'value' => $value,
-                    'label' => __($label)
-                ]
-            );
+            $data[] = [
+                'value' => $value,
+                'label' => __($label)
+            ];
         }
 
         $this->assertEquals(

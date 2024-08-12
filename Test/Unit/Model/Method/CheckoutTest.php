@@ -21,16 +21,22 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Method;
 
 use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Model\Method\Checkout as CheckoutPaymentMethod;
-use Genesis\Api\Constants\Payment\Methods;
-use Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\Api\Constants\Transaction\States;
 use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Genesis;
+use Magento\Payment\Model\MethodInterface;
+use Magento\Quote\Model\Quote;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
+ * Test Checkout functionality
+ *
  * Class CheckoutTest
- * @covers \EMerchantPay\Genesis\Model\Method\Checkout
- * @package EMerchantPay\Genesis\Test\Unit\Model\Method
+ *
+ * @covers CheckoutPaymentMethod
  */
-class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\AbstractMethodTest
+class CheckoutTest extends AbstractMethodTest
 {
     protected function getPaymentMethodClassName()
     {
@@ -43,7 +49,7 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
     public function testGetConfigPaymentAction()
     {
         $this->assertEquals(
-            \Magento\Payment\Model\Method\AbstractMethod::ACTION_ORDER,
+            MethodInterface::ACTION_ORDER,
             $this->getPaymentMethodInstance()->getConfigPaymentAction()
         );
     }
@@ -79,12 +85,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                         GenesisTransactionTypes::WEBMONEY,
                         GenesisTransactionTypes::PAYSAFECARD,
                         GenesisTransactionTypes::SOFORT,
-                        Methods::EPS . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::PRZELEWY24 . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::SAFETY_PAY . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::BCMC . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::MYBANK . Data::PPRO_TRANSACTION_SUFFIX,
-                        Methods::IDEAL . Data::PPRO_TRANSACTION_SUFFIX
                     ]
                 )
             );
@@ -108,29 +108,6 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
                 GenesisTransactionTypes::PAYSAFECARD,
                 GenesisTransactionTypes::POLI,
                 GenesisTransactionTypes::SDD_SALE,
-                GenesisTransactionTypes::PPRO => [
-                    'name' => GenesisTransactionTypes::PPRO,
-                    'parameters' => [
-                        [
-                            'payment_method' => GenesisPaymentMethods::BCMC,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::EPS
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::IDEAL,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::MYBANK,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::PRZELEWY24,
-                        ],
-                        [
-                            'payment_method' => GenesisPaymentMethods::SAFETY_PAY,
-                        ]
-                    ]
-                ],
                 GenesisTransactionTypes::SOFORT,
                 GenesisTransactionTypes::TRUSTLY_SALE,
                 GenesisTransactionTypes::WEBMONEY,
@@ -191,11 +168,11 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
             ->willReturn('en');
 
         /**
-         * @var $quote \Magento\Quote\Model\Quote|\PHPUnit_Framework_MockObject_MockObject
+         * @var $quote Quote|MockObject
          */
-        $quote = $this->getMockBuilder(\Magento\Quote\Model\Quote::class)
+        $quote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getCustomerEmail'])
+            ->addMethods(['getCustomerEmail'])
             ->getMock();
 
         $quote->expects(self::once())
@@ -238,15 +215,15 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
             ->withConsecutive(
                 [
                     $this->getPaymentMethodInstance()->getCode(),
-                    \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_SUCCESS
+                    Data::ACTION_RETURN_SUCCESS
                 ],
                 [
                     $this->getPaymentMethodInstance()->getCode(),
-                    \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_CANCEL
+                    Data::ACTION_RETURN_CANCEL
                 ],
                 [
                     $this->getPaymentMethodInstance()->getCode(),
-                    \EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_FAILURE
+                    Data::ACTION_RETURN_FAILURE
                 ]
             )
             ->willReturnOnConsecutiveCalls(
@@ -256,7 +233,7 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
             );
 
         $gatewayResponse = $this->getSampleGatewayResponse(
-            \Genesis\Api\Constants\Transaction\States::NEW_STATUS,
+            States::NEW_STATUS,
             null,
             null,
             null,
@@ -274,7 +251,7 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
         $this->dataHelperMock->expects(self::once())
             ->method('executeGatewayRequest')
             ->with(
-                $this->isInstanceOf(\Genesis\Genesis::class)
+                $this->isInstanceOf(Genesis::class)
             )
             ->willReturnArgument(0);
 
@@ -298,7 +275,7 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
         $this->paymentMock->expects(self::once())
             ->method('setTransactionAdditionalInfo')
             ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,
+                Transaction::RAW_DETAILS,
                 $this->dataHelperMock->getArrayFromGatewayResponse(
                     $gatewayResponse
                 )
@@ -322,6 +299,7 @@ class CheckoutTest extends \EMerchantPay\Genesis\Test\Unit\Model\Method\Abstract
      * Scope Config Method Settings values
      *
      * @param ...$args
+     *
      * @return string
      */
     public function configCallback(...$args)

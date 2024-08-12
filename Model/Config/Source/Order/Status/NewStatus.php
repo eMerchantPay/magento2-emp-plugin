@@ -19,15 +19,18 @@
 
 namespace EMerchantPay\Genesis\Model\Config\Source\Order\Status;
 
+use Magento\Sales\Model\Config\Source\Order\Status;
+use Magento\Sales\Model\Order;
+
 /**
  * Order Statuses source model
+ *
  * Class NewStatus
- * @package EMerchantPay\Genesis\Model\Config\Source\Order\Status
  */
-class NewStatus extends \Magento\Sales\Model\Config\Source\Order\Status
+class NewStatus extends Status
 {
     /**
      * @var string
      */
-    protected $_stateStatuses = \Magento\Sales\Model\Order::STATE_PAYMENT_REVIEW;
+    protected $_stateStatuses = Order::STATE_PAYMENT_REVIEW;
 }

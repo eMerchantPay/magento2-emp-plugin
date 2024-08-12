@@ -19,37 +19,42 @@
 
 namespace EMerchantPay\Genesis\Helper;
 
+use DateInterval;
+use DateTime;
+use EMerchantPay\Genesis\Model\Method\Checkout as MethodCheckout;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\RegistrationIndicators;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\ShippingAddressUsageIndicators;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\UpdateIndicators;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\ReorderItemIndicators;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\ShippingIndicators;
+use Magento\Customer\Model\Customer as MagentoCustomer;
+use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\ObjectManagerInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Address;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 
 /**
  * Helper Class for all Payment Methods
  *
  * Class Data
- * @package EMerchantPay\Genesis\Helper
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
  */
-class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
+class Threeds extends AbstractHelper
 {
-    const CURRENT_TRANSACTION_INDICATOR       = 'current_transaction';
-    const LESS_THAN_30_DAYS_INDICATOR         = 'less_than_30_days';
-    const MORE_30_LESS_60_DAYS_INDICATOR      = 'more_30_less_60_days';
-    const MORE_THAN_60_DAYS_INDICATOR         = 'more_than_60_days';
+    private const CURRENT_TRANSACTION_INDICATOR       = 'current_transaction';
+    private const LESS_THAN_30_DAYS_INDICATOR         = 'less_than_30_days';
+    private const MORE_30_LESS_60_DAYS_INDICATOR      = 'more_30_less_60_days';
+    private const MORE_THAN_60_DAYS_INDICATOR         = 'more_than_60_days';
 
-    const DATE_FORMAT                         = 'Y-m-d';
+    private const DATE_FORMAT                         = 'Y-m-d';
 
     /**
      * @var ObjectManagerInterface
@@ -73,16 +78,17 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
 
     /**
      * @param ObjectManagerInterface $objectManager
-     * @param Context $context
-     * @param CollectionFactory $_orderCollectionFactory
-     * @param Data $moduleHelper
+     * @param Context                $context
+     * @param CollectionFactory      $orderCollectionFactory
+     * @param Data                   $moduleHelper
+     * @param TimezoneInterface      $timezone
      */
     public function __construct(
         ObjectManagerInterface $objectManager,
-        Context $context,
-        CollectionFactory $orderCollectionFactory,
-        Data $moduleHelper,
-        TimezoneInterface $timezone
+        Context                $context,
+        CollectionFactory      $orderCollectionFactory,
+        Data                   $moduleHelper,
+        TimezoneInterface      $timezone
     ) {
         $this->_objectManager          = $objectManager;
         $this->_orderCollectionFactory = $orderCollectionFactory;
@@ -95,8 +101,9 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Fetch the Shipping Indicator from the Order Data
      *
-     * @param bool $hasPhysicalProducts Indicates if the Order has only virtual products
+     * @param bool  $hasPhysicalProducts Indicates if the Order has only virtual products
      * @param Order $order
+     *
      * @return string
      */
     public function fetchShippingIndicator($hasPhysicalProducts, $order)
@@ -125,7 +132,10 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get ReorderedItemIndicator based on the customers orders
+     *
      * @param Order $order
+     *
      * @return string
      */
     public function fetchReorderItemsIndicator($order)
@@ -147,7 +157,10 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param \Magento\Customer\Model\Customer $customer
+     * Get UpdateIndicator based on the customers profile
+     *
+     * @param MagentoCustomer $customer
+     *
      * @return string
      */
     public function fetchUpdateIndicator($customer)
@@ -160,7 +173,10 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param \Magento\Customer\Model\Customer $customer
+     * Get PasswordChangeIndicator based on the customers profile
+     *
+     * @param MagentoCustomer $customer
+     *
      * @return string
      */
     public function fetchPasswordChangeIndicator($customer)
@@ -198,6 +214,7 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
      * Get the Shipping Address Usage Indicator
      *
      * @param string $shippingAddresFistUsed
+     *
      * @return string
      */
     public function fetchShippingAddressUsageIndicator($shippingAddresFistUsed)
@@ -221,6 +238,7 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
      * Get the date of the first used Shipping Address
      *
      * @param Order $order
+     *
      * @return string
      */
     public function fetchShippingAddressDateFirstUsed($order)
@@ -236,12 +254,13 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Extract the Customer Transaction Count for the last 24 hours
      *
-     * @param $order
-     * @return void
+     * @param Order $order
+     *
+     * @return mixed
      */
     public function fetchTransactionActivityLast24Hours($order)
     {
-        $from  = $this->getTimezone()->date()->sub(new \DateInterval('PT24H'));
+        $from  = $this->getTimezone()->date()->sub(new DateInterval('PT24H'));
         $today = $this->getTimezone()->date();
 
         $collection = $this->getTransactionActivityForPeriod(
@@ -256,12 +275,13 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Extract the Customer Transaction Count for the last year
      *
-     * @param $order
-     * @return void
+     * @param Order $order
+     *
+     * @return mixed
      */
     public function fetchTransactionActivityPreviousYear($order)
     {
-        $lastYear = $this->getTimezone()->date()->sub(new \DateInterval('P1Y'));
+        $lastYear = $this->getTimezone()->date()->sub(new DateInterval('P1Y'));
 
         $collection = $this->getTransactionActivityForPeriod(
             $order->getCustomerId(),
@@ -275,12 +295,13 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Extract the Successful Customer Transaction for last 6 months
      *
-     * @param $order
+     * @param Order $order
+     *
      * @return int
      */
     public function fetchPurchasedCountLastHalfYear($order)
     {
-        $from  = $this->getTimezone()->date()->sub(new \DateInterval('P6M'));
+        $from  = $this->getTimezone()->date()->sub(new DateInterval('P6M'));
         $today = $this->getTimezone()->date();
 
         $orders = $this->getModuleHelper()->getCustomerOrders(
@@ -296,7 +317,9 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Sort the Array of Addresses
      *
-     * @param \Magento\Customer\Model\Customer $customer
+     * @param MagentoCustomer $customer
+     * @param string          $sort
+     *
      * @return array
      */
     public function getSortedCustomerAddress($customer, $sort = SORT_DESC)
@@ -318,7 +341,8 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get the First Order via emerchantpay checkout payment method
      *
-     * @param $order
+     * @param Order $order
+     *
      * @return mixed
      */
     public function fetchFirstOrderDate($order)
@@ -331,8 +355,9 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Get the Registration Indicator
      *
-     * @param \Magento\Sales\Model\Order $order
-     * @param $firsOrderDate
+     * @param Order  $order
+     * @param string $firsOrderDate
+     *
      * @return string
      */
     public function fetchRegistrationIndicator($order, $firsOrderDate)
@@ -359,7 +384,8 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Compare the given dates and return appropriate Update Interval values
      *
-     * @param \Magento\Customer\Model\Customer $customer
+     * @param MagentoCustomer $customer
+     *
      * @return string
      */
     protected function getUpdateIndicatorValue($customer)
@@ -388,7 +414,9 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Compare billing and shipping addresses
      *
-     * @param \Magento\Sales\Model\Order\Address $billingAddress
+     * @param Address $billingAddress
+     * @param Address $shippingAddress
+     *
      * @return bool
      */
     protected function isSameAddressData($billingAddress, $shippingAddress)
@@ -421,7 +449,8 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Return all Item IDs that the customer have been purchased
      *
-     * @param $orders
+     * @param array $orders
+     *
      * @return array
      */
     protected function getCustomerOrderedItems($orders)
@@ -438,15 +467,18 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param \DateTime $date
-     * @param \DateTime $compareWith
+     * Get UpdateIndicator
+     *
+     * @param DateTime $date
+     * @param DateTime $compareWith
+     *
      * @return string
      */
     protected function fetchIndicator($date, $compareWith)
     {
         $indicator = static::CURRENT_TRANSACTION_INDICATOR;
 
-        /** @var \DateInterval $updateInterval */
+        /** @var DateInterval $updateInterval */
         $updateInterval = $date->diff($compareWith);
 
         if (0 < $updateInterval->days && $updateInterval->days < 30) {
@@ -467,8 +499,9 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Retrieve all shipping addresses used from the orders
      *
-     * @param $customerId
-     * @param $shippingAddressId
+     * @param int $customerId
+     * @param int $shippingAddressId
+     *
      * @return Collection
      */
     protected function getOrdersWithShippingAddress($customerId, $shippingAddressId)
@@ -486,7 +519,7 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
                 'main_table.entity_id = address.parent_id',
                 ['customer_address_id', 'address_type']
             )
-            ->addFieldToFilter('payment.method', \EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+            ->addFieldToFilter('payment.method', MethodCheckout::CODE)
             ->addFieldToFilter('address.customer_address_id', $shippingAddressId)
             ->addFieldToFilter('main_table.customer_id', $customerId)
             ->addFieldToFilter('address.address_type', 'shipping')
@@ -502,9 +535,10 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     /**
      * Retrieve all transactions for Customer Id
      *
-     * @param $customerId
-     * @param $fromTime
-     * @param $toTime
+     * @param int    $customerId
+     * @param string $fromTime
+     * @param string $toTime
+     *
      * @return mixed
      */
     protected function getTransactionActivityForPeriod($customerId, $fromTime, $toTime)
@@ -521,7 +555,7 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
                 ['payment' => 'sales_order_payment'],
                 'main_table.entity_id = payment.parent_id'
             )
-            ->addFieldToFilter('payment.method', \EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+            ->addFieldToFilter('payment.method', MethodCheckout::CODE)
             ->addFieldToFilter('main_table.customer_id', $customerId)
             ->addFieldToFilter(
                 'main_table.created_at',
@@ -553,6 +587,8 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get TimezoneInterface
+     *
      * @return TimezoneInterface
      */
     protected function getTimezone()
@@ -561,6 +597,8 @@ class Threeds extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Get CollectionFactory
+     *
      * @return CollectionFactory
      */
     protected function getOrderCollectionFactory()

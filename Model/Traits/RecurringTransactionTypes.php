@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2018-2014 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,18 +13,32 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2018-2014 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
-// phpcs:disable
-if (is_array($_SERVER) && array_key_exists('PLUGIN_ENV', $_SERVER) && $_SERVER['PLUGIN_ENV'] == 'linter') {
-    return;
-}
-// phpcs:enable
+namespace EMerchantPay\Genesis\Model\Traits;
 
-\Magento\Framework\Component\ComponentRegistrar::register(
-    \Magento\Framework\Component\ComponentRegistrar::MODULE,
-    'EMerchantPay_Genesis',
-    __DIR__
-);
+use Genesis\Api\Constants\Transaction\Types;
+
+/**
+ * Recurring transaction types helper
+ *
+ * Trait RecurringTransactionTypes
+ */
+trait RecurringTransactionTypes
+{
+    /**
+     * Retrieve Recurring transaction Types
+     *
+     * @return array
+     */
+    public function getRecurringTransactionTypes()
+    {
+        return [
+            Types::SDD_INIT_RECURRING_SALE,
+            Types::INIT_RECURRING_SALE,
+            Types::INIT_RECURRING_SALE_3D
+        ];
+    }
+}

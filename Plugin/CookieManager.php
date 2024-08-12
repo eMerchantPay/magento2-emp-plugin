@@ -53,6 +53,8 @@ class CookieManager
      * @param CookieMetadata|null $metadata
      *
      * @return mixed
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function aroundSetPublicCookie(
         PhpCookieManager $subject,

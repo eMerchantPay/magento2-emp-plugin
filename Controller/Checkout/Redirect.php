@@ -19,12 +19,14 @@
 
 namespace EMerchantPay\Genesis\Controller\Checkout;
 
+use EMerchantPay\Genesis\Controller\AbstractCheckoutRedirectAction;
+
 /**
  * Return Action Controller (used to handle Redirects from the Payment Gateway)
  *
  * Class Redirect
  */
-class Redirect extends \EMerchantPay\Genesis\Controller\AbstractCheckoutRedirectAction
+class Redirect extends AbstractCheckoutRedirectAction
 {
     /**
      * Handle the result from the Payment Gateway

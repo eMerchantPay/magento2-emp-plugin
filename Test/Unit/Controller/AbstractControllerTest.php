@@ -19,82 +19,87 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Controller;
 
-use Magento\Framework\App\Action\Context;
+use EMerchantPay\Genesis\Controller\AbstractAction;
+use EMerchantPay\Genesis\Controller\Checkout\Index;
+use EMerchantPay\Genesis\Controller\Checkout\Redirect;
+use EMerchantPay\Genesis\Test\Unit\AbstractTestCase;
 use Magento\Checkout\Model\Session;
-use Magento\Sales\Model\OrderFactory;
-use Magento\Sales\Model\Order;
-use Magento\Store\App\Response\Redirect as RedirectResponse;
+use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Message\Manager as MessageManager;
 use Magento\Framework\ObjectManager\ObjectManager as ObjectManager;
-use Magento\Framework\App\ResponseInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
+use Magento\Store\App\Response\Redirect as RedirectResponse;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * Class AbstractControllerTest
- * @package EMerchantPay\Genesis\Test\Unit\Controller
  */
-abstract class AbstractControllerTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
+abstract class AbstractControllerTest extends AbstractTestCase
 {
     /**
-     * @var \EMerchantPay\Genesis\Controller\Checkout\Index|
-     *      \EMerchantPay\Genesis\Controller\Checkout\Redirect
+     * @var Index|Redirect
      */
     protected $controllerInstance;
 
     /**
-     * @var \Magento\Framework\App\Action\Context|\PHPUnit_Framework_MockObject_MockObject
+     * @var Context|MockObject
      */
     protected $contextMock;
 
     /**
-     * @var \Magento\Checkout\Model\Session|\PHPUnit_Framework_MockObject_MockObject
+     * @var Session|MockObject
      */
     protected $checkoutSessionMock;
 
     /**
-     * @var \Magento\Sales\Model\OrderFactory|\PHPUnit_Framework_MockObject_MockObject
+     * @var OrderFactory|MockObject
      */
     protected $orderFactoryMock;
 
     /**
-     * @var \Magento\Sales\Model\Order|\PHPUnit_Framework_MockObject_MockObject
+     * @var Order|MockObject
      */
     protected $orderMock;
 
     /**
-     * @var \Magento\Store\App\Response\Redirect|\PHPUnit_Framework_MockObject_MockObject
+     * @var RedirectResponse|MockObject
      */
     protected $redirectResponseMock;
 
     /**
-     * @var \Magento\Framework\App\Request\Http|\PHPUnit_Framework_MockObject_MockObject
+     * @var HttpRequest|MockObject
      */
     protected $httpRequestMock;
 
     /**
-     * @var \Magento\Framework\Message\Manager|\PHPUnit_Framework_MockObject_MockObject
+     * @var MessageManager|MockObject
      */
     protected $messageManagerMock;
 
     /**
-     * @var \Magento\Framework\ObjectManager\ObjectManager|\PHPUnit_Framework_MockObject_MockObject
+     * @var ObjectManager|MockObject
      */
     protected $objectManagerMock;
 
     /**
-     * @var \Magento\Framework\App\ResponseInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var ResponseInterface|MockObject
      */
     protected $responseInterfaceMock;
 
     /**
      * Get controller class name
+     *
      * @return string
      */
     abstract protected function getControllerClassName();
 
     /**
      * Gets controllers instance
-     * @return \EMerchantPay\Genesis\Controller\AbstractAction
+     *
+     * @return AbstractAction
      */
     protected function getControllerInstance()
     {
@@ -103,13 +108,22 @@ abstract class AbstractControllerTest extends \EMerchantPay\Genesis\Test\Unit\Ab
 
     /**
      * Get mock for context
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getContextMock()
     {
         $this->contextMock = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getResponse','getRedirect','getRequest','getMessageManager','getObjectManager'])
+            ->onlyMethods(
+                [
+                    'getResponse',
+                    'getRedirect',
+                    'getRequest',
+                    'getMessageManager',
+                    'getObjectManager'
+                ]
+            )
             ->getMock($this->contextMock);
 
         $this->contextMock->expects(self::any())
@@ -147,13 +161,14 @@ abstract class AbstractControllerTest extends \EMerchantPay\Genesis\Test\Unit\Ab
 
     /**
      * Get mock for checkout session
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getCheckoutSessionMock()
     {
         return $this->checkoutSessionMock = $this->getMockBuilder(Session::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->addMethods(
                 [
                     'getLastRealOrderId',
                     'getEmerchantPayCheckoutRedirectUrl',
@@ -165,25 +180,32 @@ abstract class AbstractControllerTest extends \EMerchantPay\Genesis\Test\Unit\Ab
 
     /**
      * Get mock for order factory
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
     protected function getOrderFactoryMock()
     {
         return $this->orderFactoryMock = $this->getMockBuilder(OrderFactory::class)
             ->disableOriginalConstructor()
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
     }
 
     /**
      * Get mock for order
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getOrderMock()
     {
         $this->orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->setMethods(['loadByIncrementId','getId','getPayment'])
+            ->onlyMethods(
+                [
+                    'loadByIncrementId',
+                    'getId',
+                    'getPayment'
+                ]
+            )
             ->getMock();
 
         $this->orderMock->expects(self::any())
@@ -206,63 +228,82 @@ abstract class AbstractControllerTest extends \EMerchantPay\Genesis\Test\Unit\Ab
 
     /**
      * Get mock for redirect response
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getRedirectResponseMock()
     {
         return $this->redirectResponseMock = $this->getMockBuilder(RedirectResponse::class)
             ->disableOriginalConstructor()
-            ->setMethods(['redirect'])
+            ->onlyMethods(['redirect'])
             ->getMock();
     }
 
     /**
      * Get mock for HTTP request
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getHttpRequestMock()
     {
         return $this->httpRequestMock = $this->getMockBuilder(HttpRequest::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getParam','isPost','getPostValue'])
+            ->onlyMethods(
+                [
+                    'getParam',
+                    'isPost',
+                    'getPostValue'
+                ]
+            )
             ->getMock();
     }
 
     /**
      * Get mock for message manager
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getMessageManagerMock()
     {
         return $this->messageManagerMock = $this->getMockBuilder(MessageManager::class)
             ->disableOriginalConstructor()
-            ->setMethods(['addSuccess','addWarning','addError'])
+            ->onlyMethods(
+                [
+                    'addSuccessMessage',
+                    'addWarningMessage',
+                    'addErrorMessage'
+                ]
+            )
             ->getMock();
     }
 
     /**
      * Get mock for object manager
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getObjectManagerMock()
     {
         return $this->objectManagerMock = $this->getMockBuilder(ObjectManager::class)
             ->disableOriginalConstructor()
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
     }
 
     /**
      * Get mock for response interface
-     * @return \Magento\Framework\App\ResponseInterface|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return ResponseInterface|MockObject
      */
     protected function getResponseMock()
     {
         return $this->responseInterfaceMock = $this->getMockBuilder(ResponseInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods([
-                'setRedirect','setHttpResponseCode',
-                'setHeader','setBody','sendResponse'
+            ->addMethods([
+                'setRedirect',
+                'setHttpResponseCode',
+                'setHeader',
+                'setBody',
             ])
             ->getMockForAbstractClass();
     }

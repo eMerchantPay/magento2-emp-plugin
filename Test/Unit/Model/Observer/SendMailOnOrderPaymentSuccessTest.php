@@ -23,15 +23,17 @@ use EMerchantPay\Genesis\Model\Method\Checkout;
 use EMerchantPay\Genesis\Model\Observer\SalesOrderBeforeSaveObserver;
 use EMerchantPay\Genesis\Model\Observer\SendMailOnOrderPaymentSuccess;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Rule\InvokedCount as InvokedCountMatcher;
 
 class SendMailOnOrderPaymentSuccessTest extends AbstractObserverTest
 {
     /**
-     * @var array|(Order&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var array|(Order&MockObject)|MockObject
      */
     protected $orderIds = [];
 
@@ -39,6 +41,8 @@ class SendMailOnOrderPaymentSuccessTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testExecuteWithSend(): void
     {
@@ -56,6 +60,8 @@ class SendMailOnOrderPaymentSuccessTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testWithPaymentConfirmationEmailEnabledFalse(): void
     {
@@ -73,6 +79,8 @@ class SendMailOnOrderPaymentSuccessTest extends AbstractObserverTest
      * @covers SalesOrderBeforeSaveObserver::execute()
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function testExecuteWithoutOrder(): void
     {

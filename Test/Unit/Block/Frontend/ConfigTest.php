@@ -24,22 +24,25 @@ use EMerchantPay\Genesis\Block\Frontend\Config as ConfigBlock;
 use EMerchantPay\Genesis\Model\Config as BackendConfig;
 use EMerchantPay\Genesis\Model\Method\Checkout;
 use Magento\Framework\View\Element\Template\Context;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * Test the iframe settings handler
+ *
  * Class ConfigTest
  *
- * @covers \EMerchantPay\Genesis\Block\Frontend\Config
+ * @covers ConfigBlock
  */
 class ConfigTest extends TestCase
 {
     /**
-     * @var Context|\PHPUnit\Framework\MockObject\MockObject
+     * @var Context|MockObject
      */
     private $contextMock;
 
     /**
-     * @var BackendConfig|\PHPUnit\Framework\MockObject\MockObject
+     * @var BackendConfig|MockObject
      */
     private $backendConfigMock;
 
@@ -48,17 +51,9 @@ class ConfigTest extends TestCase
      */
     private $configBlock;
 
-    protected function setUp(): void
-    {
-        $this->contextMock = $this->createMock(Context::class);
-        $this->backendConfigMock = $this->createMock(BackendConfig::class);
-
-        $this->configBlock = new ConfigBlock(
-            $this->contextMock,
-            $this->backendConfigMock
-        );
-    }
-
+    /**
+     * @return void
+     */
     public function testIsIframeProcessingEnabledTrue()
     {
         $this->backendConfigMock->expects($this->once())
@@ -72,6 +67,9 @@ class ConfigTest extends TestCase
         $this->assertTrue($this->configBlock->isIframeProcessingEnabled());
     }
 
+    /**
+     * @return void
+     */
     public function testIsIframeProcessingEnabledFalse()
     {
         $this->backendConfigMock->expects($this->once())
@@ -83,5 +81,19 @@ class ConfigTest extends TestCase
             ->willReturn(false);
 
         $this->assertFalse($this->configBlock->isIframeProcessingEnabled());
+    }
+
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->contextMock       = $this->createMock(Context::class);
+        $this->backendConfigMock = $this->createMock(BackendConfig::class);
+
+        $this->configBlock = new ConfigBlock(
+            $this->contextMock,
+            $this->backendConfigMock
+        );
     }
 }

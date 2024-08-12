@@ -19,17 +19,25 @@
 
 namespace EMerchantPay\Genesis\Logger;
 
-class Handler extends \Magento\Framework\Logger\Handler\Base
+use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\Logger\Handler\Base;
+
+class Handler extends Base
 {
+    /**
+     * The constructor
+     */
     public function __construct()
     {
         parent::__construct(
-            new \Magento\Framework\Filesystem\Driver\File()
+            new File()
         );
         $this->setFilename('default');
     }
 
     /**
+     * Set file name for logging
+     *
      * @param string $fileName
      */
     public function setFilename($fileName)

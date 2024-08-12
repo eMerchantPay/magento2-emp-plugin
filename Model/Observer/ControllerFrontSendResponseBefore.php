@@ -19,69 +19,77 @@
 
 namespace EMerchantPay\Genesis\Model\Observer;
 
+use EMerchantPay\Genesis\Helper\Data;
+use Exception;
+use Magento\Checkout\Model\Session;
+use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Webapi\ErrorProcessor;
+use Magento\Framework\Webapi\Exception as WebApiException;
+use Magento\Framework\Webapi\Rest\Response;
 
 /**
  * Observer Class (called just before the Response on the Front Site is sent)
  * Used to overwrite the Exception on the Checkout Page
  *
  * Class ControllerFrontSendResponseBefore
- * @package EMerchantPay\Genesis\Model\Observer
  */
 class ControllerFrontSendResponseBefore implements ObserverInterface
 {
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data
+     * @var Data
      */
     protected $_moduleHelper;
 
     /**
-     * @var \Magento\Framework\Webapi\ErrorProcessor
+     * @var ErrorProcessor
      */
     protected $_errorProcessor;
 
     /**
-     * @var \Magento\Checkout\Model\Session
+     * @var Session
      */
     protected $_checkoutSession;
 
     /**
      * SalesOrderPaymentPlaceEnd constructor.
-     * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
-     * @param \Magento\Framework\Webapi\ErrorProcessor $errorProcessor
-     * @param \Magento\Checkout\Model\Session $checkoutSession
+     * @param Data           $moduleHelper
+     * @param ErrorProcessor $errorProcessor
+     * @param Session        $checkoutSession
      */
     public function __construct(
-        \EMerchantPay\Genesis\Helper\Data $moduleHelper,
-        \Magento\Framework\Webapi\ErrorProcessor $errorProcessor,
-        \Magento\Checkout\Model\Session $checkoutSession
+        Data           $moduleHelper,
+        ErrorProcessor $errorProcessor,
+        Session        $checkoutSession
     ) {
-        $this->_moduleHelper = $moduleHelper;
-        $this->_errorProcessor = $errorProcessor;
+        $this->_moduleHelper    = $moduleHelper;
+        $this->_errorProcessor  = $errorProcessor;
         $this->_checkoutSession = $checkoutSession;
     }
 
     /**
-     * @param \Magento\Framework\Event\Observer $observer
+     * Execute method
+     *
+     * @param Observer $observer
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
         try {
             $response = $observer->getEvent()->getData('response');
 
             if ($response && $this->getShouldOverrideCheckoutException($response)) {
-                /** @var \Magento\Framework\Webapi\Rest\Response $response */
+                /** @var Response $response */
 
                 $maskedException = $this->getModuleHelper()->createWebApiException(
                     $this->getEmerchantPayLastCheckoutError(),
-                    \Magento\Framework\Webapi\Exception::HTTP_BAD_REQUEST
+                    WebApiException::HTTP_BAD_REQUEST
                 );
 
                 $response->setException($maskedException);
                 $this->clearEmerchantPayLastCheckoutError();
             }
         // @codingStandardsIgnoreStart
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             /**
              * Just hide any exception (if occurs) when trying to override exception message
              */
@@ -90,14 +98,17 @@ class ControllerFrontSendResponseBefore implements ObserverInterface
     }
 
     /**
-     * @param $response
+     * Should we override the Checkout exception
+     *
+     * @param Response $response
+     *
      * @return bool
      */
     protected function getShouldOverrideCheckoutException($response)
     {
         return
             ($this->getEmerchantPayLastCheckoutError()) &&
-            ($response instanceof \Magento\Framework\Webapi\Rest\Response) &&
+            ($response instanceof Response) &&
             (method_exists($response, 'isException')) &&
             ($response->isException());
     }
@@ -123,7 +134,9 @@ class ControllerFrontSendResponseBefore implements ObserverInterface
     }
 
     /**
-     * @return \EMerchantPay\Genesis\Helper\Data
+     * Return module helper
+     *
+     * @return Data
      */
     protected function getModuleHelper()
     {
@@ -131,7 +144,9 @@ class ControllerFrontSendResponseBefore implements ObserverInterface
     }
 
     /**
-     * @return \Magento\Framework\Webapi\ErrorProcessor
+     * Return the error processor
+     *
+     * @return ErrorProcessor
      */
     protected function getErrorProcessor()
     {
@@ -139,7 +154,9 @@ class ControllerFrontSendResponseBefore implements ObserverInterface
     }
 
     /**
-     * @return \Magento\Checkout\Model\Session
+     * Return the Checkout session
+     *
+     * @return Session
      */
     protected function getCheckoutSession()
     {

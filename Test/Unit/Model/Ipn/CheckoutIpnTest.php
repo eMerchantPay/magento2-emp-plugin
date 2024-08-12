@@ -19,28 +19,36 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Ipn;
 
-use EMerchantPay\Genesis\Model\Ipn\CheckoutIpn;
 use EMerchantPay\Genesis\Helper\Data as DataHelper;
-use Magento\Framework\App\Request\Http as HttpRequest;
+use EMerchantPay\Genesis\Model\Ipn\CheckoutIpn;
+use EMerchantPay\Genesis\Model\Method\Checkout;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
+use PHPUnit\Framework\MockObject\MockObject;
+use stdClass;
+use Magento\Sales\Api\OrderRepositoryInterface;
 
 /**
+ * Test Checkout notification
+ *
  * Class CheckoutIpnTest
- * @covers \EMerchantPay\Genesis\Model\Ipn\Checkout
- * @package EMerchantPay\Genesis\Test\Unit\Model\Ipn
+ *
+ * @covers CheckoutIpn
  */
 
-class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\AbstractIpnTest
+class CheckoutIpnTest extends AbstractIpnTest
 {
-    const UNIQUE_ID_NAME                    = 'wpf_unique_id';
+    private const UNIQUE_ID_NAME                    = 'wpf_unique_id';
 
-    const TRANSACTION_ID                    = '12345678901234567890123456789012';
-    const CUSTOMER_PWD                      = '1234567890123456789012345678901234567890';
+    private const TRANSACTION_ID                    = '12345678901234567890123456789012';
+    private const CUSTOMER_PWD                      = '1234567890123456789012345678901234567890';
 
-    const RECONCILIATION_TRANSACTION_ID     = '123-456';
-    const RECONCILIATION_TRANSACTION_TYPE   = \Genesis\Api\Constants\Transaction\Types::AUTHORIZE;
-    const RECONCILIATION_MESSAGE            = 'sample reconciliation message';
-    const RECONCILIATION_AMOUNT             = 271.97;
+    private const RECONCILIATION_TRANSACTION_ID     = '123-456';
+    private const RECONCILIATION_TRANSACTION_TYPE   = Types::AUTHORIZE;
+    private const RECONCILIATION_MESSAGE            = 'sample reconciliation message';
+    private const RECONCILIATION_AMOUNT             = 271.97;
 
     /**
      * @var customerPwd
@@ -49,6 +57,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
 
     /**
      * Gets IPN model class name
+     *
      * @return string
      */
     protected function getIpnClassName()
@@ -72,9 +81,9 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
     protected function setPostParams()
     {
         $transactionId = self::TRANSACTION_ID;
-        $customerPwd = self::CUSTOMER_PWD;
+        $customerPwd   = self::CUSTOMER_PWD;
 
-        $signature = self::createSignature($transactionId, $customerPwd);
+        $signature     = self::createSignature($transactionId, $customerPwd);
 
         $this->postParams = [
             self::UNIQUE_ID_NAME => $transactionId,
@@ -85,14 +94,15 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
 
     /**
      * Creates reconciliation object
-     * @return \stdClass
+     *
+     * @return stdClass
      */
     protected function createReconciliationObj()
     {
-        $this->reconciliationObj = new \stdClass();
+        $this->reconciliationObj = new stdClass();
         $this->reconciliationObj->unique_id             = $this->postParams[self::UNIQUE_ID_NAME];
         $this->reconciliationObj->transaction_id        = self::RECONCILIATION_TRANSACTION_ID;
-        $this->reconciliationObj->status                = \Genesis\Api\Constants\Transaction\States::APPROVED;
+        $this->reconciliationObj->status                = States::APPROVED;
         $this->reconciliationObj->message               = __('Module') . ' ' . self::RECONCILIATION_MESSAGE;
         $this->reconciliationObj->transaction_type      = self::RECONCILIATION_TRANSACTION_TYPE;
         $this->reconciliationObj->amount                = self::RECONCILIATION_AMOUNT;
@@ -103,13 +113,14 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
 
     /**
      * Get mock for data helper
-     * @return \EMerchantPay\Genesis\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return DataHelper|MockObject
      */
     protected function getDataHelperMock()
     {
         $this->dataHelperMock = $this->getMockBuilder(DataHelper::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'getMethodConfig',
                     'createNotificationObject',
@@ -121,7 +132,7 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
 
         $this->dataHelperMock->expects(self::once())
             ->method('getMethodConfig')
-            ->with(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+            ->with(Checkout::CODE)
             ->willReturn(
                 $this->configHelperMock
             );
@@ -136,27 +147,33 @@ class CheckoutIpnTest extends \EMerchantPay\Genesis\Test\Unit\Model\Ipn\Abstract
 
     /**
      * Get mock for payment
-     * @return \Magento\Sales\Api\Data\OrderPaymentInterface|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return OrderPaymentInterface|MockObject
      */
     protected function getPaymentMock()
     {
         $paymentMock = $this->getMockBuilder(OrderPaymentInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods([
-                'setLastTransId',
-                'setTransactionId',
-                'setParentTransactionId',
-                'setShouldCloseParentTransaction',
-                'setIsTransactionPending',
-                'setIsTransactionClosed',
-                'setPreparedMessage',
-                'resetTransactionAdditionalInfo',
-                'setTransactionAdditionalInfo',
-                'registerAuthorizationNotification',
-                'registerCaptureNotification',
-                'save'
-            ])
+            ->onlyMethods(['setLastTransId'])
+            ->addMethods(
+                [
+                    'getOrder',
+                    'setTransactionId',
+                    'setParentTransactionId',
+                    'setShouldCloseParentTransaction',
+                    'setIsTransactionPending',
+                    'setIsTransactionClosed',
+                    'setPreparedMessage',
+                    'resetTransactionAdditionalInfo',
+                    'setTransactionAdditionalInfo',
+                    'registerAuthorizationNotification',
+                    'registerCaptureNotification',
+                ]
+            )
             ->getMockForAbstractClass();
+
+        $orderMock = $this->createMock(OrderInterface::class);
+        $paymentMock->method('getOrder')->willReturn($orderMock);
 
         $paymentMock->expects(self::once())
             ->method('setLastTransId')

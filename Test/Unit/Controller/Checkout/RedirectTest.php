@@ -19,14 +19,19 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Controller\Checkout;
 
+use EMerchantPay\Genesis\Controller\AbstractCheckoutAction;
 use EMerchantPay\Genesis\Controller\Checkout\Redirect as RedirectController;
+use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Test\Unit\Controller\AbstractControllerTest;
 
 /**
+ * Test iframe redirect
+ *
  * Class RedirectTest
- * @covers \EMerchantPay\Genesis\Controller\Checkout\Redirect
- * @package EMerchantPay\Genesis\Test\Unit\Controller\Checkout
+ *
+ * @covers RedirectController
  */
-class RedirectTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractControllerTest
+class RedirectTest extends AbstractControllerTest
 {
     /**
      * Gets controller's fully qualified class name
@@ -38,14 +43,14 @@ class RedirectTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractCo
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Redirect::execute()
+     * @covers RedirectController::execute()
      */
     public function testExecuteFailWhenLastRealOrderIdIsNull()
     {
         $this->httpRequestMock->expects(self::once())
             ->method('getParam')
             ->with('action')
-            ->willReturn(\EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_SUCCESS);
+            ->willReturn(Data::ACTION_RETURN_SUCCESS);
 
         $this->checkoutSessionMock->expects(self::atLeastOnce())
             ->method('getLastRealOrderId')
@@ -61,14 +66,14 @@ class RedirectTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractCo
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Redirect::execute()
+     * @covers RedirectController::execute()
      */
     public function testExecuteSuccessReturnAction()
     {
         $this->httpRequestMock->expects(self::once())
             ->method('getParam')
             ->with('action')
-            ->willReturn(\EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_SUCCESS);
+            ->willReturn(Data::ACTION_RETURN_SUCCESS);
 
         $this->checkoutSessionMock->expects(self::atLeastOnce())
             ->method('getLastRealOrderId')
@@ -81,22 +86,22 @@ class RedirectTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractCo
             ->method('redirect')
             ->with(
                 $this->getControllerInstance()->getResponse(),
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH,
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_PATH,
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_ONEPAGE_SUCCESS_ARGS
             );
 
         $this->getControllerInstance()->execute();
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Redirect::execute()
+     * @covers RedirectController::execute()
      */
     public function testExecuteCancelReturnAction()
     {
         $this->httpRequestMock->expects(self::once())
             ->method('getParam')
             ->with('action')
-            ->willReturn(\EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_CANCEL);
+            ->willReturn(Data::ACTION_RETURN_CANCEL);
 
         $this->checkoutSessionMock->expects(self::never())
             ->method('getLastRealOrderId');
@@ -108,22 +113,22 @@ class RedirectTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractCo
             ->method('redirect')
             ->with(
                 $this->getControllerInstance()->getResponse(),
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_PATH,
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_ARGS
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_PATH,
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_ARGS
             );
 
         $this->getControllerInstance()->execute();
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Redirect::execute()
+     * @covers RedirectController::execute()
      */
     public function testExecuteFailureReturnAction()
     {
         $this->httpRequestMock->expects(self::once())
             ->method('getParam')
             ->with('action')
-            ->willReturn(\EMerchantPay\Genesis\Helper\Data::ACTION_RETURN_FAILURE);
+            ->willReturn(Data::ACTION_RETURN_FAILURE);
 
         $this->checkoutSessionMock->expects(self::never())
             ->method('getLastRealOrderId');
@@ -135,15 +140,15 @@ class RedirectTest extends \EMerchantPay\Genesis\Test\Unit\Controller\AbstractCo
             ->method('redirect')
             ->with(
                 $this->getControllerInstance()->getResponse(),
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_PATH,
-                \EMerchantPay\Genesis\Controller\AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_ARGS
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_PATH,
+                AbstractCheckoutAction::ROUTE_PATTERN_CHECKOUT_CART_ARGS
             );
 
         $this->getControllerInstance()->execute();
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Redirect::execute()
+     * @covers RedirectController::execute()
      */
     public function testExecuteUnsupportedReturnAction()
     {

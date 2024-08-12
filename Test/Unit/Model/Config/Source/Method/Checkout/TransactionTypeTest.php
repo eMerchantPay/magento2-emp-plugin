@@ -19,53 +19,47 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout;
 
-use EMerchantPay\Genesis\Helper\Checkout;
 use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType;
+use EMerchantPay\Genesis\Model\Traits\ExcludedTransactionTypes;
+use EMerchantPay\Genesis\Model\Traits\RecurringTransactionTypes;
+use Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
 use Genesis\Api\Constants\Transaction\Names;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
-use \Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
-use \Genesis\Api\Constants\Payment\Methods as GenesisPaymentMethods;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use PHPUnit\Framework\TestCase;
 
 /**
+ * Test transaction types
+ *
  * Class TransactionTypeTest
  *
- * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType
- * @package EMerchantPay\Genesis\Test\Unit\Model\Config\Source\Method\Checkout
+ * @covers TransactionType
  */
-class TransactionTypeTest extends \PHPUnit\Framework\TestCase
+class TransactionTypeTest extends TestCase
 {
+    use ExcludedTransactionTypes;
+    use RecurringTransactionTypes;
     /**
-     * @covers \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType::toOptionArray()
+     * Test transaction types
+     *
+     * @covers TransactionType::toOptionArray()
      */
     public function testToOptionArray()
     {
         $data        = [];
-        $sourceModel = new \EMerchantPay\Genesis\Model\Config\Source\Method\Checkout\TransactionType();
+        $sourceModel = new TransactionType();
 
         $transactionTypes = GenesisTransactionTypes::getWPFTransactionTypes();
-        $excludedTypes    = Checkout::getRecurringTransactionTypes();
-
-        // Exclude PPRO transaction. This is not standalone transaction type
-        array_push($excludedTypes, GenesisTransactionTypes::PPRO);
-        // Exclude GooglePay transaction. In this way Google Pay Payment types will be introduced
-        array_push($excludedTypes, GenesisTransactionTypes::GOOGLE_PAY);
-        // Exclude PayPal transaction. In this way PayPal Payment types will be introduced
-        array_push($excludedTypes, GenesisTransactionTypes::PAY_PAL);
-        // Exclude Apple Pay transaction.
-        array_push($excludedTypes, GenesisTransactionTypes::APPLE_PAY);
+        $excludedTypes    = array_merge(
+            $this->getRecurringTransactionTypes(),
+            $this->getExcludedTransactionTypes()
+        );
 
         // Exclude Transaction Types
         $transactionTypes = array_diff($transactionTypes, $excludedTypes);
-
-        // Add PPRO types
-        $pproTypes = array_map(
-            function ($type) {
-                return $type . Data::PPRO_TRANSACTION_SUFFIX;
-            },
-            GenesisPaymentMethods::getMethods()
-        );
 
         // Add Google Payment types
         $googlePayTypes = array_map(
@@ -103,7 +97,6 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
 
         $transactionTypes = array_merge(
             $transactionTypes,
-            $pproTypes,
             $googlePayTypes,
             $payPalTypes,
             $applePayTypes
@@ -116,18 +109,34 @@ class TransactionTypeTest extends \PHPUnit\Framework\TestCase
                 $name = strtoupper($type);
             }
 
-            array_push(
-                $data,
-                [
-                    'value' => $type,
-                    'label' => __($name)
-                ]
-            );
+            $data[] = [
+                'value' => $type,
+                'label' => __($name)
+            ];
         }
 
         $this->assertEquals(
             $data,
             $sourceModel->toOptionArray()
         );
+    }
+
+    /**
+     * Test excluded transaction types are really excluded
+     */
+    public function testExcludedTransactionTypesAreExcluded()
+    {
+        $sourceModel   = new TransactionType();
+        $excludedTypes = $this->getExcludedTransactionTypes();
+
+        $transactionOptions = $sourceModel->toOptionArray();
+
+        $transactionTypes = array_map(function ($option) {
+            return $option['value'];
+        }, $transactionOptions);
+
+        foreach ($excludedTypes as $excludedType) {
+            $this->assertNotContains($excludedType, $transactionTypes);
+        }
     }
 }

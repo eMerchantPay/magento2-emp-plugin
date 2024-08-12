@@ -21,7 +21,9 @@ namespace EMerchantPay\Genesis\Test\Unit\Model\Observer;
 
 use EMerchantPay\Genesis\Helper\Data as DataHelper;
 use EMerchantPay\Genesis\Model\Config;
+use EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore;
 use EMerchantPay\Genesis\Model\Observer\SalesOrderBeforeSaveObserver;
+use EMerchantPay\Genesis\Test\Unit\AbstractTestCase;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Event;
 use Magento\Framework\Event\Observer;
@@ -31,67 +33,70 @@ use Magento\Framework\Webapi\Rest\Response as RestResponse;
 use Magento\Payment\Model\Method\InstanceFactory;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use PHPUnit\Framework\MockObject\MockObject;
+use stdClass;
 
 /**
  * Class AbstractObserverTest
- * @package EMerchantPay\Genesis\Test\Unit\Model\Observer
+ *
+ * @SuppressWarnings(PHPMD.TooManyFields)
  */
-abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
+abstract class AbstractObserverTest extends AbstractTestCase
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore|\PHPUnit_Framework_MockObject_MockObject
+     * @var ControllerFrontSendResponseBefore|MockObject
      */
     protected $observerInstance;
 
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
+     * @var DataHelper|MockObject
      */
     protected $dataHelperMock;
 
     /**
-     * @var \Magento\Framework\Webapi\ErrorProcessor|\PHPUnit_Framework_MockObject_MockObject
+     * @var ErrorProcessor|MockObject
      */
     protected $errorProcessorMock;
 
     /**
-     * @var \Magento\Checkout\Model\Session|\PHPUnit_Framework_MockObject_MockObject
+     * @var Session|MockObject
      */
     protected $checkoutSessionMock;
 
     /**
-     * @var \Magento\Framework\Event\Observer|\PHPUnit_Framework_MockObject_MockObject
+     * @var Observer|MockObject
      */
     protected $observerMock;
 
     /**
-     * @var \Magento\Framework\Event|\PHPUnit_Framework_MockObject_MockObject
+     * @var Event|MockObject
      */
     protected $eventMock;
 
     /**
-     * @var \Magento\Framework\Webapi\Rest\Response|\PHPUnit_Framework_MockObject_MockObject
+     * @var RestResponse|MockObject
      */
     protected $restResponseMock;
 
     /**
-     * @var \Magento\Framework\Webapi\Exception|\PHPUnit_Framework_MockObject_MockObject
+     * @var WebapiException|MockObject
      */
     protected $webapiException;
 
     /**
-     * @var (Config&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (Config&MockObject)|MockObject
      */
     protected $configHelper;
 
     /**
-     * @var (InstanceFactory&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (InstanceFactory&MockObject)|MockObject
      */
     protected $methodInstance;
 
     /**
-     * @var (Order&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (Order&MockObject)|MockObject
      */
     protected $orderMock;
 
@@ -101,27 +106,27 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
     protected $sendMailOnOrderPaymentSuccess;
 
     /**
-     * @var (OrderFactory&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (OrderFactory&MockObject)|MockObject
      */
     protected $orderModel;
 
     /**
-     * @var (OrderSender&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (OrderSender&MockObject)|MockObject
      */
     protected $orderSender;
 
     /**
-     * @var (Session&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (Session&MockObject)|MockObject
      */
     protected $checkoutSession;
 
     /**
-     * @var \stdClass
+     * @var stdClass
      */
     protected $createMock;
 
     /**
-     * @var (OrderPaymentInterface&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     * @var (OrderPaymentInterface&MockObject)|MockObject
      */
     protected $paymentInterfaceMock;
 
@@ -129,8 +134,10 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
 
     /**
      * Gets observer's instance
-     * @return \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore|
-     * \EMerchantPay\Genesis\Model\Observer\SalesOrderPaymentPlaceEnd
+     *
+     * @return ControllerFrontSendResponseBefore|
+     *
+     * @covers SalesOrderBeforeSaveObserver
      */
     protected function getObserverInstance()
     {
@@ -139,79 +146,92 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
 
     /**
      * Get mock for data helper
-     * @return \EMerchantPay\Genesis\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
+     * @return DataHelper|MockObject
      */
     protected function getDataHelperMock()
     {
         return $this->dataHelperMock = $this->getMockBuilder(DataHelper::class)
             ->disableOriginalConstructor()
-            ->setMethods(['createWebApiException'])
+            ->onlyMethods(['createWebApiException'])
             ->getMock();
     }
 
     /**
      * Get mock for error processor
-     * @return \Magento\Framework\Webapi\ErrorProcessor|\PHPUnit_Framework_MockObject_MockObject
+     * @return ErrorProcessor|MockObject
      */
     protected function getErrorProcessorMock()
     {
         return $this->errorProcessorMock = $this->getMockBuilder(ErrorProcessor::class)
             ->disableOriginalConstructor()
-            ->setMethods([])
             ->getMock();
     }
 
     /**
      * Get mock for checkout session
-     * @return \Magento\Checkout\Model\Session|\PHPUnit_Framework_MockObject_MockObject
+     * @return Session|MockObject
      */
     protected function getCheckoutSessionMock()
     {
         return $this->checkoutSessionMock = $this->getMockBuilder(Session::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getEmerchantPayLastCheckoutError','setEmerchantPayLastCheckoutError'])
+            ->addMethods(
+                [
+                    'getEmerchantPayLastCheckoutError',
+                    'setEmerchantPayLastCheckoutError'
+                ]
+            )
             ->getMock();
     }
 
     /**
      * Get mock for event observer
-     * @return \Magento\Framework\Event\Observer|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return Observer|MockObject
      */
     protected function getObserverMock()
     {
         return $this->observerMock = $this->getMockBuilder(Observer::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getEvent'])
+            ->onlyMethods(['getEvent'])
             ->getMock();
     }
 
     /**
      * Get mock for event
-     * @return \Magento\Framework\Event|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return Event|MockObject
      */
     protected function getEventMock()
     {
         return $this->eventMock = $this->getMockBuilder(Event::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getData'])
+            ->onlyMethods(['getData'])
             ->getMock();
     }
 
     /**
      * Get mock for Webapi REST response
-     * @return \Magento\Framework\Webapi\Rest\Response|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return RestResponse|MockObject
      */
     protected function getRestResponseMock()
     {
         return $this->restResponseMock = $this->getMockBuilder(RestResponse::class)
             ->disableOriginalConstructor()
-            ->setMethods(['setException','isException'])
+            ->onlyMethods(
+                [
+                    'setException',
+                    'isException'
+                ]
+            )
             ->getMock();
     }
 
     /**
      * Get mock for Webapi exception
-     * @return \Magento\Framework\Webapi\Exception|\PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return WebapiException|MockObject
      */
     protected function getWebapiException()
     {
@@ -229,16 +249,22 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
     {
         $this->methodInstance = $this->getMockBuilder(InstanceFactory::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getCode'])
+            ->addMethods(['getCode'])
             ->getMock();
 
         $this->paymentInterfaceMock = $this->getMockBuilder(OrderPaymentInterface::class)
-            ->setMethods(['getMethodInstance'])
+            ->addMethods(['getMethodInstance'])
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
 
         $this->orderMock = $this->getMockBuilder(Order::class)
-            ->setMethods(['getPayment', 'setCanSendNewEmailFlag', 'setSendEmail'])
+            ->onlyMethods(
+                [
+                    'getPayment',
+                    'setCanSendNewEmailFlag',
+                ]
+            )
+            ->addMethods(['setSendEmail'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -248,7 +274,14 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
 
         $this->eventMock = $this->getMockBuilder(Event::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getData', 'getEvent', 'getOrder', 'getOrderIds'])
+            ->onlyMethods(['getData'])
+            ->addMethods(
+                [
+                    'getEvent',
+                    'getOrder',
+                    'getOrderIds'
+                ]
+            )
             ->getMock();
     }
 
@@ -270,8 +303,8 @@ abstract class AbstractObserverTest extends \EMerchantPay\Genesis\Test\Unit\Abst
         $this->observerInstance = $this->getObjectManagerHelper()->getObject(
             $this->getObserverClassName(),
             [
-                'moduleHelper' => $this->dataHelperMock,
-                'errorProcessor' => $this->errorProcessorMock,
+                'moduleHelper'    => $this->dataHelperMock,
+                'errorProcessor'  => $this->errorProcessorMock,
                 'checkoutSession' => $this->checkoutSessionMock
             ]
         );

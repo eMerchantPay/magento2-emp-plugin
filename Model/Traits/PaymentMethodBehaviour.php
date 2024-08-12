@@ -19,18 +19,19 @@
 
 namespace EMerchantPay\Genesis\Model\Traits;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Model\InfoInterface;
 
 /**
  * Trait PaymentMethodBehaviour
  *
  * Describes the capabilities of the payment methods
- *
- * @package EMerchantPay\Genesis\Model\Traits
  */
 trait PaymentMethodBehaviour
 {
     /**
+     * Ordering is possible
+     *
      * @return bool
      */
     public function canOrder()
@@ -39,6 +40,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Authorize is possible
+     *
      * @return bool
      */
     public function canAuthorize()
@@ -47,6 +50,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Capture is possible
+     *
      * @return bool
      */
     public function canCapture()
@@ -55,6 +60,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Partial capture is possible
+     *
      * @return bool
      */
     public function canCapturePartial()
@@ -63,6 +70,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Capture once is possible
+     *
      * @return bool
      */
     public function canCaptureOnce()
@@ -71,6 +80,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Refund is possible
+     *
      * @return bool
      */
     public function canRefund()
@@ -79,6 +90,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Partial refund per invoice is possible
+     *
      * @return bool
      */
     public function canRefundPartialPerInvoice()
@@ -87,6 +100,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Void is possible
+     *
      * @return bool
      */
     public function canVoid()
@@ -95,6 +110,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Internal use is possible
+     *
      * @return bool
      */
     public function canUseInternal()
@@ -103,6 +120,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Checkout is possible
+     *
      * @return bool
      */
     public function canUseCheckout()
@@ -111,6 +130,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Edit is possible
+     *
      * @return bool
      */
     public function canEdit()
@@ -119,6 +140,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Transaction info can be fetched
+     *
      * @return bool
      */
     public function canFetchTransactionInfo()
@@ -127,6 +150,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * It is Gateway
+     *
      * @return bool
      */
     public function isGateway()
@@ -135,6 +160,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * It is online
+     *
      * @return bool
      */
     public function isOffline()
@@ -143,6 +170,8 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * No initialization needed
+     *
      * @return bool
      */
     public function isInitializeNeeded()
@@ -151,9 +180,12 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Can be used in every country
+     *
      * @param string $country
      *
      * @return bool
+     *
      * @SuppressWarnings(PHPMD)
      * @codingStandardsIgnoreStart
      */
@@ -169,7 +201,8 @@ trait PaymentMethodBehaviour
      * @param string $currencyCode
      *
      * @return bool
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
      */
     public function canUseForCurrency($currencyCode)
     {
@@ -181,6 +214,8 @@ trait PaymentMethodBehaviour
 
 
     /**
+     * Can't review payment
+     *
      * @return bool
      */
     public function canReviewPayment()
@@ -189,10 +224,13 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Fetch the transaction information
+     *
      * @param InfoInterface $payment
-     * @param string $transactionId
+     * @param string        $transactionId
      *
      * @return array
+     *
      * @SuppressWarnings(PHPMD)
      * @codingStandardsIgnoreStart
      */
@@ -203,10 +241,13 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Initialization
+     *
      * @param string $paymentAction
      * @param object $stateObject
      *
      * @return $this|MethodInterface
+     *
      * @SuppressWarnings(PHPMD)
      * @codingStandardsIgnoreStart
      */
@@ -217,35 +258,45 @@ trait PaymentMethodBehaviour
     }
 
     /**
+     * Accept the payment
+     *
      * @param InfoInterface $payment
      *
      * @return bool|false
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
+     *
      * @SuppressWarnings(PHPMD)
      * @codingStandardsIgnoreStart
      */
     public function acceptPayment(InfoInterface $payment)
     {
         if (!$this->canReviewPayment()) {
-            throw new \Magento\Framework\Exception\LocalizedException(__('The payment review action is unavailable.'));
+            throw new LocalizedException(__('The payment review action is unavailable.'));
         }
+
         return false;
         // @codingStandardsIgnoreEnd
     }
 
     /**
+     * Deny the payment
+     *
      * @param InfoInterface $payment
      *
      * @return bool|false
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
+     *
      * @SuppressWarnings(PHPMD)
      * @codingStandardsIgnoreStart
      */
     public function denyPayment(InfoInterface $payment)
     {
         if (!$this->canReviewPayment()) {
-            throw new \Magento\Framework\Exception\LocalizedException(__('The payment review action is unavailable.'));
+            throw new LocalizedException(__('The payment review action is unavailable.'));
         }
+
         return false;
         // @codingStandardsIgnoreEnd
     }

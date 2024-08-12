@@ -19,69 +19,97 @@
 
 namespace EMerchantPay\Genesis\Helper;
 
+use DateTime;
 use EMerchantPay\Genesis\Block\Frontend\Config;
+use EMerchantPay\Genesis\Model\Config as ModelConfig;
 use EMerchantPay\Genesis\Model\ConfigFactory;
+use EMerchantPay\Genesis\Model\Method\Checkout as MethodCheckout;
 use Exception;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
+use Genesis\Api\Constants\Transaction\States;
+use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Api\Constants\i18n;
+use Genesis\Api\Notification;
+use Genesis\Api\Request\Financial\Alternatives\Klarna\Item;
+use Genesis\Api\Request\Financial\Alternatives\Klarna\Items;
+use Genesis\Api\Response;
+use Genesis\Config as GenesisConfig;
+use Genesis\Exceptions\ErrorParameter;
+use Genesis\Exceptions\InvalidArgument;
 use Genesis\Genesis;
+use Magento\Customer\Model\Customer as MagentoCustomer;
 use Magento\Customer\Model\Session;
+use Magento\Directory\Model\Currency;
+use Magento\Framework\Api\FilterBuilder;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Api\SortOrder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\HTTP\PhpEnvironment\RemoteAddress;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\ObjectManagerInterface;
+use Magento\Framework\Phrase;
 use Magento\Framework\UrlInterface;
+use Magento\Framework\Webapi\Exception as WebApiException;
 use Magento\Payment\Helper\Data as PaymentData;
-use Magento\Sales\Model\Order;
+use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\Order as MagentoOrder;
 use Magento\Sales\Model\Order\CreditmemoFactory;
+use Magento\Sales\Model\Order\Invoice;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use Magento\Sales\Model\Order\Payment\Transaction\Repository;
+use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\Collection;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Magento\Store\Model\StoreManagerInterface;
-use \Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use stdClass;
 
 /**
  * Helper Class for all Payment Methods
  *
  * Class Data
- * @package EMerchantPay\Genesis\Helper
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  */
 class Data extends AbstractHelper
 {
-    const SECURE_TRANSACTION_TYPE_SUFFIX = '3D';
+    private const SECURE_TRANSACTION_TYPE_SUFFIX = '3D';
 
-    const ADDITIONAL_INFO_KEY_STATUS           = 'status';
-    const ADDITIONAL_INFO_KEY_TRANSACTION_TYPE = 'transaction_type';
-    const ADDITIONAL_INFO_KEY_TERMINAL_TOKEN   = 'terminal_token';
-    const ADDITIONAL_INFO_KEY_REDIRECT_URL     = 'redirect_url';
+    public const ADDITIONAL_INFO_KEY_STATUS           = 'status';
+    public const ADDITIONAL_INFO_KEY_TRANSACTION_TYPE = 'transaction_type';
+    public const ADDITIONAL_INFO_KEY_TERMINAL_TOKEN   = 'terminal_token';
+    public const ADDITIONAL_INFO_KEY_REDIRECT_URL     = 'redirect_url';
 
-    const ACTION_RETURN_SUCCESS = 'success';
-    const ACTION_RETURN_CANCEL  = 'cancel';
-    const ACTION_RETURN_FAILURE = 'failure';
+    public const ACTION_RETURN_SUCCESS = 'success';
+    public const ACTION_RETURN_CANCEL  = 'cancel';
+    public const ACTION_RETURN_FAILURE = 'failure';
 
-    const GENESIS_GATEWAY_ERROR_MESSAGE_DEFAULT = 'An error has occurred while processing your request to the gateway';
+    public const GENESIS_GATEWAY_ERROR_MESSAGE_DEFAULT =
+        'An error has occurred while processing your request to the gateway';
 
-    const PPRO_TRANSACTION_SUFFIX = '_ppro';
+    public const GOOGLE_PAY_TRANSACTION_PREFIX     = GenesisTransactionTypes::GOOGLE_PAY . '_';
+    public const GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE = GooglePaymentTypes::AUTHORIZE;
+    public const GOOGLE_PAY_PAYMENT_TYPE_SALE      = GooglePaymentTypes::SALE;
 
-    const GOOGLE_PAY_TRANSACTION_PREFIX     = GenesisTransactionTypes::GOOGLE_PAY . '_';
-    const GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE = GooglePaymentTypes::AUTHORIZE;
-    const GOOGLE_PAY_PAYMENT_TYPE_SALE      = GooglePaymentTypes::SALE;
+    public const PAYPAL_TRANSACTION_PREFIX         = GenesisTransactionTypes::PAY_PAL . '_';
+    public const PAYPAL_PAYMENT_TYPE_AUTHORIZE     = PayPalPaymentTypes::AUTHORIZE;
+    public const PAYPAL_PAYMENT_TYPE_SALE          = PayPalPaymentTypes::SALE;
+    public const PAYPAL_PAYMENT_TYPE_EXPRESS       = PayPalPaymentTypes::EXPRESS;
 
-    const PAYPAL_TRANSACTION_PREFIX         = GenesisTransactionTypes::PAY_PAL . '_';
-    const PAYPAL_PAYMENT_TYPE_AUTHORIZE     = PayPalPaymentTypes::AUTHORIZE;
-    const PAYPAL_PAYMENT_TYPE_SALE          = PayPalPaymentTypes::SALE;
-    const PAYPAL_PAYMENT_TYPE_EXPRESS       = PayPalPaymentTypes::EXPRESS;
-    
-    const APPLE_PAY_TRANSACTION_PREFIX      = GenesisTransactionTypes::APPLE_PAY . '_';
-    const APPLE_PAY_PAYMENT_TYPE_AUTHORIZE  = ApplePaymentTypes::AUTHORIZE;
-    const APPLE_PAY_PAYMENT_TYPE_SALE       = ApplePaymentTypes::SALE;
+    public const APPLE_PAY_TRANSACTION_PREFIX      = GenesisTransactionTypes::APPLE_PAY . '_';
+    public const APPLE_PAY_PAYMENT_TYPE_AUTHORIZE  = ApplePaymentTypes::AUTHORIZE;
+    public const APPLE_PAY_PAYMENT_TYPE_SALE       = ApplePaymentTypes::SALE;
 
-    const PLATFORM_TRANSACTION_SUFFIX = '-mg2';
+    private const PLATFORM_TRANSACTION_SUFFIX = '-mg2';
 
     private const INCOMING_CONTROLLER_REDIRECT = 'redirect';
     private const INCOMING_CONTROLLER_IFRAME   = 'iframe';
@@ -122,49 +150,51 @@ class Data extends AbstractHelper
     protected $_config;
 
     /**
-     * @param ObjectManagerInterface $objectManager
-     * @param Context                $context
-     * @param PaymentData            $paymentData
-     * @param StoreManagerInterface  $storeManager
-     * @param ConfigFactory          $configFactory
-     * @param ResolverInterface      $localeResolver
-     * @param Session                $customerSession
-     * @param Config                 $config
+     * @var TransactionRepositoryInterface
      */
-    public function __construct(
-        ObjectManagerInterface $objectManager,
-        Context                $context,
-        PaymentData            $paymentData,
-        StoreManagerInterface  $storeManager,
-        ConfigFactory          $configFactory,
-        ResolverInterface      $localeResolver,
-        Session                $customerSession,
-        Config                 $config
-    ) {
-        $this->_objectManager   = $objectManager;
-        $this->_paymentData     = $paymentData;
-        $this->_storeManager    = $storeManager;
-        $this->_configFactory   = $configFactory;
-        $this->_localeResolver  = $localeResolver;
-        $this->_customerSession = $customerSession;
-        $this->_scopeConfig     = $context->getScopeConfig();
-        $this->_config          = $config;
-
-        parent::__construct($context);
-    }
+    protected $_transactionRepository;
 
     /**
-     * Creates an Instance of the Helper
-     *
-     * @param  ObjectManagerInterface $objectManager
-     *
-     * @return Data
+     * @var OrderRepositoryInterface
      */
-    public static function getInstance($objectManager)
-    {
-        return $objectManager->create(
-            get_class()
-        );
+    protected $_orderRepository;
+
+    /**
+     * @param ObjectManagerInterface         $objectManager
+     * @param Context                        $context
+     * @param PaymentData                    $paymentData
+     * @param StoreManagerInterface          $storeManager
+     * @param ConfigFactory                  $configFactory
+     * @param ResolverInterface              $localeResolver
+     * @param Session                        $customerSession
+     * @param Config                         $config
+     * @param TransactionRepositoryInterface $transactionRepository
+     * @param OrderRepositoryInterface       $orderRepository
+     */
+    public function __construct(
+        ObjectManagerInterface         $objectManager,
+        Context                        $context,
+        PaymentData                    $paymentData,
+        StoreManagerInterface          $storeManager,
+        ConfigFactory                  $configFactory,
+        ResolverInterface              $localeResolver,
+        Session                        $customerSession,
+        Config                         $config,
+        TransactionRepositoryInterface $transactionRepository,
+        OrderRepositoryInterface       $orderRepository
+    ) {
+        $this->_objectManager         = $objectManager;
+        $this->_paymentData           = $paymentData;
+        $this->_storeManager          = $storeManager;
+        $this->_configFactory         = $configFactory;
+        $this->_localeResolver        = $localeResolver;
+        $this->_customerSession       = $customerSession;
+        $this->_scopeConfig           = $context->getScopeConfig();
+        $this->_config                = $config;
+        $this->_transactionRepository = $transactionRepository;
+        $this->_orderRepository       = $orderRepository;
+
+        parent::__construct($context);
     }
 
     /**
@@ -251,8 +281,13 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Return the hash of the current user
+     *
      * @param int $length
+     *
      * @return string
+     *
+     * @throws Exception
      */
     public function getCurrentUserIdHash($length = 30)
     {
@@ -266,12 +301,15 @@ class Data extends AbstractHelper
     /**
      * Build URL for store
      *
-     * @param string $moduleCode
-     * @param string $controller
+     * @param string      $moduleCode
+     * @param string      $controller
      * @param string|null $queryParams
-     * @param bool|null $secure
-     * @param int|null $storeId
+     * @param bool|null   $secure
+     * @param int|null    $storeId
+     *
      * @return string
+     *
+     * @throws NoSuchEntityException
      */
     public function getUrl($moduleCode, $controller, $queryParams = null, $secure = null, $storeId = null)
     {
@@ -304,9 +342,13 @@ class Data extends AbstractHelper
 
     /**
      * Construct Module Notification Url
+     *
      * @param bool|null $secure
-     * @param int|null $storeId
+     * @param int|null  $storeId
+     *
      * @return string
+     *
+     * @throws NoSuchEntityException
      */
     public function getNotificationUrl($secure = null, $storeId = null)
     {
@@ -328,9 +370,13 @@ class Data extends AbstractHelper
 
     /**
      * Build Return Url from Payment Gateway
+     *
      * @param string $moduleCode
      * @param string $returnAction
+     *
      * @return string
+     *
+     * @throws NoSuchEntityException
      */
     public function getReturnUrl($moduleCode, $returnAction)
     {
@@ -350,8 +396,12 @@ class Data extends AbstractHelper
 
     /**
      * Generates a unique hash, used for the transaction id
-     * @param $length
+     *
+     * @param int $length
+     *
      * @return string
+     *
+     * @throws Exception
      */
     protected function uniqHash($length = 30)
     {
@@ -365,9 +415,13 @@ class Data extends AbstractHelper
 
     /**
      * Builds a transaction id
+     *
      * @param int|null $orderId
-     * @param int $length
+     * @param int      $length
+     *
      * @return string
+     *
+     * @throws Exception
      */
     public function genTransactionId($orderId = null, $length = 30)
     {
@@ -384,14 +438,16 @@ class Data extends AbstractHelper
 
     /**
      * Get Transaction Additional Parameter Value
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
-     * @param string $paramName
+     *
+     * @param Transaction $transaction
+     * @param string      $paramName
+     *
      * @return null|string
      */
     public function getTransactionAdditionalInfoValue($transaction, $paramName)
     {
         $transactionInformation = $transaction->getAdditionalInformation(
-            \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
+            Transaction::RAW_DETAILS
         );
 
         if (is_array($transactionInformation) && isset($transactionInformation[$paramName])) {
@@ -403,17 +459,19 @@ class Data extends AbstractHelper
 
     /**
      * Get Transaction Additional Parameter Value
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param string $paramName
+     *
+     * @param InfoInterface $payment
+     * @param string        $paramName
+     *
      * @return null|string
      */
     public function getPaymentAdditionalInfoValue(
-        \Magento\Payment\Model\InfoInterface $payment,
+        InfoInterface $payment,
         $paramName
     ) {
         $paymentAdditionalInfo = $payment->getTransactionAdditionalInfo();
 
-        $rawDetailsKey = \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS;
+        $rawDetailsKey = Transaction::RAW_DETAILS;
 
         if (!array_key_exists($rawDetailsKey, $paymentAdditionalInfo)) {
             return null;
@@ -428,7 +486,9 @@ class Data extends AbstractHelper
 
     /**
      * Get Transaction Terminal Token Value
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
+     *
+     * @param Transaction $transaction
+     *
      * @return null|string
      */
     public function getTransactionTerminalToken($transaction)
@@ -441,7 +501,9 @@ class Data extends AbstractHelper
 
     /**
      * Get Transaction Status Value
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
+     *
+     * @param Transaction $transaction
+     *
      * @return null|string
      */
     public function getTransactionStatus($transaction)
@@ -454,7 +516,9 @@ class Data extends AbstractHelper
 
     /**
      * Get Transaction Type
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
+     *
+     * @param Transaction $transaction
+     *
      * @return null|string
      */
     public function getTransactionTypeByTransaction($transaction)
@@ -466,13 +530,15 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Set token by payment transaction
+     *
      * During "Checkout" we don't know a Token,
-     * however its required at a latter stage, which
+     * however it's required at a latter stage, which
      * means we have to extract it from the payment
      * data. We save the token when we receive a
      * notification from Genesis.
      *
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $paymentTransaction
+     * @param Transaction $paymentTransaction
      *
      * @return bool
      */
@@ -487,7 +553,7 @@ class Data extends AbstractHelper
         );
 
         if (!empty($transactionTerminalToken)) {
-            \Genesis\Config::setToken($transactionTerminalToken);
+            GenesisConfig::setToken($transactionTerminalToken);
 
             return true;
         }
@@ -497,6 +563,7 @@ class Data extends AbstractHelper
 
     /**
      * Extracts the Genesis Token from the Transaction Id
+     *
      * @param string $transactionId
      *
      * @return void
@@ -508,9 +575,14 @@ class Data extends AbstractHelper
         $this->setTokenByPaymentTransaction($transaction);
     }
 
-    /**Get an Instance of a Method Object using the Method Code
+    /**
+     * Get an Instance of a Method Object using the Method Code
+     *
      * @param string $methodCode
-     * @return \EMerchantPay\Genesis\Model\Config
+     *
+     * @return ModelConfig
+     *
+     * @throws NoSuchEntityException
      */
     public function getMethodConfig($methodCode)
     {
@@ -531,10 +603,11 @@ class Data extends AbstractHelper
     }
 
     /**
-     * Hides generated Exception and raises WebApiException in order to
-     * display the message to user
+     * Hides generated Exception and raises WebApiException in order to display the message to user
+     *
      * @param Exception $exception
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws WebApiException
      */
     public function maskException(Exception $exception)
     {
@@ -547,24 +620,25 @@ class Data extends AbstractHelper
     /**
      * Creates a WebApiException from Message or Phrase
      *
-     * @param \Magento\Framework\Phrase|string $phrase
-     * @param int $httpCode
-     * @return \Magento\Framework\Webapi\Exception
+     * @param Phrase|string $phrase
+     * @param int           $httpCode
+     *
+     * @return WebApiException
      */
     public function createWebApiException(
         $phrase,
-        $httpCode = \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR
+        $httpCode = WebApiException::HTTP_INTERNAL_ERROR
     ) {
         if (is_string($phrase)) {
-            $phrase = new \Magento\Framework\Phrase($phrase);
+            $phrase = new Phrase($phrase);
         }
 
         /** Only HTTP error codes are allowed. No success or redirect codes must be used. */
         if ($httpCode < 400 || $httpCode > 599) {
-            $httpCode = \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR;
+            $httpCode = WebApiException::HTTP_INTERNAL_ERROR;
         }
 
-        return new \Magento\Framework\Webapi\Exception(
+        return new WebApiException(
             $phrase,
             0,
             $httpCode,
@@ -577,9 +651,11 @@ class Data extends AbstractHelper
 
     /**
      * Generates WebApiException from Exception Text
-     * @param \Magento\Framework\Phrase|string $errorMessage
-     * @param int $errorCode
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @param Phrase|string $errorMessage
+     * @param int           $errorCode
+     *
+     * @throws WebApiException
      */
     public function throwWebApiException($errorMessage, $errorCode = 0)
     {
@@ -590,9 +666,11 @@ class Data extends AbstractHelper
 
     /**
      * Find Payment Transaction per Field Value
+     *
      * @param string $fieldValue
      * @param string $fieldName
-     * @return null|\Magento\Sales\Model\Order\Payment\Transaction
+     *
+     * @return null|Transaction
      */
     public function getPaymentTransaction($fieldValue, $fieldName = 'txn_id')
     {
@@ -601,7 +679,7 @@ class Data extends AbstractHelper
         }
 
         $transaction = $this->getObjectManager()->create(
-            "\\Magento\\Sales\\Model\\Order\\Payment\\Transaction"
+            Transaction::class
         )->load(
             $fieldValue,
             $fieldName
@@ -612,7 +690,9 @@ class Data extends AbstractHelper
 
     /**
      * Generates an array from Payment Gateway Response Object
-     * @param \stdClass $response
+     *
+     * @param stdClass $response
+     *
      * @return array
      */
     public function getArrayFromGatewayResponse($response)
@@ -622,7 +702,7 @@ class Data extends AbstractHelper
             if (is_string($value)) {
                 $transaction_details[$key] = $value;
             }
-            if ($value instanceof \DateTime) {
+            if ($value instanceof DateTime) {
                 $transaction_details[$key] = $value->format('c');
             }
         }
@@ -631,8 +711,12 @@ class Data extends AbstractHelper
 
     /**
      * Checks if the store is secure
-     * @param $storeId
+     *
+     * @param int $storeId
+     *
      * @return bool
+     *
+     * @throws NoSuchEntityException
      */
     public function isStoreSecure($storeId = null)
     {
@@ -642,14 +726,16 @@ class Data extends AbstractHelper
 
     /**
      * Sets the AdditionalInfo to the Payment transaction
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param \stdClass $responseObject
+     *
+     * @param InfoInterface $payment
+     * @param stdClass      $responseObject
+     *
      * @return void
      */
     public function setPaymentTransactionAdditionalInfo($payment, $responseObject)
     {
         $payment->setTransactionAdditionalInfo(
-            \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,
+            Transaction::RAW_DETAILS,
             $this->getArrayFromGatewayResponse(
                 $responseObject
             )
@@ -658,10 +744,14 @@ class Data extends AbstractHelper
 
     /**
      * Updates a payment transaction additional info
-     * @param string $transactionId
-     * @param \stdClass $responseObject
-     * @param bool $shouldCloseTransaction
+     *
+     * @param string   $transactionId
+     * @param stdClass $responseObject
+     * @param bool     $shouldCloseTransaction
+     *
      * @return bool
+     *
+     * @throws Exception
      */
     public function updateTransactionAdditionalInfo($transactionId, $responseObject, $shouldCloseTransaction = false)
     {
@@ -677,7 +767,7 @@ class Data extends AbstractHelper
                 $transaction->setIsClosed(true);
             }
 
-            $transaction->save();
+            $this->_transactionRepository->save($transaction);
 
             return true;
         }
@@ -687,14 +777,17 @@ class Data extends AbstractHelper
 
     /**
      * Set transaction additional information
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
-     * @param $responseObject
+     *
+     * @param Transaction $transaction
+     * @param stdClass    $responseObject
+     *
+     * @throws LocalizedException
      */
     public function setTransactionAdditionalInfo($transaction, $responseObject)
     {
         $transaction
             ->setAdditionalInformation(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS,
+                Transaction::RAW_DETAILS,
                 $this->getArrayFromGatewayResponse(
                     $responseObject
                 )
@@ -703,8 +796,9 @@ class Data extends AbstractHelper
 
     /**
      * Update Order Status and State
-     * @param \Magento\Sales\Model\Order $order
-     * @param string $state
+     *
+     * @param MagentoOrder  $order
+     * @param string        $state
      */
     public function setOrderStatusByState($order, $state)
     {
@@ -718,79 +812,83 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @param \Magento\Sales\Model\Order $order
-     * @param string $status
-     * @param string $message
+     * Add a state to order
+     *
+     * @param MagentoOrder  $order
+     * @param string        $status
+     * @param string        $message
+     *
+     * @throws LocalizedException
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function setOrderState($order, $status, $message = '')
     {
         switch ($status) {
-            case \Genesis\Api\Constants\Transaction\States::APPROVED:
+            case States::APPROVED:
                 $this->setOrderStatusByState(
                     $order,
-                    \Magento\Sales\Model\Order::STATE_PROCESSING
+                    MagentoOrder::STATE_PROCESSING
                 );
-                $order->save();
                 break;
 
-            case \Genesis\Api\Constants\Transaction\States::PENDING:
-            case \Genesis\Api\Constants\Transaction\States::PENDING_ASYNC:
+            case States::PENDING:
+            case States::PENDING_ASYNC:
                 $this->setOrderStatusByState(
                     $order,
-                    \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT
+                    MagentoOrder::STATE_PENDING_PAYMENT
                 );
-                $order->save();
                 break;
 
-            case \Genesis\Api\Constants\Transaction\States::ERROR:
-            case \Genesis\Api\Constants\Transaction\States::DECLINED:
+            case States::ERROR:
+            case States::DECLINED:
                 $this->buildInvoiceCancelation($order);
                 $this->setOrderStatusByState(
                     $order,
-                    \Magento\Sales\Model\Order::STATE_CLOSED
+                    MagentoOrder::STATE_CLOSED
                 );
-                $order->save();
                 break;
-            case \Genesis\Api\Constants\Transaction\States::VOIDED:
-            case \Genesis\Api\Constants\Transaction\States::TIMEOUT:
+            case States::VOIDED:
+            case States::TIMEOUT:
                 $this->buildInvoiceCancelation($order);
                 $this->setOrderStatusByState(
                     $order,
-                    \Magento\Sales\Model\Order::STATE_CANCELED
+                    MagentoOrder::STATE_CANCELED
                 );
-                $order->save();
                 break;
-            case \Genesis\Api\Constants\Transaction\States::REFUNDED:
+            case States::REFUNDED:
                 if ($order->canCreditmemo()) {
                     /** @var CreditmemoFactory $creditMemoFactory */
                     $creditMemoFactory = $this->getObjectManager()
-                        ->create('Magento\Sales\Model\Order\CreditmemoFactory');
+                        ->create(CreditmemoFactory::class);
                     /** @var CreditmemoService $creditmemoService */
                     $creditmemoService = $this->getObjectManager()
-                        ->create('Magento\Sales\Model\Service\CreditmemoService');
+                        ->create(CreditmemoService::class);
 
                     $creditMemo = $creditMemoFactory->createByOrder($order);
                     $creditmemoService->refund($creditMemo);
                 }
-
-                $order->save();
-                break;
-            default:
-                $order->save();
                 break;
         }
+
+        $this->_orderRepository->save($order);
     }
 
     /**
-     * @param \Magento\Sales\Model\Order $order
-     * @param bool $customerNotify
-     * @param string $message
+     * Build invoice cancelation
      *
-     * @return \Magento\Sales\Model\Order
+     * @param MagentoOrder  $order
+     * @param bool          $customerNotify
+     * @param string        $message
+     *
+     * @return MagentoOrder
+     *
+     * @throws LocalizedException
      */
     public function buildInvoiceCancelation($order, $customerNotify = true, $message = '')
     {
-        /** @var \Magento\Sales\Model\Order\Invoice $invoice */
+        /** @var Invoice $invoice */
         foreach ($order->getInvoiceCollection() as $invoice) {
             $invoice->cancel();
         }
@@ -803,8 +901,9 @@ class Data extends AbstractHelper
 
     /**
      * Build Description Information for the Transaction
-     * @param \Magento\Sales\Model\Order $order
-     * @param string $lineSeparator
+     *
+     * @param MagentoOrder $order
+     * @param string       $lineSeparator
      * @return string
      */
     public function buildOrderDescriptionText($order, $lineSeparator = PHP_EOL)
@@ -828,7 +927,10 @@ class Data extends AbstractHelper
 
     /**
      * Generates Usage Text (needed to create Transaction)
-     * @return \Magento\Framework\Phrase
+     *
+     * @return Phrase|string
+     *
+     * @throws NoSuchEntityException
      */
     public function buildOrderUsage()
     {
@@ -837,7 +939,10 @@ class Data extends AbstractHelper
 
     /**
      * Get Store frontend name
+     *
      * @return string
+     *
+     * @throws NoSuchEntityException
      */
     public function getStoreName()
     {
@@ -846,9 +951,11 @@ class Data extends AbstractHelper
 
     /**
      * Search for a transaction by transaction types
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param array $transactionTypes
-     * @return \Magento\Sales\Model\Order\Payment\Transaction
+     *
+     * @param InfoInterface $payment
+     * @param array         $transactionTypes
+     *
+     * @return Transaction
      */
     public function lookUpPaymentTransaction($payment, array $transactionTypes)
     {
@@ -875,14 +982,15 @@ class Data extends AbstractHelper
 
     /**
      * Find Authorization Payment Transaction
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param array $transactionTypes
-     * @return null|\Magento\Sales\Model\Order\Payment\Transaction
+     *
+     * @param InfoInterface $payment
+     * @param array         $transactionTypes
+     *
+     * @return null|Transaction
      */
     public function lookUpAuthorizationTransaction($payment, $transactionTypes = [
-            \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH
-        ]
-    )
+            Transaction::TYPE_AUTH
+        ])
     {
         return $this->lookUpPaymentTransaction(
             $payment,
@@ -892,14 +1000,15 @@ class Data extends AbstractHelper
 
     /**
      * Find Capture Payment Transaction
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param array $transactionTypes
-     * @return null|\Magento\Sales\Model\Order\Payment\Transaction
+     *
+     * @param InfoInterface $payment
+     * @param array         $transactionTypes
+     *
+     * @return null|Transaction
      */
     public function lookUpCaptureTransaction($payment, $transactionTypes = [
-            \Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE
-        ]
-    )
+            Transaction::TYPE_CAPTURE
+        ])
     {
         return $this->lookUpPaymentTransaction(
             $payment,
@@ -909,15 +1018,16 @@ class Data extends AbstractHelper
 
     /**
      * Find Void Payment Transaction Reference (Auth or Capture)
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param array $transactionTypes
-     * @return null|\Magento\Sales\Model\Order\Payment\Transaction
+     *
+     * @param InfoInterface $payment
+     * @param array         $transactionTypes
+     *
+     * @return null|Transaction
      */
     public function lookUpVoidReferenceTransaction($payment, $transactionTypes = [
-        \Magento\Sales\Model\Order\Payment\Transaction::TYPE_CAPTURE,
-        \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH
-        ]
-    )
+        Transaction::TYPE_CAPTURE,
+        Transaction::TYPE_AUTH
+        ])
     {
         return $this->lookUpPaymentTransaction(
             $payment,
@@ -927,12 +1037,13 @@ class Data extends AbstractHelper
 
     /**
      * Get an array of all global allowed currency codes
+     *
      * @return array
      */
     public function getGlobalAllowedCurrencyCodes()
     {
         $allowedCurrencyCodes = $this->getScopeConfig()->getValue(
-            \Magento\Directory\Model\Currency::XML_PATH_CURRENCY_ALLOW
+            Currency::XML_PATH_CURRENCY_ALLOW
         );
 
         return array_map(
@@ -948,7 +1059,9 @@ class Data extends AbstractHelper
 
     /**
      * Builds Select Options for the Allowed Currencies in the Admin Zone
+     *
      * @param array $availableCurrenciesOptions
+     *
      * @return array
      */
     public function getGlobalAllowedCurrenciesOptions(array $availableCurrenciesOptions)
@@ -967,7 +1080,9 @@ class Data extends AbstractHelper
 
     /**
      * Filter Module allowed Currencies with the global allowed currencies
+     *
      * @param array $allowedLocalCurrencies
+     *
      * @return array
      */
     public function getFilteredLocalAllowedCurrencies(array $allowedLocalCurrencies)
@@ -986,9 +1101,12 @@ class Data extends AbstractHelper
 
     /**
      * Get Magento Core Locale
+     *
      * @param string $default
+     *
      * @return string
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws WebApiException
      */
     public function getLocale($default = 'en')
     {
@@ -998,11 +1116,11 @@ class Data extends AbstractHelper
 
         $languageCode = substr($languageCode, 0, 2);
 
-        if (!\Genesis\Api\Constants\i18n::isValidLanguageCode($languageCode)) {
+        if (!i18n::isValidLanguageCode($languageCode)) {
             $languageCode = $default;
         }
 
-        if (!\Genesis\Api\Constants\i18n::isValidLanguageCode($languageCode)) {
+        if (!i18n::isValidLanguageCode($languageCode)) {
             $this->throwWebApiException(
                 __('The provided argument is not a valid ISO-639-1 language code ' .
                    'or is not supported by the Payment Gateway!')
@@ -1014,7 +1132,8 @@ class Data extends AbstractHelper
 
     /**
      * Get is allowed to refund transaction
-     * @param \Magento\Sales\Model\Order\Payment\Transaction $transaction
+     *
+     * @param Transaction $transaction
      * @return bool
      */
     public function canRefundTransaction($transaction)
@@ -1028,9 +1147,13 @@ class Data extends AbstractHelper
 
     /**
      * Check is Payment Method available for currency
+     *
      * @param string $methodCode
      * @param string $currencyCode
+     *
      * @return bool
+     *
+     * @throws NoSuchEntityException
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
@@ -1051,8 +1174,11 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Check if string ends with a subject
+     *
      * @param string $haystack
      * @param string $needle
+     *
      * @return bool
      */
     public function getStringEndsWith($haystack, $needle)
@@ -1065,7 +1191,10 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Check if the transaction is 3DS
+     *
      * @param string $transactionType
+     *
      * @return bool
      */
     public function getIsTransactionThreeDSecure($transactionType)
@@ -1076,7 +1205,8 @@ class Data extends AbstractHelper
     /**
      * Retrieves the complete error message from gateway
      *
-     * @param \stdClass $response
+     * @param stdClass $response
+     *
      * @return string
      */
     public function getErrorMessageFromGatewayResponse($response)
@@ -1088,8 +1218,11 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @param \Genesis\Api\Response $genesisApiResponse
-     * @return \stdClass
+     * Return the Gateway response object
+     *
+     * @param Response $genesisApiResponse
+     *
+     * @return stdClass
      */
     public function getGatewayResponseObject($genesisApiResponse)
     {
@@ -1119,18 +1252,26 @@ class Data extends AbstractHelper
      * Creates Notification Object
      *
      * @param array $data - Incoming notification ($_POST)
-     * @return \Genesis\Api\Notification
+     *
+     * @return Notification
+     *
+     * @throws InvalidArgument
      */
     public function createNotificationObject($data)
     {
-        $notification = new \Genesis\Api\Notification($data);
+        $notification = new Notification($data);
 
         return $notification;
     }
 
     /**
+     * Check if should create Authorize notification
+     *
      * @param string $transactionType
+     *
      * @return bool
+     *
+     * @throws NoSuchEntityException
      */
     public function getShouldCreateAuthNotification($transactionType)
     {
@@ -1142,8 +1283,13 @@ class Data extends AbstractHelper
     }
 
     /**
+     * Check if should create Capture notification
+     *
      * @param string $transactionType
+     *
      * @return bool
+     *
+     * @throws NoSuchEntityException
      */
     public function getShouldCreateCaptureNotification($transactionType)
     {
@@ -1155,16 +1301,20 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @param Order $order
-     * @return \Genesis\Api\Request\Financial\Alternatives\Klarna\Items
-     * @throws \Genesis\Exceptions\ErrorParameter
+     * Return Klarna custom parameter items
+     *
+     * @param MagentoOrder $order
+     *
+     * @return Items
+     *
+     * @throws ErrorParameter
      */
     public function getKlarnaCustomParamItems($order)
     {
-        $items     = new \Genesis\Api\Request\Financial\Alternatives\Klarna\Items($order->getOrderCurrencyCode());
+        $items     = new Items($order->getOrderCurrencyCode());
         $itemsList = $this->getItemListArray($order);
         foreach ($itemsList as $item) {
-            $klarnaItem = new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
+            $klarnaItem = new Item(
                 $item['name'],
                 $item['type'],
                 $item['qty'],
@@ -1176,9 +1326,9 @@ class Data extends AbstractHelper
         $taxes = floatval($order->getTaxAmount());
         if ($taxes) {
             $items->addItem(
-                new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
+                new Item(
                     'Taxes',
-                    \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SURCHARGE,
+                    Item::ITEM_TYPE_SURCHARGE,
                     1,
                     $taxes
                 )
@@ -1188,9 +1338,9 @@ class Data extends AbstractHelper
         $discount = floatval($order->getDiscountAmount());
         if ($discount) {
             $items->addItem(
-                new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
+                new Item(
                     'Discount',
-                    \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DISCOUNT,
+                    Item::ITEM_TYPE_DISCOUNT,
                     1,
                     -$discount
                 )
@@ -1200,9 +1350,9 @@ class Data extends AbstractHelper
         $shipping_cost = floatval($order->getShippingAmount());
         if ($shipping_cost) {
             $items->addItem(
-                new \Genesis\Api\Request\Financial\Alternatives\Klarna\Item(
+                new Item(
                     'Shipping Costs',
-                    \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SHIPPING_FEE,
+                    Item::ITEM_TYPE_SHIPPING_FEE,
                     1,
                     $shipping_cost
                 )
@@ -1213,7 +1363,10 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @param $order
+     * Get a list with the order items
+     *
+     * @param MagentoOrder $order
+     *
      * @return array
      */
     public function getItemListArray($order)
@@ -1225,8 +1378,8 @@ class Data extends AbstractHelper
             $product = $item->getProduct();
 
             $type = $item->getIsVirtual() ?
-                \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DIGITAL :
-                \Genesis\Api\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_PHYSICAL;
+                Item::ITEM_TYPE_DIGITAL :
+                Item::ITEM_TYPE_PHYSICAL;
 
             $productResult[] = [
                 'sku'  =>
@@ -1248,10 +1401,10 @@ class Data extends AbstractHelper
     /**
      * Extract the payment transaction object from Genesis Response
      *
-     * @param \stdClass $responseObject
-     * @param int $payment_id
+     * @param stdClass $responseObject
+     * @param int      $payment_id
      *
-     * @return \stdClass
+     * @return stdClass
      */
     public function populatePaymentTransaction($responseObject, $payment_id)
     {
@@ -1277,6 +1430,7 @@ class Data extends AbstractHelper
 
             return $paymentTransactions[0];
         }
+        //TODO missing 'return' statement
     }
 
     /**
@@ -1285,7 +1439,7 @@ class Data extends AbstractHelper
      * @param string $fieldValue
      * @param string $fieldName
      *
-     * @return null|\Magento\Sales\Model\Order\Payment\Transaction
+     * @return null|Transaction
      */
     public function getLastPaymentTransaction($fieldValue, $fieldName = 'payment_id')
     {
@@ -1294,13 +1448,14 @@ class Data extends AbstractHelper
         }
 
         $transactionBuilder = $this->getObjectManager()->create(
-            "\\Magento\\Sales\\Model\\Order\\Payment\\Transaction\\Repository"
+            Repository::class
         );
 
-        $searchBuilder = $this->getObjectManager()->create("\\Magento\\Framework\\Api\\SearchCriteriaBuilder");
-        $filterBuilder = $this->getObjectManager()->create("\\Magento\\Framework\\Api\\FilterBuilder");
-        $sortBuilder   = $this->getObjectManager()->create("\\Magento\\Framework\\Api\\SortOrder");
+        $searchBuilder = $this->getObjectManager()->create(SearchCriteriaBuilder::class);
+        $filterBuilder = $this->getObjectManager()->create(FilterBuilder::class);
+        $sortBuilder   = $this->getObjectManager()->create(SortOrder::class);
 
+        $filters   = [];
         $filters[] = $filterBuilder
             ->setField($fieldName)
             ->setValue($fieldValue)
@@ -1316,12 +1471,13 @@ class Data extends AbstractHelper
             ->setSortOrders([$orderCriteria])
             ->create();
 
-        /** @var \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\Collection $transactionList */
+        /** @var Collection $transactionList */
         $transactionList = $transactionBuilder->getList($searchCriteria);
 
         if ($transactionList->getSize()) {
-            /** @var \Magento\Sales\Model\Order\Payment\Transaction $trx */
+            /** @var Transaction $trx */
             $transaction = $transactionList->getLastItem();
+
             return $transaction;
         }
 
@@ -1331,7 +1487,8 @@ class Data extends AbstractHelper
     /**
      * Check if special validation should be applied
      *
-     * @param $transactionType
+     * @param string $transactionType
+     *
      * @return bool
      */
     public function isTransactionWithCustomAttribute($transactionType)
@@ -1348,8 +1505,11 @@ class Data extends AbstractHelper
     /**
      * Check if we should create Authorize Notification to the Magento store
      *
-     * @param $transactionType
+     * @param string $transactionType
+     *
      * @return bool
+     *
+     * @throws NoSuchEntityException
      */
     public function isSelectedAuthorizePaymentType($transactionType)
     {
@@ -1357,19 +1517,19 @@ class Data extends AbstractHelper
             case GenesisTransactionTypes::GOOGLE_PAY:
                 return in_array(
                     self::GOOGLE_PAY_TRANSACTION_PREFIX . self::GOOGLE_PAY_PAYMENT_TYPE_AUTHORIZE,
-                    $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+                    $this->getMethodConfig(MethodCheckout::CODE)
                         ->getTransactionTypes()
                 );
             case GenesisTransactionTypes::PAY_PAL:
                 return in_array(
                     self::PAYPAL_TRANSACTION_PREFIX . self::PAYPAL_PAYMENT_TYPE_AUTHORIZE,
-                    $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+                    $this->getMethodConfig(MethodCheckout::CODE)
                         ->getTransactionTypes()
                 );
             case GenesisTransactionTypes::APPLE_PAY:
                 return in_array(
                     self::APPLE_PAY_TRANSACTION_PREFIX . self::APPLE_PAY_PAYMENT_TYPE_AUTHORIZE,
-                    $this->getMethodConfig(\EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+                    $this->getMethodConfig(MethodCheckout::CODE)
                         ->getTransactionTypes()
                 );
             default:
@@ -1380,7 +1540,8 @@ class Data extends AbstractHelper
     /**
      * Search for a Physical product in the Checkout Order
      *
-     * @param $order
+     * @param MagentoOrder $order
+     *
      * @return bool
      */
     public function isCheckoutWithPhysicalProduct($order)
@@ -1398,29 +1559,31 @@ class Data extends AbstractHelper
     /**
      * Load the Customer Entity
      *
-     * @param $customerId
-     * @return \Magento\Customer\Model\Customer
+     * @param int $customerId
+     *
+     * @return MagentoCustomer
      */
     public function getCustomerEntity($customerId)
     {
         return $this->_objectManager
-            ->create('Magento\Customer\Model\Customer')
+            ->create(MagentoCustomer::class)
             ->load($customerId);
     }
 
     /**
      * Get All order created from the Customer
      *
-     * @param $customerId
-     * @param array $status
+     * @param int    $customerId
+     * @param array  $status
      * @param string $fromTime
      * @param string $toTime
      * @param string $sort
+     *
      * @return mixed
      */
     public function getCustomerOrders($customerId, $status = [], $fromTime = '', $toTime = '', $sort = 'ASC')
     {
-        $collection = $this->_objectManager->create('Magento\Sales\Model\Order')->getCollection();
+        $collection = $this->_objectManager->create(MagentoOrder::class)->getCollection();
 
         $collection
             ->join(
@@ -1428,7 +1591,7 @@ class Data extends AbstractHelper
                 'main_table.entity_id = payment.parent_id',
                 ['method']
             )
-            ->addFieldToFilter('payment.method', \EMerchantPay\Genesis\Model\Method\Checkout::CODE)
+            ->addFieldToFilter('payment.method', MethodCheckout::CODE)
             ->addFieldToFilter('customer_id', $customerId)
             ->setOrder('main_table.created_at', $sort);
 

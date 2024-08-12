@@ -19,19 +19,31 @@
 
 namespace EMerchantPay\Genesis\Model\Method;
 
+use EMerchantPay\Genesis\Logger\Logger;
 use EMerchantPay\Genesis\Model\Traits\OnlinePaymentMethod;
 use EMerchantPay\Genesis\Model\Traits\PaymentMethodBehaviour;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DataObject;
+use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\AbstractModel;
+use Magento\Framework\Model\Context;
+use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Registry;
+use Magento\Payment\Block\Form;
+use Magento\Payment\Block\Info;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Quote\Api\Data\PaymentInterface;
 use Magento\Quote\Api\Data\PaymentMethodInterface;
+use Magento\Sales\Api\OrderPaymentRepositoryInterface;
+use Magento\Store\Model\ScopeInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class Base
- * @package EMerchantPay\Genesis\Model\Method
  */
 abstract class Base extends AbstractModel implements MethodInterface, PaymentMethodInterface
 {
@@ -44,50 +56,59 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     protected $_code;
 
     /**
-     * @var \Magento\Framework\Event\ManagerInterface
+     * @var ManagerInterface
      */
     protected $_eventManager;
 
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     * @var ScopeConfigInterface
      */
     protected $_scopeConfig;
 
     /**
-     * @var \EMerchantPay\Genesis\Logger\Logger
+     * @var Logger
      */
     protected $_loggerHelper;
 
     /**
+     * @var OrderPaymentRepositoryInterface
+     */
+    protected $_paymentRepository;
+
+    /**
      * Base constructor.
      *
-     * @param \Magento\Framework\Model\Context $context
-     * @param \Magento\Framework\Registry $registry
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \EMerchantPay\Genesis\Logger\Logger $loggerHelper
-     * @param \Magento\Framework\Model\ResourceModel\AbstractResource $resource
-     * @param \Magento\Framework\Data\Collection\AbstractDb $resourceCollection
-     * @param array $data
+     * @param Context                         $context
+     * @param Registry                        $registry
+     * @param ScopeConfigInterface            $scopeConfig
+     * @param Logger                          $loggerHelper
+     * @param OrderPaymentRepositoryInterface $paymentRepository
+     * @param AbstractResource|null           $resource
+     * @param AbstractDb|null                 $resourceCollection
+     * @param array                           $data
      */
     public function __construct(
-        \Magento\Framework\Model\Context $context,
-        \Magento\Framework\Registry $registry,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \EMerchantPay\Genesis\Logger\Logger $loggerHelper,
-        \Magento\Framework\Model\ResourceModel\AbstractResource $resource = null,
-        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
-        array $data = []
+        Context                         $context,
+        Registry                        $registry,
+        ScopeConfigInterface            $scopeConfig,
+        Logger                          $loggerHelper,
+        OrderPaymentRepositoryInterface $paymentRepository,
+        AbstractResource                $resource = null,
+        AbstractDb                      $resourceCollection = null,
+        array                           $data = []
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
 
-        $this->_eventManager = $context->getEventDispatcher();
-        $this->_scopeConfig  = $scopeConfig;
-        $this->_loggerHelper = $loggerHelper;
+        $this->_eventManager      = $context->getEventDispatcher();
+        $this->_scopeConfig       = $scopeConfig;
+        $this->_loggerHelper      = $loggerHelper;
+        $this->_paymentRepository = $paymentRepository;
     }
 
     /**
      * Get custom Logger
-     * @return \Psr\Log\LoggerInterface
+     *
+     * @return LoggerInterface
      */
     protected function getLogger()
     {
@@ -95,13 +116,16 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Get method code
+     *
      * @return string
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
      */
     public function getCode()
     {
         if (empty($this->_code)) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 __('We cannot retrieve the payment method code.')
             );
         }
@@ -110,7 +134,11 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Get method title
+     *
      * @return mixed|string
+     *
+     * @throws LocalizedException
      */
     public function getTitle()
     {
@@ -118,14 +146,18 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Get form class
+     *
      * @return string
      */
     public function getFormBlockType()
     {
-        return \Magento\Payment\Block\Form::class;
+        return Form::class;
     }
 
     /**
+     * Set store id
+     *
      * @param int $storeId
      */
     public function setStore($storeId)
@@ -134,6 +166,8 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Get store id
+     *
      * @return int|mixed
      */
     public function getStore()
@@ -142,22 +176,27 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Get Info class
+     *
      * @return string
      */
     public function getInfoBlockType()
     {
-        return \Magento\Payment\Block\Info::class;
+        return Info::class;
     }
 
     /**
+     * Get Info instance
+     *
      * @return InfoInterface|mixed
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
      */
     public function getInfoInstance()
     {
         $instance = $this->getData('info_instance');
         if (!$instance instanceof InfoInterface) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 __('We cannot retrieve the payment information object instance.')
             );
         }
@@ -165,12 +204,21 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
         return $instance;
     }
 
+    /**
+     * Set Info instance
+     *
+     * @param InfoInterface $info
+     *
+     * @return void
+     */
     public function setInfoInstance(InfoInterface $info)
     {
         $this->setData('info_instance', $info);
     }
 
     /**
+     * Get self instance
+     *
      * @return $this|MethodInterface
      */
     public function validate()
@@ -179,29 +227,35 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Authorize payment for a specified amount
+     *
      * @param InfoInterface $payment
-     * @param float $amount
+     * @param float         $amount
      *
      * @return bool|MethodInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
+     *
      * @SuppressWarnings(PHPMD)
-     * @codingStandardsIgnoreStart
      */
-    public function authorize(\Magento\Payment\Model\InfoInterface $payment, $amount)
+    public function authorize(InfoInterface $payment, $amount)
     {
         if (!$this->canReviewPayment()) {
-            throw new \Magento\Framework\Exception\LocalizedException(__('The authorize action is unavailable.'));
+            throw new LocalizedException(__('The authorize action is unavailable.'));
         }
 
         return false;
-        // @codingStandardsIgnoreEnd
     }
 
     /**
-     * @param string $field
-     * @param null $storeId
+     * Get the configuration data
+     *
+     * @param string   $field
+     * @param int|null $storeId
      *
      * @return mixed
+     *
+     * @throws LocalizedException
      */
     public function getConfigData($field, $storeId = null)
     {
@@ -213,14 +267,17 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
         }
         $path = 'payment/' . $this->getCode() . '/' . $field;
 
-        return $this->_scopeConfig->getValue($path, \Magento\Store\Model\ScopeInterface::SCOPE_STORE, $storeId);
+        return $this->_scopeConfig->getValue($path, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     /**
+     * Assign credit card data
+     *
      * @param DataObject $data
      *
      * @return $this|MethodInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws LocalizedException
      */
     public function assignData(DataObject $data)
     {
@@ -251,9 +308,13 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
+     * Is the payment method available
+     *
      * @param CartInterface|null $quote
      *
      * @return bool|mixed
+     *
+     * @throws LocalizedException
      */
     public function isAvailable(CartInterface $quote = null)
     {
@@ -278,9 +339,13 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
     }
 
     /**
-     * @param null $storeId
+     * Is the payment method active
+     *
+     * @param int|null $storeId
      *
      * @return bool
+     *
+     * @throws LocalizedException
      */
     public function isActive($storeId = null)
     {

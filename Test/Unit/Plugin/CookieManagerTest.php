@@ -24,12 +24,15 @@ use EMerchantPay\Genesis\Plugin\CookieManager;
 use Magento\Framework\Stdlib\Cookie\CookieMetadata;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\Stdlib\Cookie\PhpCookieManager;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
+ * Test Cookie samesite handler
+ *
  * Class CookieManagerTest
  *
- * @covers \EMerchantPay\Genesis\Plugin\CookieManager
+ * @covers CookieManager
  */
 class CookieManagerTest extends TestCase
 {
@@ -39,42 +42,28 @@ class CookieManagerTest extends TestCase
     private $cookieManager;
 
     /**
-     * @var CookieMetadataFactory|\PHPUnit\Framework\MockObject\MockObject
+     * @var CookieMetadataFactory|MockObject
      */
     private $cookieMetadataFactoryMock;
 
     /**
-     * @var PhpCookieManager|\PHPUnit\Framework\MockObject\MockObject
+     * @var PhpCookieManager|MockObject
      */
     private $phpCookieManagerMock;
 
     /**
-     * @var CookieMetadata|\PHPUnit\Framework\MockObject\MockObject
+     * @var CookieMetadata|MockObject
      */
     private $cookieMetadataMock;
 
-    protected function setUp(): void
-    {
-        $this->cookieMetadataFactoryMock = $this->getMockBuilder(CookieMetadataFactory::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->phpCookieManagerMock = $this->getMockBuilder(PhpCookieManager::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->cookieMetadataMock = $this->getMockBuilder(CookieMetadata::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['setSameSite'])
-            ->addMethods(['setSecure'])
-            ->getMock();
-
-        $this->cookieManager = new CookieManager($this->cookieMetadataFactoryMock);
-    }
-
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @return void
+     */
     public function testAroundSetPublicCookieWithNullMetadata()
     {
-        $cookieName = 'test_cookie';
+        $cookieName  = 'test_cookie';
         $cookieValue = 'test_value';
 
         $this->cookieMetadataFactoryMock->expects($this->once())
@@ -106,6 +95,11 @@ class CookieManagerTest extends TestCase
         $this->assertTrue($result);
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @return void
+     */
     public function testAroundSetPublicCookieWithMetadata()
     {
         $cookieName = 'test_cookie';
@@ -134,5 +128,27 @@ class CookieManagerTest extends TestCase
         );
 
         $this->assertTrue($result);
+    }
+
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->cookieMetadataFactoryMock = $this->getMockBuilder(CookieMetadataFactory::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->phpCookieManagerMock = $this->getMockBuilder(PhpCookieManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->cookieMetadataMock = $this->getMockBuilder(CookieMetadata::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['setSameSite'])
+            ->addMethods(['setSecure'])
+            ->getMock();
+
+        $this->cookieManager = new CookieManager($this->cookieMetadataFactoryMock);
     }
 }

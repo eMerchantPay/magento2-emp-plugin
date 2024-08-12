@@ -19,28 +19,45 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Model\Method;
 
+use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Logger\Logger;
+use EMerchantPay\Genesis\Model\Config;
+use EMerchantPay\Genesis\Model\Method\Checkout;
+use EMerchantPay\Genesis\Test\Unit\AbstractTestCase;
+use Faker\Factory;
+use Faker\Generator;
+use Faker\Provider\Internet;
+use Faker\Provider\Payment;
+use Faker\Provider\en_US\Address;
+use Faker\Provider\en_US\Person;
+use Faker\Provider\en_US\PhoneNumber;
+use Magento\Checkout\Model\Session;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Api\OrderPaymentRepositoryInterface;
 use Magento\Sales\Model\Order;
-use EMerchantPay\Genesis\Helper\Data as EMerchantPayDataHelper;
-use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
+use ReflectionClass;
+use ReflectionException;
 
 /**
  * Base Test Method Class for Payment Method Models
  *
  * Class AbstractMethodTest
- * @package EMerchantPay\Genesis\Test\Unit\Model\Method
  */
-abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
+abstract class AbstractMethodTest extends AbstractTestCase
 {
-    const ORDER_AMOUNT = 1.05;
+    public const ORDER_AMOUNT = 1.05;
 
-    const CREDIT_CARD_VISA = '4200000000000000';
+    public const CREDIT_CARD_VISA = '4200000000000000';
 
-    const API_LOGIN    = 'api_login-23e9b38424f6b1688aed91495fa4601a';
-    const API_PASSWORD = 'api_password-0631a4be134a6d344bec9a99ac6954d4';
-    const API_TOKEN    = 'api_token-c7dd1174bab427d2333b66b12a8ed703';
+    public const API_LOGIN    = 'api_login-23e9b38424f6b1688aed91495fa4601a';
+    public const API_PASSWORD = 'api_password-0631a4be134a6d344bec9a99ac6954d4';
+    public const API_TOKEN    = 'api_token-c7dd1174bab427d2333b66b12a8ed703';
 
     /**
-     * @var \EMerchantPay\Genesis\Model\Method\Checkout
+     * @var Checkout
      */
     protected $paymentMethodInstance;
 
@@ -49,47 +66,52 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
      */
     protected $paymentMethodCode = null;
     /**
-     * @var \ReflectionClass
+     * @var ReflectionClass
      */
     protected $paymentMethodReflection;
 
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var ScopeConfigInterface|MockObject
      */
     protected $scopeConfigMock;
 
     /**
-     * @var \Magento\Payment\Model\InfoInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var InfoInterface|MockObject
      */
     protected $paymentMock;
 
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
+     * @var Data|MockObject
      */
     protected $dataHelperMock;
 
     /**
-     * @var \EMerchantPay\Genesis\Model\Config|\PHPUnit_Framework_MockObject_MockObject
+     * @var Config|MockObject
      */
     protected $configHelperMock;
 
     /**
-     * @var \Magento\Checkout\Model\Session|\PHPUnit_Framework_MockObject_MockObject
+     * @var Session|MockObject
      */
     protected $checkoutSessionMock;
 
     /**
-     * @var \EMerchantPay\Genesis\Logger\Logger|\PHPUnit_Framework_MockObject_MockObject
+     * @var Logger|MockObject
      */
     protected $loggerHelperMock;
 
     /**
-     * @var \Psr\Log\LoggerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var LoggerInterface|MockObject
      */
     protected $psrLoggerMock;
 
     /**
-     * @return \EMerchantPay\Genesis\Model\Method\Checkout
+     * @var (OrderPaymentRepositoryInterface&MockObject)|MockObject
+     */
+    protected $paymentRepositoryMock;
+
+    /**
+     * @return Checkout
      */
     protected function getPaymentMethodInstance()
     {
@@ -97,7 +119,7 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
     }
 
     /**
-     * @return \ReflectionClass
+     * @return ReflectionClass
      */
     protected function getPaymentMethodReflection()
     {
@@ -116,17 +138,28 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
         return $this->paymentMethodCode;
     }
 
+    /**
+     * @return mixed
+     */
     abstract protected function getPaymentMethodClassName();
 
+    /**
+     * @return void
+     *
+     * @throws ReflectionException
+     */
     protected function init()
     {
         parent::init();
 
-        $this->paymentMethodReflection = new \ReflectionClass(
+        $this->paymentMethodReflection = new ReflectionClass(
             $this->getPaymentMethodClassName()
         );
     }
 
+    /**
+     * @return int
+     */
     protected function getGeneratedOrderId()
     {
         return $this->getFakerObject()->randomNumber(8);
@@ -139,55 +172,45 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
     {
         parent::setUp();
 
-        $this->scopeConfigMock = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
+        $this->scopeConfigMock = $this->getMockBuilder(ScopeConfigInterface::class)
             ->getMock();
 
-        $this->paymentMock = $this->getMockBuilder(\Magento\Sales\Model\Order\Payment::class)
+        $this->paymentMock = $this->getMockBuilder(Order\Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods([
-                'getOrder', 'getId', 'setAdditionalInformation', 'getAdditionalInformation',
-                'setIsTransactionDenied', 'setIsTransactionClosed', 'decrypt', 'getCcLast4',
-                'getParentTransactionId', 'getPoNumber', 'setIsTransactionPending', 'setTransactionAdditionalInfo',
-                'getCcNumber', 'getCcExpYear', 'getCcExpMonth', 'getCcCid', 'getCcOwner',
-                'setTransactionId', 'addData'
+            ->onlyMethods([
+                'addData', 'decrypt', 'getAdditionalInformation', 'getCcExpMonth', 'getCcExpYear', 'getCcLast4',
+                'getCcOwner', 'getId', 'getOrder', 'getParentTransactionId', 'getPoNumber', 'setAdditionalInformation',
+                'setIsTransactionClosed', 'setIsTransactionPending', 'setTransactionAdditionalInfo', 'setTransactionId',
             ])
+            ->addMethods(['setIsTransactionDenied', 'getCcNumber', 'getCcCid'])
             ->getMock();
 
-        $this->dataHelperMock = $this->getMockBuilder(\EMerchantPay\Genesis\Helper\Data::class)
+        $this->dataHelperMock = $this->getMockBuilder(Data::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
-                    'getMethodConfig',
-                    'getNotificationUrl',
-                    'getReturnUrl',
-                    'genTransactionId',
-                    'buildOrderUsage',
-                    'buildOrderDescriptionText',
-                    'getLocale',
-                    'executeGatewayRequest',
-                    'getGatewayResponseObject',
+                    'buildOrderDescriptionText', 'buildOrderUsage', 'executeGatewayRequest', 'genTransactionId',
+                    'getGatewayResponseObject', 'getLocale', 'getMethodConfig', 'getNotificationUrl', 'getReturnUrl',
+                    'lookUpAuthorizationTransaction', 'lookUpCaptureTransaction',  'lookUpVoidReferenceTransaction',
                     'maskException',
-                    'lookUpAuthorizationTransaction',
-                    'lookUpCaptureTransaction',
-                    'lookUpVoidReferenceTransaction'
                 ]
             )
             ->getMock();
 
         $this->configHelperMock = $this->getMockBuilder('EMerchantPay\Genesis\Model\Config')
             ->disableOriginalConstructor()
-            ->setMethods(['getMethodCode', 'initGatewayClient', 'getScopeConfig'])
+            ->onlyMethods(['getMethodCode', 'initGatewayClient', 'getScopeConfig'])
             ->getMock();
 
         $this->configHelperMock->expects(self::any())
             ->method('initGatewayClient')
             ->willReturn(null);
 
-        $this->checkoutSessionMock = $this->getMockBuilder(\Magento\Checkout\Model\Session::class)
+        $this->checkoutSessionMock = $this->getMockBuilder(Session::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(['getQuote'])
+            ->addMethods(
                 [
-                    'getQuote',
                     'setEmerchantPayLastCheckoutError',
                     'setEmerchantPayCheckoutRedirectUrl',
                     'getEmerchantPayLastCheckoutError',
@@ -210,13 +233,17 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
 
         $this->setupLoggerMocks();
 
+        $this->paymentRepositoryMock = $this->getMockBuilder(OrderPaymentRepositoryInterface::class)
+            ->getMock();
+
         $this->paymentMethodInstance = $this->getObjectManagerHelper()->getObject(
             $this->getPaymentMethodClassName(),
             [
-                'scopeConfig'     => $this->scopeConfigMock,
-                'moduleHelper'    => $this->dataHelperMock,
-                'checkoutSession' => $this->checkoutSessionMock,
-                'loggerHelper'    => $this->loggerHelperMock
+                'scopeConfig'       => $this->scopeConfigMock,
+                'moduleHelper'      => $this->dataHelperMock,
+                'checkoutSession'   => $this->checkoutSessionMock,
+                'loggerHelper'      => $this->loggerHelperMock,
+                'paymentRepository' => $this->paymentRepositoryMock
             ]
         );
 
@@ -255,14 +282,17 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
         );
     }
 
+    /**
+     * @return void
+     */
     protected function setupLoggerMocks()
     {
         $this->loggerHelperMock = $this->getMockBuilder(
-            \EMerchantPay\Genesis\Logger\Logger::class
+            Logger::class
         )->getMock();
 
         $this->psrLoggerMock = $this->getMockBuilder(
-            \Psr\Log\LoggerInterface::class
+            LoggerInterface::class
         )->getMock();
 
         $this->loggerHelperMock
@@ -274,13 +304,14 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
 
     /**
      * Get mock for order
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     *
+     * @return MockObject
      */
     protected function getOrderMock()
     {
         $orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'getId',
                     'getIncrementId',
@@ -301,7 +332,7 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
     /**
      * Get Mock for Order Address
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
     protected function getOrderAddressMock()
     {
@@ -346,16 +377,16 @@ abstract class AbstractMethodTest extends \EMerchantPay\Genesis\Test\Unit\Abstra
     /**
      * Builds a Faker Object
      *
-     * @return \Faker\Generator
+     * @return Generator
      */
     protected function getFakerObject()
     {
-        $faker = \Faker\Factory::create();
-        $faker->addProvider(new \Faker\Provider\en_US\Person($faker));
-        $faker->addProvider(new \Faker\Provider\Payment($faker));
-        $faker->addProvider(new \Faker\Provider\en_US\Address($faker));
-        $faker->addProvider(new \Faker\Provider\en_US\PhoneNumber($faker));
-        $faker->addProvider(new \Faker\Provider\Internet($faker));
+        $faker = Factory::create();
+        $faker->addProvider(new Person($faker));
+        $faker->addProvider(new Payment($faker));
+        $faker->addProvider(new Address($faker));
+        $faker->addProvider(new PhoneNumber($faker));
+        $faker->addProvider(new Internet($faker));
 
         return $faker;
     }

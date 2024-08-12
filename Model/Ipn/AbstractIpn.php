@@ -20,36 +20,50 @@
 namespace EMerchantPay\Genesis\Model\Ipn;
 
 use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Model\Config;
+use Exception;
 use Genesis\Api\Constants\Transaction\States;
 use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Exceptions\InvalidArgument;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order\Status\History;
+use Psr\Log\LoggerInterface;
+use stdClass;
 
 /**
  * Base IPN Handler Class
  *
  * Class AbstractIpn
- * @package EMerchantPay\Genesis\Model\Ipn
  */
 abstract class AbstractIpn
 {
 
     /**
-     * @var \Magento\Framework\App\Action\Context
+     * @var Context
      */
     protected $_context;
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     protected $_logger;
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data
+     * @var Data
      */
     protected $_moduleHelper;
     /**
-     * @var \EMerchantPay\Genesis\Model\Config
+     * @var Config
      */
     protected $_configHelper;
     /**
-     * @var \Magento\Sales\Model\OrderFactory
+     * @var OrderFactory
      */
     protected $_orderFactory;
     /**
@@ -57,65 +71,79 @@ abstract class AbstractIpn
      */
     protected $_ipnRequest;
     /**
-     * @var \Magento\Sales\Model\Order
+     * @var Order
      */
     protected $_order;
     /**
-     * @var \Magento\Sales\Model\Order\Email\Sender\OrderSender
+     * @var OrderSender
      */
     protected $_orderSender;
     /**
-     * @var \Magento\Sales\Model\Order\Email\Sender\CreditmemoSender
+     * @var CreditmemoSender
      */
     protected $_creditMemoSender;
+    /**
+     * @var OrderStatusHistoryRepositoryInterface
+     */
+    private $_orderStatusHistoryRepository;
 
     /**
      * Get Payment Solution Code (used to create an instance of the Config Object)
+     *
      * @return string
      */
     abstract protected function getPaymentMethodCode();
 
     /**
      * Update / Create Transactions; Updates Order Status
-     * @param \stdClass $responseObject
+     *
+     * @param stdClass $responseObject
+     *
      * @return void
      */
     abstract protected function processNotification($responseObject);
 
     /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Magento\Sales\Model\OrderFactory $orderFactory
-     * @param \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
-     * @param \Magento\Sales\Model\Order\Email\Sender\CreditmemoSender $creditMemoSender
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \EMerchantPay\Genesis\Helper\Data $moduleHelper
-     * @param array $data
+     * @param Context                               $context
+     * @param OrderFactory                          $orderFactory
+     * @param OrderSender                           $orderSender
+     * @param CreditmemoSender                      $creditMemoSender
+     * @param LoggerInterface                       $logger
+     * @param Data                                  $moduleHelper
+     * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
+     * @param array                                 $data
+     *
+     * @throws NoSuchEntityException
      */
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Magento\Sales\Model\OrderFactory $orderFactory,
-        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
-        \Magento\Sales\Model\Order\Email\Sender\CreditmemoSender $creditMemoSender,
-        \Psr\Log\LoggerInterface $logger,
-        \EMerchantPay\Genesis\Helper\Data $moduleHelper,
-        array $data = []
+        Context                               $context,
+        OrderFactory                          $orderFactory,
+        OrderSender                           $orderSender,
+        CreditmemoSender                      $creditMemoSender,
+        LoggerInterface                       $logger,
+        Data                                  $moduleHelper,
+        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
+        array                                 $data = [],
     ) {
-        $this->_context = $context;
-        $this->_orderFactory = $orderFactory;
-        $this->_orderSender = $orderSender;
-        $this->_creditMemoSender = $creditMemoSender;
-        $this->_logger = $logger;
-        $this->_moduleHelper = $moduleHelper;
-        $this->_configHelper =
+        $this->_context                      = $context;
+        $this->_orderFactory                 = $orderFactory;
+        $this->_orderSender                  = $orderSender;
+        $this->_creditMemoSender             = $creditMemoSender;
+        $this->_logger                       = $logger;
+        $this->_moduleHelper                 = $moduleHelper;
+        $this->_configHelper                 =
             $this->_moduleHelper->getMethodConfig(
                 $this->getPaymentMethodCode()
             );
-        $this->_ipnRequest = $data;
+        $this->_orderStatusHistoryRepository = $orderStatusHistoryRepository;
+        $this->_ipnRequest                   = $data;
     }
 
     /**
      * Get IPN Post Request Params or Param Value
+     *
      * @param string|null $key
+     *
      * @return array|string|null
      */
     protected function getIpnRequestData($key = null)
@@ -128,11 +156,13 @@ abstract class AbstractIpn
     }
 
     /**
+     * Genesis notification handler
      *
      * @return null|string (null => failed; responseText => success)
-     * @throws \Exception
-     * @throws \Genesis\Exceptions\InvalidArgument
-     * @throws \Magento\Framework\Exception\LocalizedException
+     *
+     * @throws Exception
+     * @throws InvalidArgument
+     * @throws LocalizedException
      */
     public function handleGenesisNotification()
     {
@@ -156,12 +186,13 @@ abstract class AbstractIpn
 
         try {
             $this->processNotification($responseObject);
-        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+        } catch (LocalizedException $e) {
             $comment = $this->createIpnComment(
                 __('Note: %1', $e->getMessage()),
                 true
             );
-            $comment->save();
+            $this->_orderStatusHistoryRepository->save($comment);
+
             throw $e;
         }
 
@@ -171,13 +202,14 @@ abstract class AbstractIpn
     /**
      * Load order
      *
-     * @return \Magento\Sales\Model\Order
-     * @throws \Exception
+     * @return Order
+     *
+     * @throws Exception
      */
     protected function getOrder()
     {
         if (!isset($this->_order) || empty($this->_order->getId())) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 __('IPN-Order is not set to an instance of an object')
             );
         }
@@ -187,8 +219,10 @@ abstract class AbstractIpn
 
     /**
      * Get an Instance of the Magento Payment Object
-     * @return \Magento\Sales\Api\Data\OrderPaymentInterface|mixed|null
-     * @throws \Exception
+     *
+     * @return OrderPaymentInterface|mixed|null
+     *
+     * @throws Exception
      */
     protected function getPayment()
     {
@@ -197,8 +231,10 @@ abstract class AbstractIpn
 
     /**
      * Initializes the Order Object from the transaction in the Reconcile response object
-     * @param $responseObject
-     * @throws \Exception
+     *
+     * @param stdClass $responseObject
+     *
+     * @throws Exception
      *
      * @SuppressWarnings(PHPMD.UnusedLocalVariable)
      */
@@ -212,7 +248,7 @@ abstract class AbstractIpn
         );
 
         if (!$this->_order->getId()) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 sprintf('Wrong order ID: "%s".', $incrementId)
             );
         }
@@ -220,24 +256,30 @@ abstract class AbstractIpn
 
     /**
      * Generate an "IPN" comment with additional explanation.
+     *
      * Returns the generated comment or order status history object
      *
      * @param string|null $message
-     * @param bool $addToHistory
-     * @return string|\Magento\Sales\Model\Order\Status\History
+     * @param bool        $addToHistory
+     *
+     * @return string|History
+     *
+     * @throws Exception
      */
     protected function createIpnComment($message = null, $addToHistory = false)
     {
         if ($addToHistory && !empty($message)) {
-            $message = $this->getOrder()->addStatusHistoryComment($message);
+            $message = $this->getOrder()->addCommentToStatusHistory($message);
             $message->setIsCustomerNotified(null);
         }
+
         return $message;
     }
 
     /**
      * Get an instance of the Module Config Helper Object
-     * @return \EMerchantPay\Genesis\Model\Config
+     *
+     * @return Config
      */
     protected function getConfigHelper()
     {
@@ -246,7 +288,8 @@ abstract class AbstractIpn
 
     /**
      * Get an instance of the Magento Action Context Object
-     * @return \Magento\Framework\App\Action\Context
+     *
+     * @return Context
      */
     protected function getContext()
     {
@@ -255,7 +298,8 @@ abstract class AbstractIpn
 
     /**
      * Get an instance of the Magento Logger Interface
-     * @return \Psr\Log\LoggerInterface
+     *
+     * @return LoggerInterface
      */
     protected function getLogger()
     {
@@ -264,7 +308,8 @@ abstract class AbstractIpn
 
     /**
      * Get an Instance of the Module Helper Object
-     * @return \EMerchantPay\Genesis\Helper\Data
+     *
+     * @return Data
      */
     protected function getModuleHelper()
     {
@@ -273,7 +318,8 @@ abstract class AbstractIpn
 
     /**
      * Get an Instance of the magento Order Factory Object
-     * @return \Magento\Sales\Model\OrderFactory
+     *
+     * @return OrderFactory
      */
     protected function getOrderFactory()
     {
@@ -281,7 +327,10 @@ abstract class AbstractIpn
     }
 
     /**
-     * @param \stdClass $responseObject
+     * Return if we should set the current transaction as pending
+     *
+     * @param stdClass $responseObject
+     *
      * @return bool
      */
     protected function getShouldSetCurrentTranPending($responseObject)
@@ -290,8 +339,13 @@ abstract class AbstractIpn
     }
 
     /**
-     * @param \stdClass $responseObject
+     * Return if we should close the current transaction
+     *
+     * @param stdClass $responseObject
+     *
      * @return bool
+     *
+     * @throws NoSuchEntityException
      */
     protected function getShouldCloseCurrentTransaction($responseObject)
     {
@@ -313,7 +367,7 @@ abstract class AbstractIpn
     /**
      * Extract the Message from Genesis response
      *
-     * @param \stdClass $transactionResponse
+     * @param stdClass $transactionResponse
      *
      * @return string
      */
@@ -322,8 +376,7 @@ abstract class AbstractIpn
         $uniqueId          = $transactionResponse->unique_id;
         $transactionStatus = $transactionResponse->status;
         $additionalNotes   = isset($transactionResponse->message) ? "({$transactionResponse->message})" : '';
-        $transactionType   = isset($transactionResponse->transaction_type) ?
-            $transactionResponse->transaction_type : __('unknown');
+        $transactionType   = $transactionResponse->transaction_type ?? __('unknown');
 
         $messageArray = [
             __('Module'),
@@ -338,7 +391,7 @@ abstract class AbstractIpn
         ];
 
         if (!empty($additionalNotes)) {
-            array_push($messageArray, $additionalNotes);
+            $messageArray[] = $additionalNotes;
         }
 
         return implode(' ', $messageArray);

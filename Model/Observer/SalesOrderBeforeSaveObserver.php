@@ -19,34 +19,44 @@
 
 namespace EMerchantPay\Genesis\Model\Observer;
 
-use Magento\Framework\Event\ObserverInterface;
+use EMerchantPay\Genesis\Model\Config;
 use EMerchantPay\Genesis\Model\Method\Checkout as GenesisCheckoutPaymentMethod;
+use Magento\Framework\Event\Observer;
+use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Sales\Model\Order;
 
 class SalesOrderBeforeSaveObserver implements ObserverInterface
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Config
+     * @var Config
      */
     protected $_configHelper;
 
     /**
-     * @param \EMerchantPay\Genesis\Model\Config $configHelper
+     * @param Config $configHelper
+     *
      * @codeCoverageIgnore
      */
     public function __construct(
-        \EMerchantPay\Genesis\Model\Config $configHelper
+        Config $configHelper
     ) {
         $this->_configHelper = $configHelper;
     }
 
     /**
-     * @param \Magento\Framework\Event\Observer $observer
+     * Execute method
+     *
+     * @param Observer $observer
+     *
      * @return $this
+     *
+     * @throws LocalizedException
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $observer->getEvent()->getOrder();
+        /** @var Order $order */
+        $order      = $observer->getEvent()->getOrder();
         $methodCode = $order->getPayment()->getMethodInstance()->getCode();
 
         if (!$this->_configHelper->getPaymentConfirmationEmailEnabled($methodCode)) {

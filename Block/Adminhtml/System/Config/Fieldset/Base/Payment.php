@@ -19,32 +19,38 @@
 
 namespace EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\Base;
 
+use Magento\Backend\Block\Context;
+use Magento\Backend\Model\Auth\Session;
+use Magento\Config\Block\System\Config\Form\Fieldset;
+use Magento\Config\Model\Config;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Magento\Framework\View\Helper\Js;
+
 /**
  * Base Renderer for EMerchantPay Checkout & Direct Panel in System Configuration
  *
  * Class Payment
- * @package EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\Base
  */
-abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
+abstract class Payment extends Fieldset
 {
     /**
-     * @var \Magento\Config\Model\Config
+     * @var Config
      */
     protected $_backendConfig;
 
     /**
-     * @param \Magento\Backend\Block\Context $context
-     * @param \Magento\Backend\Model\Auth\Session $authSession
-     * @param \Magento\Framework\View\Helper\Js $jsHelper
-     * @param \Magento\Config\Model\Config $backendConfig
-     * @param array $data
+     * @param Context $context
+     * @param Session $authSession
+     * @param Js      $jsHelper
+     * @param Config  $backendConfig
+     * @param array   $data
      */
     public function __construct(
-        \Magento\Backend\Block\Context $context,
-        \Magento\Backend\Model\Auth\Session $authSession,
-        \Magento\Framework\View\Helper\Js $jsHelper,
-        \Magento\Config\Model\Config $backendConfig,
-        array $data = []
+        Context $context,
+        Session $authSession,
+        Js      $jsHelper,
+        Config  $backendConfig,
+        array   $data = []
     ) {
         $this->_backendConfig = $backendConfig;
         parent::__construct($context, $authSession, $jsHelper, $data);
@@ -52,6 +58,7 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
 
     /**
      * Retrieves the Module Panel Css Class
+     *
      * @return string
      */
     abstract protected function getBlockHeadCssClass();
@@ -59,7 +66,8 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     /**
      * Add custom css class
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
+     *
      * @return string
      */
     protected function _getFrontendClass($element)
@@ -70,8 +78,10 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     /**
      * Return header title part of html for payment solution
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
+     *
      * @return string
+     *
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     protected function _getHeaderTitleHtml($element)
@@ -106,8 +116,10 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     /**
      * Return header comment part of html for payment solution
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
+     *
      * @return string
+     *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function _getHeaderCommentHtml($element)
@@ -118,8 +130,10 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     /**
      * Get collapsed state on-load
      *
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * @param AbstractElement $element
+     *
      * @return bool
+     *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function _isCollapseState($element)
@@ -128,7 +142,10 @@ abstract class Payment extends \Magento\Config\Block\System\Config\Form\Fieldset
     }
 
     /**
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * Add jQuery to the payment page
+     *
+     * @param AbstractElement $element
+     *
      * @return string
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)

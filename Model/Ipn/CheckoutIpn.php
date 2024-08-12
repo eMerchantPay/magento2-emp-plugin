@@ -19,27 +19,89 @@
 
 namespace EMerchantPay\Genesis\Model\Ipn;
 
+use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Model\Method\Checkout;
+use Exception;
+use Genesis\Api\Constants\Transaction\States;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\OrderFactory;
+use Psr\Log\LoggerInterface;
+use stdClass;
+
 /**
  * Checkout Method IPN Handler Class
+ *
  * Class CheckoutIpn
- * @package EMerchantPay\Genesis\Model\Ipn
  */
-class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
+class CheckoutIpn extends AbstractIpn
 {
     /**
+     * @var OrderRepositoryInterface
+     */
+    protected $orderRepository;
+
+    /**
+     * @param Context                               $context
+     * @param OrderFactory                          $orderFactory
+     * @param OrderSender                           $orderSender
+     * @param CreditmemoSender                      $creditMemoSender
+     * @param LoggerInterface                       $logger
+     * @param Data                                  $moduleHelper
+     * @param OrderRepositoryInterface              $orderRepository
+     * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
+     * @param array                                 $data
+     *
+     * @throws NoSuchEntityException
+     */
+    public function __construct(
+        Context                               $context,
+        OrderFactory                          $orderFactory,
+        OrderSender                           $orderSender,
+        CreditmemoSender                      $creditMemoSender,
+        LoggerInterface                       $logger,
+        Data                                  $moduleHelper,
+        OrderRepositoryInterface              $orderRepository,
+        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
+        array                                 $data = []
+    ) {
+        parent::__construct(
+            $context,
+            $orderFactory,
+            $orderSender,
+            $creditMemoSender,
+            $logger,
+            $moduleHelper,
+            $orderStatusHistoryRepository,
+            $data
+        );
+
+        $this->orderRepository = $orderRepository;
+    }
+
+    /**
+     * Return the code of the payment method
+     *
      * @return string
      */
     protected function getPaymentMethodCode()
     {
-        return \EMerchantPay\Genesis\Model\Method\Checkout::CODE;
+        return Checkout::CODE;
     }
 
     /**
      * Update Pending Transactions and Order Status
-     * @param \stdClass $responseObject
-     * @throws \Exception
+     *
+     * @param stdClass $responseObject
+     *
+     * @throws Exception
      */
-    protected function processNotification($responseObject)
+    public function processNotification($responseObject)
     {
         $recordedToCommentHistory = false;
         $payment                  = $this->getPayment();
@@ -88,23 +150,21 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
                 ->setPreparedMessage(
                     __('Module') . ' ' . $this->getConfigHelper()->getCheckoutTitle()
                 )
-                ->resetTransactionAdditionalInfo(
-
-                );
+                ->resetTransactionAdditionalInfo();
 
             $this->getModuleHelper()->setPaymentTransactionAdditionalInfo(
                 $payment,
                 $payment_transaction
             );
 
-            if (\Genesis\Api\Constants\Transaction\States::APPROVED == $payment_transaction->status) {
+            if (States::APPROVED == $payment_transaction->status) {
                 $this->registerPaymentNotification(
                     $payment,
                     $payment_transaction
                 );
             }
 
-            $payment->save();
+            $this->orderRepository->save($payment->getOrder());
         }
 
         if (!$recordedToCommentHistory) {
@@ -123,12 +183,16 @@ class CheckoutIpn extends \EMerchantPay\Genesis\Model\Ipn\AbstractIpn
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $payment
-     * @param \stdClass $payment_transaction
+     * Register the payment notification
+     *
+     * @param OrderPaymentInterface $payment
+     * @param stdClass              $payment_transaction
+     *
+     * @throws NoSuchEntityException
      */
     protected function registerPaymentNotification(
-        \Magento\Sales\Api\Data\OrderPaymentInterface $payment,
-        \stdClass $payment_transaction
+        OrderPaymentInterface $payment,
+        stdClass              $payment_transaction
     ) {
         $transactionType = $payment_transaction->transaction_type;
 

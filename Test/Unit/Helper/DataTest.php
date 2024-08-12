@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2018-2024 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,23 +13,52 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2018-2024 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
 namespace EMerchantPay\Genesis\Test\Unit\Helper;
 
+use EMerchantPay\Genesis\Block\Frontend\Config as FrontendConfig;
 use EMerchantPay\Genesis\Helper\Data as EMerchantPayDataHelper;
+use EMerchantPay\Genesis\Model\ConfigFactory;
+use EMerchantPay\Genesis\Test\Unit\AbstractTestCase;
+use Exception;
 use Genesis\Api\Constants\Transaction\States as GenesisTransactionStates;
 use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
+use Genesis\Api\Constants\i18n;
+use Genesis\Config as GenesisConfig;
+use Magento\Customer\Model\Session;
+use Magento\Directory\Model\Currency;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\Locale\Resolver;
+use Magento\Framework\ObjectManagerInterface;
+use Magento\Framework\UrlInterface;
+use Magento\Framework\Webapi\Exception as WebApiException;
+use Magento\Payment\Helper\Data as PaymentData;
+use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\Order\Config as OrderConfig;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
+use ReflectionClass;
+use stdClass;
 
 /**
+ * Test Data class
+ *
  * Class DataTest
- * @package EMerchantPay\Genesis\Test\Unit\Helper
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  */
-class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
+class DataTest extends AbstractTestCase
 {
     /**
      * @var EMerchantPayDataHelper
@@ -37,67 +66,156 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     protected $moduleHelper;
 
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var ScopeConfigInterface|MockObject
      */
     protected $scopeConfigMock;
 
     /**
-     * @var \Magento\Framework\App\Helper\Context|\PHPUnit_Framework_MockObject_MockObject
+     * @var Context|MockObject
      */
     protected $contextMock;
 
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var StoreManagerInterface|MockObject
      */
     protected $storeManagerMock;
 
     /**
-     * @var \Magento\Store\Model\Store|\PHPUnit_Framework_MockObject_MockObject
+     * @var Store|MockObject
      */
     protected $storeMock;
 
     /**
-     * @var \Magento\Framework\UrlInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var UrlInterface|MockObject
      */
     protected $urlBuilderMock;
 
     /**
-     * @var \Magento\Framework\Locale\Resolver|\PHPUnit_Framework_MockObject_MockObject
+     * @var Resolver|MockObject
      */
     protected $localeResolverMock;
 
     /**
-     * @return \Magento\Sales\Model\Order\Payment\Transaction|\PHPUnit_Framework_MockObject_MockObject
+     * @var Transaction
+     */
+    protected $transactionMock;
+
+    /**
+     * @var TransactionRepositoryInterface
+     */
+    protected $transactionRepositoryMock;
+
+    /**
+     * @var EMerchantPayDataHelper
+     */
+    protected $dataInstance;
+
+    /**
+     * @var (PaymentData&MockObject)|MockObject
+     */
+    protected $paymentDataMock;
+
+    /**
+     * @var (ConfigFactory&MockObject)|MockObject
+     */
+    protected $configFactoryMock;
+
+    /**
+     * @var (Session&MockObject)|MockObject
+     */
+    protected $customerSessionMock;
+
+    /**
+     * @var (FrontendConfig&MockObject)|MockObject
+     */
+    protected $configMock;
+
+    /**
+     * @return Transaction|MockObject
      */
     protected function getPaymentTransactionMock()
     {
-        return $this->getMockBuilder('\Magento\Sales\Model\Order\Payment\Transaction')
+        return $this->getMockBuilder(Transaction::class)
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'getAdditionalInformation'
-                ]
-            )
+            ->onlyMethods(['getAdditionalInformation', 'save', 'setIsClosed', 'load', 'getId'])
             ->getMock();
     }
 
     /**
-     * @return \Magento\Sales\Model\Order|\PHPUnit_Framework_MockObject_MockObject
+     * @return (PaymentData&MockObject)|MockObject
+     */
+    protected function getPaymentDataMock()
+    {
+        return $this->getMockBuilder(PaymentData::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    /**
+     * @return (ConfigFactory&MockObject)|MockObject
+     */
+    protected function getConfigFactoryMock()
+    {
+        return $this->getMockBuilder(ConfigFactory::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    /**
+     * @return (Session&MockObject)|MockObject
+     */
+    protected function getCustomerSessionMock()
+    {
+        return $this->getMockBuilder(Session::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    /**
+     * @return (FrontendConfig&MockObject)|MockObject
+     */
+    protected function getConfigMock()
+    {
+        return $this->getMockBuilder(FrontendConfig::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
+
+    /**
+     * @return (TransactionRepositoryInterface&MockObject)|MockObject
+     */
+    protected function getPaymentTransactionRepositoryMock()
+    {
+        return $this->getMockBuilder(TransactionRepositoryInterface::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['save', 'getList', 'get', 'delete', 'create'])
+            ->getMock();
+    }
+
+    /**
+     * @return (OrderRepositoryInterface&MockObject)|MockObject
+     */
+    protected function getOrderRepositoryMock()
+    {
+        return $this->getMockBuilder(OrderRepositoryInterface::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['save', 'get', 'getList', 'delete'])
+            ->getMock();
+    }
+
+    /**
+     * @return Order|MockObject
      */
     protected function getOrderMock()
     {
-        $orderConfigMock = $this->getMockBuilder(\Magento\Sales\Model\Order\Config::class)
+        $orderConfigMock = $this->getMockBuilder(OrderConfig::class)
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'getStateDefaultStatus'
-                ]
-            )
+            ->onlyMethods(['getStateDefaultStatus'])
             ->getMock();
 
-        $orderMock = $this->getMockBuilder(\Magento\Sales\Model\Order::class)
+        $orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'getConfig',
                     'setState',
@@ -105,7 +223,6 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
                     'getInvoiceCollection',
                     'registerCancellation',
                     'setCustomerNoteNotify',
-                    'save'
                 ]
             )
             ->getMock();
@@ -135,15 +252,37 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $this->setUpBasicMocks();
         $this->setUpContextMock();
         $this->setUpStoreManagerMock();
+        $this->orderRepositoryMock       = $this->getOrderRepositoryMock();
+        $this->transactionMock           = $this->getPaymentTransactionMock();
+        $this->transactionRepositoryMock = $this->getPaymentTransactionRepositoryMock();
+        $this->paymentDataMock           = $this->getPaymentDataMock();
+        $this->configFactoryMock         = $this->getConfigFactoryMock();
+        $this->customerSessionMock       = $this->getCustomerSessionMock();
+        $this->configMock                = $this->getConfigMock();
 
-        $this->moduleHelper = $this->getObjectManagerHelper()->getObject(
-            EMerchantPayDataHelper::class,
-            [
-                'context'        => $this->contextMock,
-                'storeManager'   => $this->storeManagerMock,
-                'localeResolver' => $this->localeResolverMock
-            ]
-        );
+        $this->objectManagerMock = $this->getMockBuilder(ObjectManagerInterface::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->objectManagerMock->method('create')
+            ->with(Transaction::class)
+            ->willReturn($this->transactionMock);
+
+        $this->moduleHelper = $this->getMockBuilder(EMerchantPayDataHelper::class)
+            ->setConstructorArgs([
+                'transactionRepository'     => $this->transactionRepositoryMock,
+                'objectManager'             => $this->objectManagerMock,
+                'context'                   => $this->contextMock,
+                'storeManager'              => $this->storeManagerMock,
+                'localeResolver'            => $this->localeResolverMock,
+                'orderRepository'           => $this->orderRepositoryMock,
+                'paymentData'               => $this->paymentDataMock,
+                'configFactory'             => $this->configFactoryMock,
+                'customerSession'           => $this->customerSessionMock,
+                'config'                    => $this->configMock,
+            ])
+            ->onlyMethods(['getPaymentTransaction', 'setTransactionAdditionalInfo'])
+            ->getMock();
     }
 
     /**
@@ -151,21 +290,21 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function setUpBasicMocks()
     {
-        $this->scopeConfigMock = $this->getMockBuilder(\Magento\Framework\App\Config\ScopeConfigInterface::class)
+        $this->scopeConfigMock = $this->getMockBuilder(ScopeConfigInterface::class)
             ->getMock();
 
-        $this->storeMock = $this->getMockBuilder(\Magento\Store\Model\Store::class)
+        $this->storeMock = $this->getMockBuilder(Store::class)
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->urlBuilderMock = $this->getMockBuilder(\Magento\Framework\Url::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getUrl'])
+            ->onlyMethods(['getUrl'])
             ->getMock();
 
-        $this->localeResolverMock = $this->getMockBuilder(\Magento\Framework\Locale\Resolver::class)
+        $this->localeResolverMock = $this->getMockBuilder(Resolver::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getLocale'])
+            ->onlyMethods(['getLocale'])
             ->getMock();
     }
 
@@ -174,22 +313,23 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function setUpContextMock()
     {
-        $this->contextMock = $this->getMockBuilder(\Magento\Framework\App\Helper\Context::class)
+        $this->contextMock = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getScopeConfig', 'getUrlBuilder'])
+            ->onlyMethods(
+                [
+                    'getScopeConfig',
+                    'getUrlBuilder'
+                ]
+            )
             ->getMock();
 
         $this->contextMock->expects(static::any())
             ->method('getScopeConfig')
-            ->willReturn(
-                $this->scopeConfigMock
-            );
+            ->willReturn($this->scopeConfigMock);
 
         $this->contextMock->expects(static::any())
             ->method('getUrlBuilder')
-            ->willReturn(
-                $this->urlBuilderMock
-            );
+            ->willReturn($this->urlBuilderMock);
     }
 
     /**
@@ -199,20 +339,17 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $this->storeManagerMock = $this->getMockBuilder(\Magento\Store\Model\StoreManager::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getStore', 'getUrlBuilder'])
+            ->addMethods(['getUrlBuilder'])
+            ->onlyMethods(['getStore'])
             ->getMock();
 
         $this->storeManagerMock->expects(static::any())
             ->method('getStore')
-            ->willReturn(
-                $this->storeMock
-            );
+            ->willReturn($this->storeMock);
 
         $this->storeManagerMock->expects(static::any())
             ->method('getUrlBuilder')
-            ->willReturn(
-                $this->urlBuilderMock
-            );
+            ->willReturn($this->urlBuilderMock);
     }
 
     /**
@@ -299,9 +436,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $transactionMock->expects(static::exactly(3))
             ->method('getAdditionalInformation')
-            ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
-            )
+            ->with(Transaction::RAW_DETAILS)
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_REDIRECT_URL     =>
@@ -335,27 +470,23 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     }
 
     /**
-     * @covers EMer
+     * @covers EMerchantPayDataHelper::getTransactionAdditionalInfoValue()
      */
     public function testGetPaymentAdditionalInfoValue()
     {
         /**
-         * @var $paymentMock \Magento\Payment\Model\InfoInterface|\PHPUnit_Framework_MockObject_MockObject
+         * @var $paymentMock InfoInterface|MockObject
          */
-        $paymentMock = $this->getMockBuilder(\Magento\Sales\Model\Order\Payment::class)
+        $paymentMock = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'getTransactionAdditionalInfo'
-                ]
-            )
+            ->onlyMethods(['getTransactionAdditionalInfo'])
             ->getMock();
 
         $paymentMock->expects(static::exactly(2))
             ->method('getTransactionAdditionalInfo')
             ->willReturn(
                 [
-                    \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => [
+                    Transaction::RAW_DETAILS => [
                         EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_STATUS           =>
                             GenesisTransactionStates::APPROVED,
                         EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
@@ -380,15 +511,18 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         );
     }
 
+    /**
+     * @covers EMerchantPayDataHelper::setTokenByPaymentTransaction()
+     *
+     * @return void
+     */
     public function testSetTokenByPaymentTransaction()
     {
         $declinedSaleTransactionMock = $this->getPaymentTransactionMock();
 
         $declinedSaleTransactionMock->expects(static::once())
             ->method('getAdditionalInformation')
-            ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
-            )
+            ->with(Transaction::RAW_DETAILS)
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_STATUS           =>
@@ -400,9 +534,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $this->moduleHelper->setTokenByPaymentTransaction($declinedSaleTransactionMock);
 
-        $this->assertNull(
-            \Genesis\Config::getToken()
-        );
+        $this->assertNull(GenesisConfig::getToken());
 
         $gatewayTerminalToken = 'gateway_token_098f6bcd4621d373cade4e832627b4f6';
 
@@ -410,9 +542,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $approvedSaleTransactionMock->expects(static::once())
             ->method('getAdditionalInformation')
-            ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
-            )
+            ->with(Transaction::RAW_DETAILS)
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_STATUS           =>
@@ -428,7 +558,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $this->assertEquals(
             $gatewayTerminalToken,
-            \Genesis\Config::getToken()
+            GenesisConfig::getToken()
         );
     }
 
@@ -439,13 +569,13 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $exceptionMessage = 'Exception Message';
 
-        $this->expectException(\Magento\Framework\Webapi\Exception::class);
+        $this->expectException(WebApiException::class);
         $this->expectExceptionMessage($exceptionMessage);
 
         $this->moduleHelper->maskException(
-            new \Exception(
+            new Exception(
                 $exceptionMessage,
-                \Magento\Framework\Webapi\Exception::HTTP_INTERNAL_ERROR
+                WebApiException::HTTP_INTERNAL_ERROR
             )
         );
     }
@@ -455,16 +585,14 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     public function testGetArrayFromGatewayResponse()
     {
-        $gatewayResponse = new \stdClass();
-        $gatewayResponse->status = GenesisTransactionStates::APPROVED;
-        $gatewayResponse->message = 'Gateway Response Message Text';
+        $gatewayResponse = new stdClass();
+        $gatewayResponse->status           = GenesisTransactionStates::APPROVED;
+        $gatewayResponse->message          = 'Gateway Response Message Text';
         $gatewayResponse->transaction_type = GenesisTransactionTypes::PAYSAFECARD;
 
         $arrObj = $this->moduleHelper->getArrayFromGatewayResponse($gatewayResponse);
 
-        $this->assertTrue(
-            is_array($arrObj)
-        );
+        $this->assertTrue(is_array($arrObj));
 
         $this->assertArrayHasKeys(
             [
@@ -484,13 +612,9 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $orderMock = $this->getOrderMock();
 
         /**
-         * @var $orderConfigMock \Magento\Sales\Model\Order\Config|\PHPUnit_Framework_MockObject_MockObject
+         * @var $orderConfigMock Order\Config|MockObject
          */
         $orderConfigMock = $orderMock->getConfig();
-
-        $orderMock->expects(static::once())
-            ->method('save')
-            ->willReturnSelf();
 
         $orderMock->expects(static::once())
             ->method('setState')
@@ -503,11 +627,15 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $orderConfigMock->expects(static::once())
             ->method('getStateDefaultStatus')
             ->with(
-                \Magento\Sales\Model\Order::STATE_PROCESSING
+                Order::STATE_PROCESSING
             )
             ->willReturn(
-                \Magento\Sales\Model\Order::STATE_PROCESSING
+                Order::STATE_PROCESSING
             );
+
+        $this->orderRepositoryMock->expects(static::once())
+            ->method('save')
+            ->with($orderMock);
 
         $this->moduleHelper->setOrderState(
             $orderMock,
@@ -523,13 +651,9 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $orderMock = $this->getOrderMock();
 
         /**
-         * @var $orderConfigMock \Magento\Sales\Model\Order\Config|\PHPUnit_Framework_MockObject_MockObject
+         * @var $orderConfigMock Order\Config|MockObject
          */
         $orderConfigMock = $orderMock->getConfig();
-
-        $orderMock->expects(static::exactly(2))
-            ->method('save')
-            ->willReturnSelf();
 
         $orderMock->expects(static::exactly(2))
             ->method('setState')
@@ -544,12 +668,12 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $orderConfigMock->expects(static::exactly(2))
             ->method('getStateDefaultStatus')
-            ->with(
-                \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT
-            )
-            ->willReturn(
-                \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT
-            );
+            ->with(Order::STATE_PENDING_PAYMENT)
+            ->willReturn(Order::STATE_PENDING_PAYMENT);
+
+        $this->orderRepositoryMock->expects(static::exactly(2))
+            ->method('save')
+            ->with($orderMock);
 
         $this->moduleHelper->setOrderState(
             $orderMock,
@@ -570,7 +694,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $orderMock = $this->getOrderMock();
 
         /**
-         * @var $orderConfigMock \Magento\Sales\Model\Order\Config|\PHPUnit_Framework_MockObject_MockObject
+         * @var $orderConfigMock Order\Config|MockObject
          */
         $orderConfigMock = $orderMock->getConfig();
 
@@ -592,12 +716,12 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->method('setCustomerNoteNotify')
             ->willReturnSelf();
 
-        $orderMock->expects(static::exactly(2))
-            ->method('save')
-            ->willReturnSelf();
-
         $orderConfigMock->expects(static::exactly(2))
             ->method('getStateDefaultStatus');
+
+        $this->orderRepositoryMock->expects(static::exactly(2))
+            ->method('save')
+            ->with($orderMock);
 
         $this->moduleHelper->setOrderState(
             $orderMock,
@@ -618,7 +742,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $orderMock = $this->getOrderMock();
 
         /**
-         * @var $orderConfigMock \Magento\Sales\Model\Order\Config|\PHPUnit_Framework_MockObject_MockObject
+         * @var $orderConfigMock Order\Config|MockObject
          */
         $orderConfigMock = $orderMock->getConfig();
 
@@ -640,12 +764,12 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->method('setCustomerNoteNotify')
             ->willReturnSelf();
 
-        $orderMock->expects(static::exactly(2))
-            ->method('save')
-            ->willReturnSelf();
-
         $orderConfigMock->expects(static::exactly(2))
             ->method('getStateDefaultStatus');
+
+        $this->orderRepositoryMock->expects(static::exactly(2))
+            ->method('save')
+            ->with($orderMock);
 
         $this->moduleHelper->setOrderState(
             $orderMock,
@@ -666,15 +790,13 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $this->scopeConfigMock->expects(static::once())
             ->method('getValue')
             ->with(
-                \Magento\Directory\Model\Currency::XML_PATH_CURRENCY_ALLOW
+                Currency::XML_PATH_CURRENCY_ALLOW
             )
             ->willReturn('USD,EUR,GBP');
 
         $globalAllowedCurrencyCodes = $this->moduleHelper->getGlobalAllowedCurrencyCodes();
 
-        $this->assertTrue(
-            is_array($globalAllowedCurrencyCodes)
-        );
+        $this->assertTrue(is_array($globalAllowedCurrencyCodes));
 
         $this->assertArrayKeysCount(
             3,
@@ -698,9 +820,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $this->scopeConfigMock->expects(static::once())
             ->method('getValue')
-            ->with(
-                \Magento\Directory\Model\Currency::XML_PATH_CURRENCY_ALLOW
-            )
+            ->with(Currency::XML_PATH_CURRENCY_ALLOW)
             ->willReturn('USD,EUR,GBP');
 
         $allowedCurrenciesOptions = $this->moduleHelper->getGlobalAllowedCurrenciesOptions(
@@ -717,9 +837,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ]
         );
 
-        $this->assertTrue(
-            is_array($allowedCurrenciesOptions)
-        );
+        $this->assertTrue(is_array($allowedCurrenciesOptions));
 
         $this->assertArrayKeysCount(2, $allowedCurrenciesOptions);
 
@@ -744,19 +862,19 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $this->localeResolverMock->expects(static::once())
             ->method('getLocale')
             ->willReturn(
-                \Magento\Framework\Locale\Resolver::DEFAULT_LOCALE
+                Resolver::DEFAULT_LOCALE
             );
 
         $gatewayLocale = $this->moduleHelper->getLocale('de');
 
         $this->assertTrue(
-            \Genesis\Api\Constants\i18n::isValidLanguageCode($gatewayLocale)
+            i18n::isValidLanguageCode($gatewayLocale)
         );
 
         $this->assertEquals(
             $gatewayLocale,
             substr(
-                \Magento\Framework\Locale\Resolver::DEFAULT_LOCALE,
+                Resolver::DEFAULT_LOCALE,
                 0,
                 2
             )
@@ -779,9 +897,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
 
         $gatewayLocale = $this->moduleHelper->getLocale($defaultLocale);
 
-        $this->assertTrue(
-            \Genesis\Api\Constants\i18n::isValidLanguageCode($gatewayLocale)
-        );
+        $this->assertTrue(i18n::isValidLanguageCode($gatewayLocale));
 
         $this->assertEquals(
             $gatewayLocale,
@@ -797,13 +913,10 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $captureTransactionMock = $this->getPaymentTransactionMock();
         $captureTransactionMock->expects(static::once())
             ->method('getAdditionalInformation')
-            ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
-            )
+            ->with(Transaction::RAW_DETAILS)
             ->willReturn(
                 [
-                    EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
-                        \Genesis\Api\Constants\Transaction\Types::CAPTURE
+                    EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE => GenesisTransactionTypes::CAPTURE
                 ]
             );
 
@@ -822,13 +935,11 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $captureTransactionMock = $this->getPaymentTransactionMock();
         $captureTransactionMock->expects(static::once())
             ->method('getAdditionalInformation')
-            ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
-            )
+            ->with(Transaction::RAW_DETAILS)
             ->willReturn(
                 [
                     EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
-                        \Genesis\Api\Constants\Transaction\Types::PAYSAFECARD
+                        GenesisTransactionTypes::PAYSAFECARD
                 ]
             );
 
@@ -847,13 +958,10 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $captureTransactionMock = $this->getPaymentTransactionMock();
         $captureTransactionMock->expects(static::once())
             ->method('getAdditionalInformation')
-            ->with(
-                \Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS
-            )
+            ->with(Transaction::RAW_DETAILS)
             ->willReturn(
                 [
-                    EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE =>
-                        \Genesis\Api\Constants\Transaction\Types::SALE
+                    EMerchantPayDataHelper::ADDITIONAL_INFO_KEY_TRANSACTION_TYPE => GenesisTransactionTypes::SALE
                 ]
             );
 
@@ -871,25 +979,25 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $this->assertTrue(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\Api\Constants\Transaction\Types::AUTHORIZE_3D
+                GenesisTransactionTypes::AUTHORIZE_3D
             )
         );
 
         $this->assertFalse(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\Api\Constants\Transaction\Types::AUTHORIZE
+                GenesisTransactionTypes::AUTHORIZE
             )
         );
 
         $this->assertTrue(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\Api\Constants\Transaction\Types::SALE_3D
+                GenesisTransactionTypes::SALE_3D
             )
         );
 
         $this->assertFalse(
             $this->moduleHelper->getIsTransactionThreeDSecure(
-                \Genesis\Api\Constants\Transaction\Types::SALE
+                GenesisTransactionTypes::SALE
             )
         );
     }
@@ -899,12 +1007,12 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     public function testGetSuccessErrorMessageFromGatewayResponse()
     {
-        $successfulGatewayResponseMessage = 'Transaction successful!';
+        $successfulGatewayResponseMessage     = 'Transaction successful!';
         $successfulGatewayResponseTechMessage = 'Transaction has been processed successfully!';
 
         $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
-            \Genesis\Api\Constants\Transaction\States::APPROVED,
-            \Genesis\Api\Constants\Transaction\Types::AUTHORIZE,
+            GenesisTransactionStates::APPROVED,
+            GenesisTransactionTypes::AUTHORIZE,
             $successfulGatewayResponseMessage,
             $successfulGatewayResponseTechMessage
         );
@@ -930,8 +1038,8 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     public function testGetFailedErrorMessageFromGatewayResponse()
     {
         $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
-            \Genesis\Api\Constants\Transaction\States::DECLINED,
-            \Genesis\Api\Constants\Transaction\Types::SALE
+            GenesisTransactionStates::DECLINED,
+            GenesisTransactionTypes::SALE
         );
 
         $gatewayResponseMessage = $this->moduleHelper->getErrorMessageFromGatewayResponse(
@@ -949,14 +1057,14 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     public function testGetPendingAsyncSuccessErrorMessageFromGatewayResponse()
     {
-        $successfulGatewayResponseMessage = 'Transaction successful!';
+        $successfulGatewayResponseMessage          = 'Transaction successful!';
         $successfulGatewayResponseTechnicalMessage = 'Transaction has been processed successfully!';
 
         $validGatewayResponseWithMessage = $this->getSampleGatewayResponse(
-            \Genesis\Api\Constants\Transaction\States::PENDING_ASYNC,
-            \Genesis\Api\Constants\Transaction\Types::REFUND,
+            GenesisTransactionStates::PENDING_ASYNC,
+            GenesisTransactionTypes::REFUND,
             $successfulGatewayResponseMessage,
-	        $successfulGatewayResponseTechnicalMessage
+            $successfulGatewayResponseTechnicalMessage
         );
 
         $gatewayResponseMessage = $this->moduleHelper->getErrorMessageFromGatewayResponse(
@@ -969,7 +1077,7 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         );
 
         $this->assertStringEndsWith(
-	        $successfulGatewayResponseTechnicalMessage,
+            $successfulGatewayResponseTechnicalMessage,
             $gatewayResponseMessage
         );
     }
@@ -979,20 +1087,20 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     public function testGetReturnUrl()
     {
-        $moduleCode = 'emerchantpay_checkout';
-        $returnAction = EMerchantPayDataHelper::ACTION_RETURN_SUCCESS;
-        $expectedUrlIframe = 'https://example.com/emerchantpay/checkout/iframe/action/success';
+        $moduleCode          = 'emerchantpay_checkout';
+        $returnAction        = EMerchantPayDataHelper::ACTION_RETURN_SUCCESS;
+        $expectedUrlIframe   = 'https://example.com/emerchantpay/checkout/iframe/action/success';
         $expectedUrlRedirect = 'https://example.com/emerchantpay/checkout/redirect/action/success';
 
         // Mocking the Config class to return true for isIframeProcessingEnabled
-        $configMock = $this->createMock(\EMerchantPay\Genesis\Block\Frontend\Config::class);
+        $configMock = $this->createMock(FrontendConfig::class);
         $configMock->expects($this->exactly(2))
             ->method('isIframeProcessingEnabled')
             ->willReturnOnConsecutiveCalls(true, false);
 
         // Use reflection to set the protected property _config
-        $reflectionClass = new \ReflectionClass(EMerchantPayDataHelper::class);
-        $configProperty = $reflectionClass->getProperty('_config');
+        $reflectionClass = new ReflectionClass(EMerchantPayDataHelper::class);
+        $configProperty  = $reflectionClass->getProperty('_config');
         $configProperty->setAccessible(true);
         $configProperty->setValue($this->moduleHelper, $configMock);
 
@@ -1005,8 +1113,22 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         $this->urlBuilderMock->expects($this->exactly(2))
             ->method('getUrl')
             ->withConsecutive(
-                ['emerchantpay/checkout/iframe', ['_store' => $this->storeMock, '_secure' => null, 'action' => $returnAction]],
-                ['emerchantpay/checkout/redirect', ['_store' => $this->storeMock, '_secure' => null, 'action' => $returnAction]]
+                [
+                    'emerchantpay/checkout/iframe',
+                    [
+                        '_store'  => $this->storeMock,
+                        '_secure' => null,
+                        'action'  => $returnAction
+                    ]
+                ],
+                [
+                    'emerchantpay/checkout/redirect',
+                    [
+                        '_store'  => $this->storeMock,
+                        '_secure' => null,
+                        'action'  => $returnAction
+                    ]
+                ]
             )
             ->willReturnOnConsecutiveCalls($expectedUrlIframe, $expectedUrlRedirect);
 
@@ -1017,5 +1139,87 @@ class DataTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
         // Test redirect URL generation
         $actualUrlRedirect = $this->moduleHelper->getReturnUrl($moduleCode, $returnAction);
         $this->assertEquals($expectedUrlRedirect, $actualUrlRedirect);
+    }
+
+    /**
+     * @covers EMerchantPayDataHelper::updateTransactionAdditionalInfo
+     *
+     * @return void
+     *
+     * @throws Exception
+     */
+    public function testUpdateTransactionAdditionalInfoTransactionFound()
+    {
+        $transactionId          = '123';
+        $responseObject         = new stdClass();
+        $shouldCloseTransaction = true;
+
+        $this->transactionMock->method('load')
+            ->with($transactionId, 'txn_id')
+            ->willReturnSelf();
+
+        $this->transactionMock->method('getId')
+            ->willReturn(1);
+
+        $this->moduleHelper->method('getPaymentTransaction')
+            ->with($transactionId)
+            ->willReturn($this->transactionMock);
+
+        $this->moduleHelper->expects($this->once())
+            ->method('setTransactionAdditionalInfo')
+            ->with($this->transactionMock, $responseObject);
+
+        $this->transactionMock->expects($this->once())
+            ->method('setIsClosed')
+            ->with(true);
+
+        $this->transactionRepositoryMock->expects($this->once())
+            ->method('save')
+            ->with($this->transactionMock);
+
+        $result = $this->moduleHelper->updateTransactionAdditionalInfo(
+            $transactionId,
+            $responseObject,
+            $shouldCloseTransaction
+        );
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @covers EMerchantPayDataHelper::updateTransactionAdditionalInfo
+     *
+     * @return void
+     *
+     * @throws Exception
+     */
+    public function testUpdateTransactionAdditionalInfoTransactionNotFound()
+    {
+        $transactionId          = '123';
+        $responseObject         = new stdClass();
+        $shouldCloseTransaction = false;
+
+        $this->moduleHelper = $this->getMockBuilder(EMerchantPayDataHelper::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getPaymentTransaction', 'setTransactionAdditionalInfo'])
+            ->getMock();
+
+        $this->moduleHelper->method('getPaymentTransaction')
+            ->with($transactionId)
+            ->willReturn(null);
+
+        $this->moduleHelper->expects($this->never())
+            ->method('setTransactionAdditionalInfo');
+
+        $this->transactionRepositoryMock->expects($this->never())
+            ->method('save');
+
+        $result = $this->moduleHelper->updateTransactionAdditionalInfo(
+            $transactionId,
+            $responseObject,
+            $shouldCloseTransaction
+        );
+
+        $this->assertFalse($result);
     }
 }

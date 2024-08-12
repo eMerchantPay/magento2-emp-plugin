@@ -21,8 +21,8 @@ namespace EMerchantPay\Genesis\Model\Config\Source\Locale\Currency;
 
 /**
  * Locale currency source
+ *
  * Class Currency
- * @package EMerchantPay\Genesis\Model\Config\Source\Locale\Currency
  */
 class Currency extends \Magento\Config\Model\Config\Source\Locale\Currency
 {
@@ -45,6 +45,7 @@ class Currency extends \Magento\Config\Model\Config\Source\Locale\Currency
 
     /**
      * Get an Instance of the Module Helper
+     *
      * @return \EMerchantPay\Genesis\Helper\Data
      */
     protected function getModuleHelper()
@@ -54,6 +55,7 @@ class Currency extends \Magento\Config\Model\Config\Source\Locale\Currency
 
     /**
      * Builds the options array for the MultiSelect control in the Admin Zone
+     *
      * @return array
      */
     public function toOptionArray()

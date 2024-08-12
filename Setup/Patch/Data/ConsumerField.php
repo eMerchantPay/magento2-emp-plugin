@@ -19,12 +19,12 @@
 
 namespace EMerchantPay\Genesis\Setup\Patch\Data;
 
-use Magento\Customer\Model\Customer;
-use Magento\Eav\Setup\EavSetupFactory;
+use Magento\Customer\Model\Customer as MagentoCustomer;
+use Magento\Customer\Setup\CustomerSetupFactory as CustomerSetupFactory;
 use Magento\Eav\Model\Config;
 use Magento\Eav\Model\Entity\Attribute\SetFactory as AttributeSetFactory;
+use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
-use Magento\Customer\Setup\CustomerSetupFactory as CustomerSetupFactory;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 
 /**
@@ -45,16 +45,16 @@ class ConsumerField implements DataPatchInterface
 
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
-        EavSetupFactory $eavSetupFactory,
-        Config $config,
-        CustomerSetupFactory $customerSetupFactory,
-        AttributeSetFactory $attributeSetFactory
+        EavSetupFactory          $eavSetupFactory,
+        Config                   $config,
+        CustomerSetupFactory     $customerSetupFactory,
+        AttributeSetFactory      $attributeSetFactory
     ) {
-        $this->moduleDataSetup = $moduleDataSetup;
-        $this->eavSetupFactory = $eavSetupFactory;
-        $this->eavConfig = $config;
+        $this->moduleDataSetup      = $moduleDataSetup;
+        $this->eavSetupFactory      = $eavSetupFactory;
+        $this->eavConfig            = $config;
         $this->customerSetupFactory = $customerSetupFactory;
-        $this->attributeSetFactory = $attributeSetFactory;
+        $this->attributeSetFactory  = $attributeSetFactory;
     }
 
     /**
@@ -64,7 +64,7 @@ class ConsumerField implements DataPatchInterface
     {
         $this->moduleDataSetup->getConnection()->startSetup();
 
-        $customerSetup = $this->customerSetupFactory->create(['setup' => $this->moduleDataSetup]);
+        $customerSetup  = $this->customerSetupFactory->create(['setup' => $this->moduleDataSetup]);
 
         $customerEntity = $customerSetup->getEavConfig()->getEntityType(Customer::ENTITY);
         $attributeSetId = $customerEntity->getDefaultAttributeSetId();
@@ -74,7 +74,7 @@ class ConsumerField implements DataPatchInterface
 
         $eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetup]);
         $eavSetup->addAttribute(
-            Customer::ENTITY,
+            MagentoCustomer::ENTITY,
             self::CUSTOM_FIELD_CONSUMER_ID,
             [
                 'label'      => self::CUSTOM_FIELD_CONSUMER_ID,
@@ -88,7 +88,7 @@ class ConsumerField implements DataPatchInterface
         );
 
         $document = $customerSetup->getEavConfig()
-            ->getAttribute(Customer::ENTITY, self::CUSTOM_FIELD_CONSUMER_ID)
+            ->getAttribute(MagentoCustomer::ENTITY, self::CUSTOM_FIELD_CONSUMER_ID)
             ->addData([
                 'attribute_set_id'   => $attributeSetId,
                 'attribute_group_id' => $attributeGroupId

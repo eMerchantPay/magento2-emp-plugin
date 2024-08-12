@@ -20,18 +20,19 @@
 namespace EMerchantPay\Genesis\Test\Unit;
 
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager as ObjectManagerHelper;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 /**
  * Class AbstractTestCase
- * @package EMerchantPay\Genesis\Test\Unit
  */
-abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
+abstract class AbstractTestCase extends TestCase
 {
-    const SAMPLE_REDIRECT_URL       = 'https://example.com/action/redirect/to';
-    const SAMPLE_NOTIFICATION_URL   = 'https://example.com/action/notify';
-    const SAMPLE_RETURN_SUCCESS_URL = 'https://example.com/action/success';
-    const SAMPLE_RETURN_CANCEL_URL  = 'https://example.com/action/cancel';
-    const SAMPLE_RETURN_FAILURE_URL = 'https://example.com/action/failure';
+    protected const SAMPLE_REDIRECT_URL       = 'https://example.com/action/redirect/to';
+    protected const SAMPLE_NOTIFICATION_URL   = 'https://example.com/action/notify';
+    protected const SAMPLE_RETURN_SUCCESS_URL = 'https://example.com/action/success';
+    protected const SAMPLE_RETURN_CANCEL_URL  = 'https://example.com/action/cancel';
+    protected const SAMPLE_RETURN_FAILURE_URL = 'https://example.com/action/failure';
 
     /**
      * @var ObjectManagerHelper
@@ -44,29 +45,30 @@ abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param string $status
-     * @param string $transactionType
-     * @param string string $message
-     * @param string string $technicalMessage
-     * @param array $additionalParams
-     * @return \stdClass
+     * @param string      $status
+     * @param string|null $transactionType
+     * @param string|null $message
+     * @param string|null $technicalMessage
+     * @param array       $additionalParams
+     *
+     * @return stdClass
      */
     protected function getSampleGatewayResponse(
-        $status,
-        $transactionType = null,
-        $message = '',
-        $technicalMessage = '',
-        $additionalParams = []
+        string  $status,
+        ?string $transactionType = null,
+        ?string $message = '',
+        ?string $technicalMessage = '',
+        array   $additionalParams = []
     ) {
-        $response = new \stdClass();
-        $response->status = $status;
+        $response            = new stdClass();
+        $response->status    = $status;
         $response->unique_id = $this->generateUniqueId();
 
         if ($transactionType) {
             $response->transaction_type = $transactionType;
-            $response->currency = 'USD';
-            $response->amount = '23.56';
-            $response->transaction_id = $this->generateUniqueId();
+            $response->currency         = 'USD';
+            $response->amount           = '23.56';
+            $response->transaction_id   = $this->generateUniqueId();
         }
 
         if (!empty($message)) {
@@ -88,7 +90,8 @@ abstract class AbstractTestCase extends \PHPUnit\Framework\TestCase
 
     /**
      * @param mixed|array $keys
-     * @param array $arr
+     * @param array       $arr
+     *
      * @return bool
      */
     protected function getArrayHasKeys($keys, array $arr)

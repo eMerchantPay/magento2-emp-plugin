@@ -19,61 +19,69 @@
 
 namespace EMerchantPay\Genesis\Model\Observer;
 
-use EMerchantPay\Genesis\Model\Method\Checkout;
+use EMerchantPay\Genesis\Model\Config;
+use EMerchantPay\Genesis\Model\Method\Checkout as MethodCheckout;
+use Magento\Checkout\Model\Session;
+use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 
 /**
  * Observer Class called on checkout_onepage_controller_success_action_sendmail event
  *
  * Class SendMailOnOrderPaymentSuccess
- * @package EMerchantPay\Genesis\Model\Observer
  */
 class SendMailOnOrderPaymentSuccess implements ObserverInterface
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Config
+     * @var Config
      */
     protected $_configHelper;
 
     /**
-     * @var \Magento\Sales\Model\OrderFactory
+     * @var OrderFactory
      */
     protected $orderModel;
 
     /**
-     * @var \Magento\Sales\Model\Order\Email\Sender\OrderSender
+     * @var OrderSender
      */
     protected $orderSender;
 
     /**
-     * @var \Magento\Checkout\Model\Session $checkoutSession
+     * @var Session $checkoutSession
      */
     protected $checkoutSession;
 
     /**
-     * @param \Magento\Sales\Model\OrderFactory $orderModel
-     * @param \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
-     * @param \Magento\Checkout\Model\Session $checkoutSession
-     * @param \EMerchantPay\Genesis\Model\Config $configHelper
+     * @param OrderFactory $orderModel
+     * @param OrderSender  $orderSender
+     * @param Session      $checkoutSession
+     * @param Config       $configHelper
+     *
      * @codeCoverageIgnore
      */
     public function __construct(
-        \Magento\Sales\Model\OrderFactory $orderModel,
-        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
-        \Magento\Checkout\Model\Session $checkoutSession,
-        \EMerchantPay\Genesis\Model\Config $configHelper
+        OrderFactory $orderModel,
+        OrderSender  $orderSender,
+        Session      $checkoutSession,
+        Config       $configHelper
     ) {
-        $this->orderModel = $orderModel;
-        $this->orderSender = $orderSender;
+        $this->orderModel      = $orderModel;
+        $this->orderSender     = $orderSender;
         $this->checkoutSession = $checkoutSession;
-        $this->_configHelper = $configHelper;
+        $this->_configHelper   = $configHelper;
     }
 
     /**
-     * @param \Magento\Framework\Event\Observer $observer
+     * Execute method
+     *
+     * @param Observer $observer
+     *
      * @return void
      */
-    public function execute(\Magento\Framework\Event\Observer $observer)
+    public function execute(Observer $observer)
     {
         $orderIds = $observer->getEvent()->getOrderIds();
 
@@ -84,7 +92,7 @@ class SendMailOnOrderPaymentSuccess implements ObserverInterface
         $order = $this->orderModel->create()->load($orderIds[0]);
         $methodCode = $order->getPayment()->getMethodInstance()->getCode();
 
-        if (!in_array($methodCode, [Checkout::CODE])) {
+        if (!in_array($methodCode, [MethodCheckout::CODE])) {
             return;
         }
 

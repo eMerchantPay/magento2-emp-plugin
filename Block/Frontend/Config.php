@@ -20,7 +20,7 @@
 namespace EMerchantPay\Genesis\Block\Frontend;
 
 use EMerchantPay\Genesis\Model\Config as BackendConfig;
-use EMerchantPay\Genesis\Model\Method\Checkout;
+use EMerchantPay\Genesis\Model\Method\Checkout as MethodCheckout;
 use Magento\Framework\View\Element\Template;
 
 /**
@@ -37,8 +37,8 @@ class Config extends Template
 
     /**
      * @param Template\Context $context
-     * @param BackendConfig $backendConfig
-     * @param array $data
+     * @param BackendConfig    $backendConfig
+     * @param array            $data
      */
     public function __construct(
         Template\Context $context,
@@ -56,7 +56,7 @@ class Config extends Template
      */
     public function isIframeProcessingEnabled(): bool
     {
-        $this->_backendConfig->setMethodCode(Checkout::CODE);
+        $this->_backendConfig->setMethodCode(MethodCheckout::CODE);
 
         return $this->_backendConfig->isIframeProcessingEnabled();
     }

@@ -24,8 +24,8 @@ use EMerchantPay\Genesis\Helper\Data;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Webapi\Exception;
 use Magento\Sales\Model\OrderFactory;
@@ -33,10 +33,10 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Base Checkout Redirect Controller Class
+ *
  * Class AbstractCheckoutRedirectAction
- * @package EMerchantPay\Genesis\Controller
  */
-abstract class AbstractCheckoutRedirectAction extends \EMerchantPay\Genesis\Controller\AbstractCheckoutAction
+abstract class AbstractCheckoutRedirectAction extends AbstractCheckoutAction
 {
     /**
      * @var Checkout
@@ -86,7 +86,7 @@ abstract class AbstractCheckoutRedirectAction extends \EMerchantPay\Genesis\Cont
     {
         $response = null;
         if ($this->getCheckoutSession()->getLastRealOrderId()) {
-            $this->getMessageManager()->addSuccess(__("Your payment is complete"));
+            $this->getMessageManager()->addSuccessMessage(__("Your payment is complete"));
 
             $response = $this->redirectToCheckoutOnePageSuccess($iframeRedirect);
         }
@@ -126,7 +126,7 @@ abstract class AbstractCheckoutRedirectAction extends \EMerchantPay\Genesis\Cont
      * Select redirect action based on the URL parameter
      *
      * @param string $action
-     * @param bool $iframeRedirect
+     * @param bool   $iframeRedirect
      *
      * @return ResponseInterface|void|null
      */
@@ -137,14 +137,14 @@ abstract class AbstractCheckoutRedirectAction extends \EMerchantPay\Genesis\Cont
                 return $this->executeSuccessAction($iframeRedirect);
 
             case Data::ACTION_RETURN_CANCEL:
-                $this->getMessageManager()->addWarning(
+                $this->getMessageManager()->addWarningMessage(
                     __("You have successfully canceled your order")
                 );
 
                 return $this->executeCancelAction($iframeRedirect);
 
             case Data::ACTION_RETURN_FAILURE:
-                $this->getMessageManager()->addError(
+                $this->getMessageManager()->addErrorMessage(
                     __("Please, check your input and try again!")
                 );
 

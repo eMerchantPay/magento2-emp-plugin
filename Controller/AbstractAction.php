@@ -19,39 +19,46 @@
 
 namespace EMerchantPay\Genesis\Controller;
 
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\ObjectManagerInterface;
+use Psr\Log\LoggerInterface;
+
 /**
  * Base Controller Class
+ *
  * Class AbstractAction
- * @package EMerchantPay\Genesis\Controller
  */
-abstract class AbstractAction extends \Magento\Framework\App\Action\Action
+abstract class AbstractAction extends Action
 {
     /**
-     * @var \Magento\Framework\App\Action\Context
+     * @var Context
      */
     protected $_context;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     protected $_logger;
 
     /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param Context         $context
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        \Magento\Framework\App\Action\Context $context,
-        \Psr\Log\LoggerInterface $logger
+        Context         $context,
+        LoggerInterface $logger
     ) {
         parent::__construct($context);
         $this->_context = $context;
-        $this->_logger = $logger;
+        $this->_logger  = $logger;
     }
 
     /**
      * Get Instance of Magento Controller Action
-     * @return \Magento\Framework\App\Action\Context
+     *
+     * @return Context
      */
     protected function getContext()
     {
@@ -60,7 +67,8 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
 
     /**
      * Get Instance of Magento Object Manager
-     * @return \Magento\Framework\ObjectManagerInterface
+     *
+     * @return ObjectManagerInterface
      */
     protected function getObjectManager()
     {
@@ -69,7 +77,8 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
 
     /**
      * Get Instance of Magento global Message Manager
-     * @return \Magento\Framework\Message\ManagerInterface
+     *
+     * @return ManagerInterface
      */
     protected function getMessageManager()
     {
@@ -78,7 +87,8 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
 
     /**
      * Get Instance of Magento global Logger
-     * @return \Psr\Log\LoggerInterface
+     *
+     * @return LoggerInterface
      */
     protected function getLogger()
     {
@@ -87,7 +97,9 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
 
     /**
      * Check if param exists in the post request
+     *
      * @param string $key
+     *
      * @return bool
      */
     protected function isPostRequestExists($key)
@@ -99,7 +111,9 @@ abstract class AbstractAction extends \Magento\Framework\App\Action\Action
 
     /**
      * Get an array of the Submitted Post Request
+     *
      * @param string|null $key
+     *
      * @return null|array
      */
     protected function getPostRequest($key = null)

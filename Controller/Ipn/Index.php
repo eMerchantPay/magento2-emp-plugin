@@ -22,13 +22,11 @@ namespace EMerchantPay\Genesis\Controller\Ipn;
 /**
  * Unified IPN controller for all supported EMerchantPay Payment Methods
  * Class Index
- * @package EMerchantPay\Genesis\Controller\Ipn
  */
 class Index extends \EMerchantPay\Genesis\Controller\AbstractAction
 {
     /**
-     * Get the name of the IPN Class, used to handle the posted Notification
-     * It is separated per Payment Method
+     * Get the name of the IPN Class, used to handle the posted Notification. It is separated per Payment Method
      *
      * @return null|string
      */

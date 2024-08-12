@@ -19,16 +19,31 @@
 
 namespace EMerchantPay\Genesis\Test\Unit\Helper;
 
+use ArrayIterator;
+use DateTime;
+use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Helper\Threeds;
+use EMerchantPay\Genesis\Test\Unit\AbstractTestCase;
+use Magento\Customer\Model\Address;
+use Magento\Customer\Model\Customer;
+use Magento\Framework\App\Helper\Context;
+use Magento\Framework\DB\Select;
+use Magento\Framework\DataObject;
+use Magento\Framework\Stdlib\DateTime\Timezone;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Item;
+use Magento\Sales\Model\ResourceModel\Order\Collection;
+use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
+ * Test 3DS functions
+ *
  * Class ThreedsTest
- * @package EMerchantPay\Genesis\Test\Unit\Helper
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
-class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
+class ThreedsTest extends AbstractTestCase
 {
     /**
      * @var Threeds
@@ -36,32 +51,32 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     protected $threedsHelper;
 
     /**
-     * @var \Magento\Framework\App\Helper\Context|\PHPUnit\Framework\MockObject\MockObject
+     * @var Context|MockObject
      */
     protected $contextMock;
 
     /**
-     * @var \Magento\Framework\Stdlib\DateTime\Timezone|\PHPUnit\Framework\MockObject\MockObject
+     * @var Timezone|MockObject
      */
     protected $timezoneMock;
 
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data|\PHPUnit\Framework\MockObject\MockObject
+     * @var Data|MockObject
      */
     protected $moduleHelper;
 
     /**
-     * @var \Magento\Sales\Model\Order|\PHPUnit\Framework\MockObject\MockObject
+     * @var Order|MockObject
      */
     protected $orderMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject|\Magento\Customer\Model\Customer
+     * @var Customer|MockObject
      */
     protected $customerMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject|\Magento\Sales\Model\ResourceModel\Order\CollectionFactory
+     * @var CollectionFactory|MockObject
      */
     protected $orderCollectionFacotryMock;
 
@@ -246,15 +261,15 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     /**
      * Timezone Date Stub
      *
-     * @return \DateTime
+     * @return DateTime
      */
     public function dateCallback($args)
     {
         if (!empty($args)) {
-            return \DateTime::createFromFormat('Y-m-d H:i:s', $args);
+            return DateTime::createFromFormat('Y-m-d H:i:s', $args);
         }
 
-        return new \DateTime();
+        return new DateTime();
     }
 
     /**
@@ -263,14 +278,10 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     protected function setUpBasicMocks()
     {
         $this->timezoneMock = $this->getMockBuilder(
-            \Magento\Framework\Stdlib\DateTime\Timezone::class
+            Timezone::class
         )
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'date'
-                ]
-            )
+            ->onlyMethods(['date'])
             ->getMock();
 
         $this->timezoneMock->expects(static::any())
@@ -278,14 +289,10 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->will($this->returnCallback([$this, 'dateCallback']));
 
         $this->orderCollectionFacotryMock = $this->getMockBuilder(
-            \Magento\Sales\Model\ResourceModel\Order\CollectionFactory::class
+            CollectionFactory::class
         )
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'create'
-                ]
-            )
+            ->onlyMethods(['create'])
             ->getMock();
         $this->orderCollectionFacotryMock->expects(static::any())
             ->method('create')
@@ -297,7 +304,7 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function setUpContextMock()
     {
-        $this->contextMock = $this->getMockBuilder(\Magento\Framework\App\Helper\Context::class)
+        $this->contextMock = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
             ->getMock();
     }
@@ -309,7 +316,7 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
     {
         $this->orderMock = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'getCustomerId',
                     'getBillingAddress',
@@ -337,9 +344,9 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function setUpModuleHelperMock()
     {
-        $this->moduleHelper = $this->getMockBuilder(\EMerchantPay\Genesis\Helper\Data::class)
+        $this->moduleHelper = $this->getMockBuilder(Data::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'getMethodConfig',
                     'getCustomerOrders'
@@ -357,11 +364,11 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function setUpCustomerMock()
     {
-        $this->customerMock = $this->getMockBuilder(\Magento\Customer\Model\Customer::class)
+        $this->customerMock = $this->getMockBuilder(Customer::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(['getAddresses'])
+            ->addMethods(
                 [
-                    'getAddresses',
                     'getCreatedAt',
                     'getUpdatedAt'
                 ]
@@ -390,7 +397,7 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function getItemMock($productId = 1)
     {
-        $itemMock = $this->getMockBuilder('\Magento\Sales\Model\Order\Item')
+        $itemMock = $this->getMockBuilder(Item::class)
             ->disableOriginalConstructor()
             ->getMock();
         $itemMock->expects(static::any())
@@ -405,14 +412,10 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function getAddressesMock($createdAt = '2021-01-30 12:12:12', $updatedAt = '2021-01-31 12:12:12')
     {
-        $address = $this->getMockBuilder(\Magento\Customer\Model\Address::class)
+        $address = $this->getMockBuilder(Address::class)
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'getData',
-                    'getCustomerAddressId'
-                ]
-            )
+            ->onlyMethods(['getData'])
+            ->addMethods(['getCustomerAddressId'])
             ->getMock();
 
         $address->expects(static::any())
@@ -437,11 +440,9 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function getOrderCollectionMock()
     {
-        $orderCollectionMock = $this->getMockBuilder(
-            \Magento\Sales\Model\ResourceModel\Order\Collection::class
-        )
+        $orderCollectionMock = $this->getMockBuilder(Collection::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'join',
                     'addFieldToFilter',
@@ -450,17 +451,21 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
                     'setPageSize',
                     'getSize',
                     'getFirstItem',
-                    'rewind',
-                    'current',
-                    'key',
-                    'next',
-                    'valid',
                     '_beforeLoad',
                     '_fetchAll',
                     '_afterLoad',
                     'getData',
                     'getNewEmptyItem',
                     'beforeAddLoadedItem'
+                ]
+            )
+            ->addMethods(
+                [
+                    'rewind',
+                    'current',
+                    'key',
+                    'next',
+                    'valid',
                 ]
             )
             ->getMock();
@@ -509,7 +514,7 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
             ->method('getFirstItem')
             ->willReturn($this->getDataObjectMock());
 
-        $iterator = new \ArrayIterator([$this->orderMock]);
+        $iterator = new ArrayIterator([$this->orderMock]);
 
         $orderCollectionMock->expects(static::any())
             ->method('rewind')
@@ -557,9 +562,9 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function getMagentoSelectMock()
     {
-        $selectMock = $this->getMockBuilder(\Magento\Framework\DB\Select::class)
+        $selectMock = $this->getMockBuilder(Select::class)
             ->disableOriginalConstructor()
-            ->setMethods(
+            ->onlyMethods(
                 [
                     'reset',
                     'columns'
@@ -583,13 +588,9 @@ class ThreedsTest extends \EMerchantPay\Genesis\Test\Unit\AbstractTestCase
      */
     protected function getDataObjectMock()
     {
-        $dataMock = $this->getMockBuilder(\Magento\Framework\DataObject::class)
+        $dataMock = $this->getMockBuilder(DataObject::class)
             ->disableOriginalConstructor()
-            ->setMethods(
-                [
-                    'getCreatedAt'
-                ]
-            )
+            ->addMethods(['getCreatedAt'])
             ->getMock();
 
         $dataMock->expects(static::any())

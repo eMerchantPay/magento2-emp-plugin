@@ -23,86 +23,38 @@ namespace EMerchantPay\Genesis\Test\Unit\Controller\Checkout;
 use EMerchantPay\Genesis\Controller\Checkout\Iframe as IframeController;
 use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Test\Unit\Controller\AbstractControllerTest;
-use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\UrlInterface;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\App\Response\Http as HttpResponse;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\App\Action\Context;
 
 /**
+ * Test Iframe jailbreak
+ *
  * Class IframeTest
  *
- * @covers \EMerchantPay\Genesis\Controller\Checkout\Iframe
+ * @covers IframeController
  */
 class IframeTest extends AbstractControllerTest
 {
     /**
-     * Gets controller's fully qualified class name
-     * @return string
+     * @var ResultFactory
      */
-    protected function getControllerClassName(): string
-    {
-        return IframeController::class;
-    }
+    protected $resultFactoryMock;
 
     /**
-     * Sets up common mocks for test methods
+     * @var UrlInterface
      */
-    private function setUpCommonMocks(bool $expectRaw = false, string $expectedUrl = '')
-    {
-        $resultFactoryMock = $this->getMockBuilder(ResultFactory::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['create'])
-            ->getMock();
-
-        if ($expectRaw) {
-            $rawMock = $this->createMock(Raw::class);
-            $rawMock->expects($this->once())
-                ->method('setHeader')
-                ->with('Content-Type', 'text/html')
-                ->willReturnSelf();
-
-            if ($expectedUrl !== '') {
-                $expectedHtml = sprintf(
-                    '<html><body><script type="text/javascript">if (window.top !== window.self) ' .
-                    '{window.top.location.href = "%s";} else {window.location.href = "%s";}</script></body></html>',
-                    $expectedUrl,
-                    $expectedUrl
-                );
-
-                $rawMock->expects($this->once())
-                    ->method('setContents')
-                    ->with($expectedHtml)
-                    ->willReturnSelf();
-            }
-
-            $resultFactoryMock->expects($this->once())
-                ->method('create')
-                ->with(ResultFactory::TYPE_RAW)
-                ->willReturn($rawMock);
-        }
-
-        $urlBuilderMock = $this->createMock(UrlInterface::class);
-        if ($expectedUrl !== '') {
-            $urlBuilderMock->expects($this->once())
-                ->method('getUrl')
-                ->willReturn($expectedUrl);
-        }
-
-        $this->controllerInstance = $this->getObjectManagerHelper()->getObject(
-            $this->getControllerClassName(),
-            [
-                'context' => $this->getContextMock(),
-                'logger' => $this->createMock(LoggerInterface::class),
-                'checkoutSession' => $this->checkoutSessionMock,
-                'orderFactory' => $this->orderFactoryMock,
-                'resultFactory' => $resultFactoryMock,
-                'urlBuilder' => $urlBuilderMock
-            ]
-        );
-    }
+    protected $urlBuilderMock;
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Iframe::execute
+     * @covers IframeController::execute
      */
     public function testExecuteFailWhenLastRealOrderIdIsNull()
     {
@@ -126,7 +78,7 @@ class IframeTest extends AbstractControllerTest
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Iframe::execute
+     * @covers IframeController::execute
      */
     public function testExecuteSuccessReturnAction()
     {
@@ -148,7 +100,7 @@ class IframeTest extends AbstractControllerTest
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Iframe::execute
+     * @covers IframeController::execute
      */
     public function testExecuteCancelReturnAction()
     {
@@ -169,7 +121,7 @@ class IframeTest extends AbstractControllerTest
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Iframe::execute
+     * @covers IframeController::execute
      */
     public function testExecuteFailureReturnAction()
     {
@@ -187,7 +139,7 @@ class IframeTest extends AbstractControllerTest
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Controller\Checkout\Iframe::execute
+     * @covers IframeController::execute
      */
     public function testExecuteUnsupportedReturnAction()
     {
@@ -201,5 +153,121 @@ class IframeTest extends AbstractControllerTest
         $result = $this->controllerInstance->execute();
 
         $this->assertNull($result);
+    }
+
+    /**
+     * Gets controller's fully qualified class name
+     *
+     * @return string
+     */
+    protected function getControllerClassName(): string
+    {
+        return IframeController::class;
+    }
+
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp(); // Call the parent setUp to initialize common mocks
+
+        $this->setUpCommonMocks();
+
+        $this->requestMock         = $this->createMock(HttpRequest::class);
+        $this->responseMock        = $this->createMock(HttpResponse::class);
+        $this->redirectFactoryMock = $this->createMock(RedirectFactory::class);
+        $this->storeManagerMock    = $this->createMock(StoreManagerInterface::class);
+        $this->messageManagerMock  = $this->createMock(ManagerInterface::class);
+
+        // Create a mock for the context, which includes all its dependencies
+        $this->contextMock = $this->getMockBuilder(Context::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(
+                [
+                    'getRequest',
+                    'getResponse',
+                    'getResultRedirectFactory',
+                    'getMessageManager',
+                ]
+            )
+            ->addMethods(['getStoreManager'])
+            ->getMock();
+
+        $this->contextMock->method('getRequest')->willReturn($this->requestMock);
+        $this->contextMock->method('getResponse')->willReturn($this->responseMock);
+        $this->contextMock->method('getResultRedirectFactory')->willReturn($this->redirectFactoryMock);
+        $this->contextMock->method('getStoreManager')->willReturn($this->storeManagerMock);
+        $this->contextMock->method('getMessageManager')->willReturn($this->messageManagerMock);
+
+        $this->iframeController = $this->getObjectManagerHelper()->getObject(
+            $this->getControllerClassName(),
+            [
+                'context'         => $this->getContextMock(),
+                'logger'          => $this->createMock(LoggerInterface::class),
+                'checkoutSession' => $this->checkoutSessionMock,
+                'orderFactory'    => $this->orderFactoryMock,
+                'resultFactory'   => $this->resultFactoryMock,
+                'urlBuilder'      => $this->urlBuilderMock
+            ]
+        );
+    }
+
+    /**
+     * Sets up common mocks for test methods
+     */
+    private function setUpCommonMocks(bool $expectRaw = false, string $expectedUrl = '')
+    {
+        $this->resultFactoryMock = $this->getMockBuilder(ResultFactory::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['create'])
+            ->addMethods(['getLastRealOrderId'])
+            ->getMock();
+
+        if ($expectRaw) {
+            $rawMock = $this->createMock(Raw::class);
+            $rawMock->expects($this->once())
+                ->method('setHeader')
+                ->with('Content-Type', 'text/html')
+                ->willReturnSelf();
+
+            if ($expectedUrl !== '') {
+                $expectedHtml = sprintf(
+                    '<html><body><script type="text/javascript">if (window.top !== window.self) ' .
+                    '{window.top.location.href = "%s";} else {window.location.href = "%s";}</script></body></html>',
+                    $expectedUrl,
+                    $expectedUrl
+                );
+
+                $rawMock->expects($this->once())
+                    ->method('setContents')
+                    ->with($expectedHtml)
+                    ->willReturnSelf();
+            }
+
+            $this->resultFactoryMock->expects($this->once())
+                ->method('create')
+                ->with(ResultFactory::TYPE_RAW)
+                ->willReturn($rawMock);
+        }
+
+        $this->urlBuilderMock = $this->createMock(UrlInterface::class);
+        if ($expectedUrl !== '') {
+            $this->urlBuilderMock->expects($this->once())
+                ->method('getUrl')
+                ->willReturn($expectedUrl);
+        }
+
+        $this->controllerInstance = $this->getObjectManagerHelper()->getObject(
+            $this->getControllerClassName(),
+            [
+                'context'         => $this->getContextMock(),
+                'logger'          => $this->createMock(LoggerInterface::class),
+                'checkoutSession' => $this->checkoutSessionMock,
+                'orderFactory'    => $this->orderFactoryMock,
+                'resultFactory'   => $this->resultFactoryMock,
+                'urlBuilder'      => $this->urlBuilderMock
+            ]
+        );
     }
 }

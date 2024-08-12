@@ -19,49 +19,71 @@
 
 namespace EMerchantPay\Genesis\Model\Traits;
 
+use EMerchantPay\Genesis\Helper\Data;
+use EMerchantPay\Genesis\Model\Config;
 use Exception;
 use Genesis\Api\Constants\Transaction\States;
 use Genesis\Api\Constants\Transaction\Types;
+use Genesis\Exceptions\DeprecatedMethod;
+use Genesis\Exceptions\ErrorParameter;
+use Genesis\Exceptions\InvalidArgument;
+use Genesis\Exceptions\InvalidMethod;
+use Genesis\Exceptions\InvalidResponse;
+use Genesis\Genesis;
+use Genesis\Utils\Common;
+use Magento\Checkout\Model\Session;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\UrlInterface;
+use Magento\Framework\Webapi\Exception as WebApiException;
+use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
+use stdClass;
 
 /**
  * Trait for defining common variables and methods for all Payment Solutions
+ *
  * Trait OnlinePaymentMethod
- * @package EMerchantPay\Genesis\Model\Traits
  */
 trait OnlinePaymentMethod
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Config
+     * @var Config
      */
     protected $_configHelper;
     /**
-     * @var \EMerchantPay\Genesis\Helper\Data
+     * @var Data
      */
     protected $_moduleHelper;
     /**
-     * @var \Magento\Framework\App\Action\Context
+     * @var Context
      */
     protected $_actionContext;
     /**
-     * @var \Magento\Store\Model\StoreManagerInterface
+     * @var StoreManagerInterface
      */
     protected $_storeManager;
     /**
-     * @var \Magento\Framework\UrlInterface
+     * @var UrlInterface
      */
     protected $_urlBuilder;
     /**
-     * @var \Magento\Checkout\Model\Session
+     * @var Session
      */
     protected $_checkoutSession;
     /**
-     * @var \Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface
+     * @var Transaction\ManagerInterface
      */
     protected $_transactionManager;
 
     /**
      * Get an Instance of the Config Helper Object
-     * @return \EMerchantPay\Genesis\Model\Config
+     *
+     * @return Config
      */
     public function getConfigHelper()
     {
@@ -70,7 +92,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of the Module Helper Object
-     * @return \EMerchantPay\Genesis\Helper\Data
+     *
+     * @return Data
      */
     public function getModuleHelper()
     {
@@ -79,7 +102,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of the Magento Action Context
-     * @return \Magento\Framework\App\Action\Context
+     *
+     * @return Context
      */
     protected function getActionContext()
     {
@@ -88,7 +112,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of the Magento Core Message Manager
-     * @return \Magento\Framework\Message\ManagerInterface
+     *
+     * @return ManagerInterface
      */
     protected function getMessageManager()
     {
@@ -97,7 +122,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of Magento Core Store Manager Object
-     * @return \Magento\Store\Model\StoreManagerInterface
+     *
+     * @return StoreManagerInterface
      */
     protected function getStoreManager()
     {
@@ -106,7 +132,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of the Url
-     * @return \Magento\Framework\UrlInterface
+     *
+     * @return UrlInterface
      */
     protected function getUrlBuilder()
     {
@@ -115,7 +142,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of the Magento Core Checkout Session
-     * @return \Magento\Checkout\Model\Session
+     *
+     * @return Session
      */
     protected function getCheckoutSession()
     {
@@ -124,7 +152,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get an Instance of the Magento Transaction Manager
-     * @return \Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface
+     *
+     * @return Transaction\ManagerInterface
      */
     protected function getTransactionManager()
     {
@@ -133,7 +162,8 @@ trait OnlinePaymentMethod
 
     /**
      * Get custom Logger
-     * @return \Psr\Log\LoggerInterface
+     *
+     * @return LoggerInterface
      */
     abstract protected function getLogger();
 
@@ -143,34 +173,33 @@ trait OnlinePaymentMethod
      *      - Refund
      *      - Void
      *
-     * @param $transactionClass
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param array $data
+     * @param string        $transactionClass
+     * @param InfoInterface $payment
+     * @param array         $data
      *
-     * @return \stdClass
+     * @return stdClass
      *
-     * @throws \Genesis\Exceptions\DeprecatedMethod
-     * @throws \Genesis\Exceptions\ErrorAPI
-     * @throws \Genesis\Exceptions\InvalidArgument
-     * @throws \Genesis\Exceptions\InvalidMethod
-     * @throws \Genesis\Exceptions\InvalidResponse
-     * @throws \Genesis\Exceptions\ErrorParameter
+     * @throws DeprecatedMethod
+     * @throws InvalidArgument
+     * @throws InvalidMethod
+     * @throws InvalidResponse
+     * @throws ErrorParameter
      * @throws Exception
      */
     protected function processReferenceTransaction(
         $transactionClass,
-        \Magento\Payment\Model\InfoInterface $payment,
+        InfoInterface $payment,
         $data
     ) {
 
         $this->getConfigHelper()->initGatewayClient();
 
-        $genesis = new \Genesis\Genesis($transactionClass);
+        $genesis = new Genesis($transactionClass);
 
         foreach ($data as $key => $value) {
             $methodName = sprintf(
                 "set%s",
-                \Genesis\Utils\Common::snakeCaseToCamelCase(
+                Common::snakeCaseToCamelCase(
                     $key
                 )
             );
@@ -218,16 +247,14 @@ trait OnlinePaymentMethod
             ->setIsTransactionClosed(
                 true
             )
-            ->resetTransactionAdditionalInfo(
-
-            );
+            ->resetTransactionAdditionalInfo();
 
         $this->getModuleHelper()->setPaymentTransactionAdditionalInfo(
             $payment,
             $responseObject
         );
 
-        $payment->save();
+        $this->_paymentRepository->save($payment);
 
         return $responseObject;
     }
@@ -235,17 +262,19 @@ trait OnlinePaymentMethod
     /**
      * Base Payment Capture Method
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param float $amount
-     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $authTransaction
+     * @param InfoInterface    $payment
+     * @param float            $amount
+     * @param Transaction|null $authTransaction
+     *
      * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws WebApiException
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    protected function doCapture(\Magento\Payment\Model\InfoInterface $payment, $amount, $authTransaction)
+    protected function doCapture(InfoInterface $payment, $amount, $authTransaction)
     {
-        /** @var \Magento\Sales\Model\Order $order */
+        /** @var Order $order */
         $order = $payment->getOrder();
 
         $this->getModuleHelper()->setTokenByPaymentTransaction(
@@ -296,17 +325,24 @@ trait OnlinePaymentMethod
     /**
      * Base Payment Refund Method
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param InfoInterface $payment
      * @param float $amount
-     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $captureTransaction
+     * @param Transaction|null $captureTransaction
+     *
      * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws DeprecatedMethod
+     * @throws ErrorParameter
+     * @throws InvalidArgument
+     * @throws InvalidMethod
+     * @throws InvalidResponse
+     * @throws WebApiException
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    protected function doRefund(\Magento\Payment\Model\InfoInterface $payment, $amount, $captureTransaction)
+    protected function doRefund(InfoInterface $payment, $amount, $captureTransaction)
     {
-        /** @var \Magento\Sales\Model\Order $order */
+        /** @var Order $order */
         $order = $payment->getOrder();
 
         if (!$this->getModuleHelper()->canRefundTransaction($captureTransaction)) {
@@ -390,17 +426,24 @@ trait OnlinePaymentMethod
     /**
      * Base Payment Void Method
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $authTransaction
-     * @param \Magento\Sales\Model\Order\Payment\Transaction|null $referenceTransaction
+     * @param InfoInterface $payment
+     * @param Transaction|null $authTransaction
+     * @param Transaction|null $referenceTransaction
+     *
      * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws DeprecatedMethod
+     * @throws ErrorParameter
+     * @throws InvalidArgument
+     * @throws InvalidMethod
+     * @throws InvalidResponse
+     * @throws WebApiException
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    protected function doVoid(\Magento\Payment\Model\InfoInterface $payment, $authTransaction, $referenceTransaction)
+    protected function doVoid(InfoInterface $payment, $authTransaction, $referenceTransaction)
     {
-        /** @var \Magento\Sales\Model\Order $order */
+        /** @var Order $order */
 
         $order = $payment->getOrder();
 
@@ -446,14 +489,16 @@ trait OnlinePaymentMethod
     /**
      * Payment refund
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment
-     * @param float $amount
+     * @param InfoInterface $payment
+     * @param float         $amount
+     *
      * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws WebApiException
      */
-    public function refund(\Magento\Payment\Model\InfoInterface $payment, $amount)
+    public function refund(InfoInterface $payment, $amount)
     {
-        /** @var \Magento\Sales\Model\Order $order */
+        /** @var Order $order */
         $order = $payment->getOrder();
 
         $this->getLogger()->debug('Refund transaction for order #' . $order->getIncrementId());
@@ -480,7 +525,7 @@ trait OnlinePaymentMethod
 
         try {
             $this->doRefund($payment, $amount, $captureTransaction);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()
             );
@@ -497,15 +542,18 @@ trait OnlinePaymentMethod
 
     /**
      * Void Payment
-     * @param \Magento\Payment\Model\InfoInterface $payment
+     *
+     * @param InfoInterface $payment
+     *
      * @return $this
-     * @throws \Magento\Framework\Webapi\Exception
+     *
+     * @throws WebApiException
      *
      * @SuppressWarnings(PHPMD.ElseExpression)
      */
-    public function void(\Magento\Payment\Model\InfoInterface $payment)
+    public function void(InfoInterface $payment)
     {
-        /** @var \Magento\Sales\Model\Order $order */
+        /** @var Order $order */
 
         $order = $payment->getOrder();
 
@@ -517,7 +565,7 @@ trait OnlinePaymentMethod
             $payment
         );
 
-        if ($referenceTransaction->getTxnType() == \Magento\Sales\Model\Order\Payment\Transaction::TYPE_AUTH) {
+        if ($referenceTransaction->getTxnType() == Transaction::TYPE_AUTH) {
             $authTransaction = $referenceTransaction;
         } else {
             $authTransaction = $this->getModuleHelper()->lookUpAuthorizationTransaction(
@@ -536,7 +584,7 @@ trait OnlinePaymentMethod
 
         try {
             $this->doVoid($payment, $authTransaction, $referenceTransaction);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->getLogger()->error(
                 $e->getMessage()
             );
@@ -550,10 +598,13 @@ trait OnlinePaymentMethod
     /**
      * Cancel order
      *
-     * @param \Magento\Payment\Model\InfoInterface $payment
+     * @param InfoInterface $payment
+     *
      * @return $this
+     *
+     * @throws WebApiException
      */
-    public function cancel(\Magento\Payment\Model\InfoInterface $payment)
+    public function cancel(InfoInterface $payment)
     {
         return $this->void($payment);
     }
@@ -562,18 +613,19 @@ trait OnlinePaymentMethod
      * Sets the 3D-Secure redirect URL or throws an exception on failure
      *
      * @param string $redirectUrl
-     * @throws \Exception
+     *
+     * @throws Exception
      */
     public function setRedirectUrl($redirectUrl)
     {
         if (!isset($redirectUrl)) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 __('Empty 3D-Secure redirect URL')
             );
         }
 
         if (filter_var($redirectUrl, FILTER_VALIDATE_URL) === false) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 __('Invalid 3D-Secure redirect URL')
             );
         }

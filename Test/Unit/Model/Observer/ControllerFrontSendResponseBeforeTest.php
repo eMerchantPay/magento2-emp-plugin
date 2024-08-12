@@ -20,29 +20,24 @@
 namespace EMerchantPay\Genesis\Test\Unit\Model\Observer;
 
 use EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
+ * Test front controller response
+ *
  * Class ControllerFrontSendResponseBeforeTest
- * @covers \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore
- * @package EMerchantPay\Genesis\Test\Unit\Model\Observer
+ *
+ * @covers ControllerFrontSendResponseBefore
  */
-class ControllerFrontSendResponseBeforeTest extends \EMerchantPay\Genesis\Test\Unit\Model\Observer\AbstractObserverTest
+class ControllerFrontSendResponseBeforeTest extends AbstractObserverTest
 {
     /**
-     * @var \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore|\PHPUnit_Framework_MockObject_MockObject
+     * @var ControllerFrontSendResponseBefore|MockObject
      */
     protected $observerInstance;
 
     /**
-     * @return string
-     */
-    protected function getObserverClassName()
-    {
-        return ControllerFrontSendResponseBefore::class;
-    }
-
-    /**
-     * @covers \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore::execute()
+     * @covers ControllerFrontSendResponseBefore::execute
      */
     public function testExecuteNullResponse()
     {
@@ -65,7 +60,7 @@ class ControllerFrontSendResponseBeforeTest extends \EMerchantPay\Genesis\Test\U
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore::execute()
+     * @covers ControllerFrontSendResponseBefore::execute
      */
     public function testExecuteDoNotOverrideCheckoutException()
     {
@@ -96,7 +91,7 @@ class ControllerFrontSendResponseBeforeTest extends \EMerchantPay\Genesis\Test\U
     }
 
     /**
-     * @covers \EMerchantPay\Genesis\Model\Observer\ControllerFrontSendResponseBefore::execute()
+     * @covers ControllerFrontSendResponseBefore::execute
      */
     public function testExecuteOverrideCheckoutException()
     {
@@ -132,5 +127,13 @@ class ControllerFrontSendResponseBeforeTest extends \EMerchantPay\Genesis\Test\U
             ->with($this->webapiException);
 
         $this->getObserverInstance()->execute($this->observerMock);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getObserverClassName()
+    {
+        return ControllerFrontSendResponseBefore::class;
     }
 }

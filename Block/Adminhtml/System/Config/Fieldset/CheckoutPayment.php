@@ -23,12 +23,12 @@ namespace EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset;
  * Renderer for EMerchantPay Checkout Panel in System Configuration
  *
  * Class CheckoutPayment
- * @package EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset
  */
 class CheckoutPayment extends \EMerchantPay\Genesis\Block\Adminhtml\System\Config\Fieldset\Base\Payment
 {
     /**
      * Retrieves the Module Panel Css Class
+     *
      * @return string
      */
     protected function getBlockHeadCssClass()

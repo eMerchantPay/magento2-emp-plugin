@@ -19,23 +19,33 @@
 
 namespace EMerchantPay\Genesis\Plugin;
 
+use Closure;
+use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\Request\CsrfValidator;
+use Magento\Framework\App\RequestInterface;
+
 /**
+ * Skip CSRF validation for the notification URL
+ *
  * Class CsrfValidatorSkip
- * @package EMerchantPay\Genesis\Plugin
  */
 class CsrfValidatorSkip
 {
     /**
-     * @param \Magento\Framework\App\Request\CsrfValidator $subject
-     * @param \Closure $proceed
-     * @param \Magento\Framework\App\RequestInterface $request
-     * @param \Magento\Framework\App\ActionInterface $action
+     * Use our validator instead of the original
+     *
+     * @param CsrfValidator    $subject
+     * @param Closure          $proceed
+     * @param RequestInterface $request
+     * @param ActionInterface  $action
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function aroundValidate(
-        $subject,
-        \Closure $proceed,
-        $request,
-        $action
+        CsrfValidator    $subject,
+        Closure          $proceed,
+        RequestInterface $request,
+        ActionInterface  $action
     ) {
         if ($request->getModuleName() == 'emerchantpay') {
             return;

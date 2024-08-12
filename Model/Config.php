@@ -19,9 +19,15 @@
 
 namespace EMerchantPay\Genesis\Model;
 
+use Genesis\Api\Constants\Endpoints;
+use Genesis\Api\Constants\Environments;
+use Genesis\Config as GenesisConfig;
+use Genesis\Exceptions\InvalidArgument;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 
-class Config implements \Magento\Payment\Model\Method\ConfigInterface
+class Config implements ConfigInterface
 {
     /**
      * Current payment method code
@@ -40,22 +46,23 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      */
     protected $pathPattern;
     /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     * @var ScopeConfigInterface
      */
     protected $_scopeConfig;
 
     /**
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->_scopeConfig = $scopeConfig;
     }
 
     /**
      * Get an Instance of the Magento ScopeConfig
-     * @return \Magento\Framework\App\Config\ScopeConfigInterface
+     *
+     * @return ScopeConfigInterface
      */
     protected function getScopeConfig()
     {
@@ -63,35 +70,37 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     }
 
     /**
-     * Set the the Credentials and Environment to the Gateway Client
+     * Set the Credentials and Environment to the Gateway Client
+     *
      * @return void
-     * @throws \Genesis\Exceptions\InvalidArgument
+     *
+     * @throws InvalidArgument
      */
     public function initGatewayClient()
     {
-        \Genesis\Config::setEndpoint(
-            \Genesis\Api\Constants\Endpoints::EMERCHANTPAY
+        GenesisConfig::setEndpoint(
+            Endpoints::EMERCHANTPAY
         );
 
-        \Genesis\Config::setUsername(
+        GenesisConfig::setUsername(
             $this->getUserName()
         );
 
-        \Genesis\Config::setPassword(
+        GenesisConfig::setPassword(
             $this->getPassword()
         );
 
         $token = $this->getToken();
         if (!empty($token)) {
-            \Genesis\Config::setToken(
+            GenesisConfig::setToken(
                 $token
             );
         }
 
-        \Genesis\Config::setEnvironment(
+        GenesisConfig::setEnvironment(
             $this->getIsStagingMode() ?
-                \Genesis\Api\Constants\Environments::STAGING :
-                \Genesis\Api\Constants\Environments::PRODUCTION
+                Environments::STAGING :
+                Environments::PRODUCTION
         );
     }
 
@@ -109,6 +118,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Store ID setter
      *
      * @param int $storeId
+     *
      * @return $this
      */
     public function setStoreId($storeId)
@@ -120,8 +130,9 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     /**
      * Returns payment configuration value
      *
-     * @param string $key
-     * @param null $storeId
+     * @param string   $key
+     * @param int|null $storeId
+     *
      * @return null|string
      */
     public function getValue($key, $storeId = null)
@@ -146,6 +157,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Sets method code
      *
      * @param string $methodCode
+     *
      * @return void
      */
     public function setMethodCode($methodCode)
@@ -157,6 +169,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Sets path pattern
      *
      * @param string $pathPattern
+     *
      * @return void
      */
     public function setPathPattern($pathPattern)
@@ -168,6 +181,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Map any supported payment method into a config path by specified field name
      *
      * @param string $fieldName
+     *
      * @return string|null
      */
     protected function getSpecificConfigPath($fieldName)
@@ -182,9 +196,11 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     /**
      * Check whether Gateway API credentials are available for this method
      *
-     * @param null $methodCode
+     * @param string|null $methodCode
      *
      * @return bool
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function isApiAvailable($methodCode = null)
     {
@@ -196,7 +212,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     /**
      * Check whether method available for checkout or not
      *
-     * @param null $methodCode
+     * @param string|null $methodCode
      *
      * @return bool
      */
@@ -210,6 +226,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Check whether method active in configuration and supported for merchant country or not
      *
      * @param string $methodCode Method code
+     *
      * @return bool
      */
     public function isMethodActive($methodCode = null)
@@ -223,6 +240,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Check whether tokenization is enabled
      *
      * @param string $methodCode Method code
+     *
      * @return bool
      */
     public function isTokenizationEnabled($methodCode = null)
@@ -234,8 +252,10 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Check if Method Bool Setting Checked
+     *
      * @param string|null $methodCode
-     * @param string $name
+     * @param string      $name
+     *
      * @return bool
      */
     public function isFlagChecked($methodCode, $name)
@@ -251,6 +271,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get if Payment Solution is configured to use the Staging (Test) Environment
+     *
      * @return bool
      */
     public function getIsStagingMode()
@@ -260,6 +281,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method UserName Admin Setting
+     *
      * @return null|string
      */
     public function getUserName()
@@ -269,6 +291,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method Password Admin Setting
+     *
      * @return null|string
      */
     public function getPassword()
@@ -278,6 +301,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method Token Admin Setting
+     *
      * @return null|string
      */
     public function getToken()
@@ -287,6 +311,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method Checkout Page Title
+     *
      * @return null|string
      */
     public function getCheckoutTitle()
@@ -296,6 +321,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method Available Transaction Types
+     *
      * @return array
      */
     public function getTransactionTypes()
@@ -312,6 +338,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method New Order Status
+     *
      * @return null|string
      */
     public function getOrderStatusNew()
@@ -320,8 +347,8 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
     }
 
     /**
-     * Get if specific currencies are allowed
-     * (not all global allowed currencies)
+     * Get if specific currencies are allowed (not all global allowed currencies)
+     *
      * @return bool
      */
     public function getAreAllowedSpecificCurrencies()
@@ -334,6 +361,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get Method Allowed Currency array
+     *
      * @return array
      */
     public function getAllowedCurrencies()
@@ -351,6 +379,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
      * Checks whether an email has to be sent after successful payment
      *
      * @param string|null $methodCode
+     *
      * @return bool
      */
     public function getPaymentConfirmationEmailEnabled($methodCode = null)
@@ -362,6 +391,7 @@ class Config implements \Magento\Payment\Model\Method\ConfigInterface
 
     /**
      * Get selected Bank codes
+     *
      * @return array
      */
     public function getBankCodes()

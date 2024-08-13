@@ -66,7 +66,7 @@ class ConsumerField implements DataPatchInterface
 
         $customerSetup  = $this->customerSetupFactory->create(['setup' => $this->moduleDataSetup]);
 
-        $customerEntity = $customerSetup->getEavConfig()->getEntityType(Customer::ENTITY);
+        $customerEntity = $customerSetup->getEavConfig()->getEntityType(MagentoCustomer::ENTITY);
         $attributeSetId = $customerEntity->getDefaultAttributeSetId();
 
         $attributeSet     = $this->attributeSetFactory->create();

@@ -186,10 +186,6 @@ class CheckoutTest extends AbstractMethodTest
             ->willReturn($quote);
 
         $orderMock->expects(static::once())
-            ->method('getBaseCurrencyCode')
-            ->willReturn('USD');
-
-        $orderMock->expects(static::once())
             ->method('getBillingAddress')
             ->willReturn(
                 $this->getOrderAddressMock()

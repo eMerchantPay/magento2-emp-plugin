@@ -39,6 +39,7 @@ use PHPUnit\Framework\MockObject\Rule\InvokedCount;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface as Logger;
 use stdClass;
+use EMerchantPay\Genesis\Model\Service\MultiCurrencyProcessingService;
 
 /**
  * Class AbstractIpnTest
@@ -495,6 +496,11 @@ abstract class AbstractIpnTest extends AbstractTestCase
             $this->dataHelperMock
         );
 
+        $this->multiCurrencyProcessingServiceMock = $this->createMock(MultiCurrencyProcessingService::class);
+
+        $this->multiCurrencyProcessingServiceMock->method('getWpfAmount')
+            ->willReturn(271.97);
+
         $constructorParams = [
             'context'           => $this->contextMock,
             'orderFactory'      => $this->orderFactoryMock,
@@ -502,6 +508,7 @@ abstract class AbstractIpnTest extends AbstractTestCase
             'creditmemoSender'  => $this->creditmemoSenderMock,
             'logger'            => $this->loggerMock,
             'moduleHelper'      => $this->dataHelperMock,
+            'multiCurrencyProcessingService' => $this->multiCurrencyProcessingServiceMock,
             'data'              => $this->postParams
         ];
 

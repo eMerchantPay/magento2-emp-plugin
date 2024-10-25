@@ -19,12 +19,44 @@
 
 namespace EMerchantPay\Genesis\Controller\Ipn;
 
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+
 /**
  * Unified IPN controller for all supported EMerchantPay Payment Methods
  * Class Index
  */
-class Index extends \EMerchantPay\Genesis\Controller\AbstractAction
+class Index extends \EMerchantPay\Genesis\Controller\AbstractAction implements CsrfAwareActionInterface
 {
+    /**
+     * Skip CSRF validation for the received request from the Gateway
+     *
+     * @param RequestInterface $request
+     *
+     * @return bool|null
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
+    }
+
+    /**
+     * No validation required
+     *
+     * @param RequestInterface $request
+     *
+     * @return InvalidRequestException|null
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
     /**
      * Get the name of the IPN Class, used to handle the posted Notification. It is separated per Payment Method
      *

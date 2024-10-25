@@ -120,8 +120,8 @@ define(
             },
 
             isIframeProcessingEnabled() {
-                const iframeProcessingDataDiv = document.getElementById('iframeProcessingData');
-                let isIframeProcessingEnabled = iframeProcessingDataDiv.getAttribute('data-iframe-processing-enabled');
+                const empIframeProcessingDataDiv = document.getElementById('empIframeProcessingData');
+                let isIframeProcessingEnabled = empIframeProcessingDataDiv.getAttribute('data-iframe-processing-enabled');
 
                 return isIframeProcessingEnabled === '1';
             }

@@ -318,7 +318,7 @@ abstract class AbstractMethodTest extends AbstractTestCase
                     'getStoreId',
                     'getBillingAddress',
                     'getShippingAddress',
-                    'getBaseCurrencyCode',
+                    'getOrderCurrencyCode',
                     'getBaseTaxAmount',
                     'getRemoteIp',
                     '__wakeup'

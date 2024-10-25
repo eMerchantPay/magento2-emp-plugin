@@ -21,6 +21,7 @@ namespace EMerchantPay\Genesis\Model\Method;
 
 use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Logger\Logger;
+use EMerchantPay\Genesis\Model\Service\MultiCurrencyProcessingService;
 use EMerchantpay\Genesis\Helper\Threeds;
 use Exception;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
@@ -52,6 +53,7 @@ use Magento\Payment\Model\InfoInterface;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Sales\Api\OrderPaymentRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use stdClass;
 
@@ -86,6 +88,11 @@ class Checkout extends Base
     protected $_customerRepositoryInterface;
 
     /**
+     * @var MultiCurrencyProcessingService
+     */
+    protected $_multiCurrencyProcessingService;
+
+    /**
      * Checkout constructor.
      *
      * @param Context                         $context
@@ -99,6 +106,7 @@ class Checkout extends Base
      * @param CustomerRepositoryInterface     $customerRepositoryInterface
      * @param Threeds                         $threedsHelper
      * @param OrderPaymentRepositoryInterface $paymentRepository
+     * @param MultiCurrencyProcessingService  $multiCurrencyProcessingService
      * @param AbstractResource|null           $resource
      * @param AbstractDb|null                 $resourceCollection
      * @param array                           $data
@@ -117,6 +125,7 @@ class Checkout extends Base
         CustomerRepositoryInterface     $customerRepositoryInterface,
         Threeds                         $threedsHelper,
         OrderPaymentRepositoryInterface $paymentRepository,
+        MultiCurrencyProcessingService  $multiCurrencyProcessingService,
         AbstractResource                $resource = null,
         AbstractDb                      $resourceCollection = null,
         array                           $data = []
@@ -134,16 +143,18 @@ class Checkout extends Base
             $data
         );
 
-        $this->_actionContext               = $actionContext;
-        $this->_storeManager                = $storeManager;
-        $this->_checkoutSession             = $checkoutSession;
-        $this->_moduleHelper                = $moduleHelper;
-        $this->_threedsHelper               = $threedsHelper;
-        $this->_customerRepositoryInterface = $customerRepositoryInterface;
-        $this->_configHelper                =
+        $this->_actionContext                  = $actionContext;
+        $this->_storeManager                   = $storeManager;
+        $this->_checkoutSession                = $checkoutSession;
+        $this->_moduleHelper                   = $moduleHelper;
+        $this->_threedsHelper                  = $threedsHelper;
+        $this->_customerRepositoryInterface    = $customerRepositoryInterface;
+        $this->_configHelper                   =
             $this->getModuleHelper()->getMethodConfig(
                 $this->getCode()
             );
+        $this->_multiCurrencyProcessingService = $multiCurrencyProcessingService;
+        $this->_multiCurrencyProcessingService->setMethodCode($this->getCode());
     }
 
     /**
@@ -222,7 +233,12 @@ class Checkout extends Base
      *
      * @return stdClass
      *
-     * @throws WebapiException
+     * @throws ErrorParameter
+     * @throws InvalidArgument
+     * @throws InvalidMethod
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws Exception
      */
     protected function checkout($data)
     {
@@ -592,6 +608,8 @@ class Checkout extends Base
      * @return $this
      *
      * @throws LocalizedException|InvalidArgument
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function order(InfoInterface $payment, $amount)
     {
@@ -604,32 +622,32 @@ class Checkout extends Base
 
         // @codingStandardsIgnoreStart
         $data = [
-            'transaction_id' =>
+            'transaction_id'    =>
                 $this->getModuleHelper()->genTransactionId(
                     $orderId
                 ),
             'transaction_types' =>
                 $this->getConfigHelper()->getTransactionTypes(),
-            'order' => [
-                'currency' => $order->getBaseCurrencyCode(),
-                'language' => $this->getModuleHelper()->getLocale(),
-                'amount' => $amount,
-                'usage' => $this->getModuleHelper()->buildOrderUsage(),
+            'order'             => [
+                'currency'    => $this->_multiCurrencyProcessingService->getOrderCurrency($order),
+                'language'    => $this->getModuleHelper()->getLocale(),
+                'amount'      => $this->_multiCurrencyProcessingService->getOrderAmount($order, $amount),
+                'usage'       => $this->getModuleHelper()->buildOrderUsage(),
                 'description' => $this->getModuleHelper()->buildOrderDescriptionText(
                     $order
                 ),
-                'customer' => [
+                'customer'    => [
                     'id'    => $order->getCustomerId(),
                     'email' => $this->getCheckoutSession()->getQuote()->getCustomerEmail(),
                 ],
-                'billing' =>
+                'billing'     =>
                     $order->getBillingAddress(),
-                'shipping' =>
+                'shipping'    =>
                     $order->getShippingAddress(),
                 'orderObject' => $order
             ],
-            'urls' => [
-                'notify' =>
+            'urls'              => [
+                'notify'         =>
                     $this->getModuleHelper()->getNotificationUrl(
                         $this->getCode()
                     ),
@@ -744,6 +762,7 @@ class Checkout extends Base
         }
 
         try {
+            $amount = $this->_multiCurrencyProcessingService->convertAmount($amount, $order);
             $this->doCapture($payment, $amount, $authTransaction);
         } catch (Exception $e) {
             $this->getLogger()->error(
@@ -944,5 +963,18 @@ class Checkout extends Base
             $selectedCreditCardTypes,
             array_diff($selectedTypes, $selectedCreditCardTypes)
         );
+    }
+
+    /**
+     * Convert amount according to the order currency
+     *
+     * @param float $amount
+     * @param Order $order
+     *
+     * @return float|null
+     */
+    protected function convertAmount($amount, $order)
+    {
+        return $this->_multiCurrencyProcessingService->convertAmount($amount, $order);
     }
 }

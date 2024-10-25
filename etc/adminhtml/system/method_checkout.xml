@@ -145,7 +145,13 @@ GNU General Public License for more details.
             </depends>
             <can_be_empty>0</can_be_empty>
         </field>
-        <field id="min_order_total" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="multi_currency_processing" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Enable Multi-Currency Processing</label>
+            <comment><![CDATA[Yes, will process payment with the chosen currency on the Checkout Page. No, will process payment with the chosen currency on the Base platform currency]]></comment>
+            <config_path>payment/emerchantpay_checkout/multi_currency_processing</config_path>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+        </field>
+        <field id="min_order_total" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Minimum Order Total</label>
             <config_path>payment/emerchantpay_checkout/min_order_total</config_path>
             <validate>validate-zero-or-greater</validate>
@@ -154,7 +160,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="max_order_total" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="max_order_total" translate="label" type="text" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Maximum Order Total</label>
             <config_path>payment/emerchantpay_checkout/max_order_total</config_path>
             <validate>validate-zero-or-greater</validate>
@@ -163,7 +169,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="sort_order" translate="label" type="text" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sort_order" translate="label" type="text" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Sort Order</label>
             <config_path>payment/emerchantpay_checkout/sort_order</config_path>
             <frontend_class>validate-number</frontend_class>
@@ -173,7 +179,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="payment_confirmation_email_enabled" translate="label" type="select" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="payment_confirmation_email_enabled" translate="label" type="select" sortOrder="19" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable e-mail notifications</label>
             <comment><![CDATA[If checked, the New Order e-mails are received upon successful payment.<br>Notes: Make sure to enable New Order e-mails from Store > Configuration > Sales > Sales Emails > Order > Enabled]]></comment>
             <config_path>payment/emerchantpay_checkout/payment_confirmation_email_enabled</config_path>
@@ -182,7 +188,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="threeds_allowed" translate="label" type="select" sortOrder="19" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="threeds_allowed" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Enable 3DSv2 parameters</label>
             <comment><![CDATA[Enable the plugin extraction of the 3DSv2 parameters and sent them to the Gateway]]></comment>
             <config_path>payment/emerchantpay_checkout/threeds_allowed</config_path>
@@ -191,7 +197,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="threeds_challenge_indicator" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="threeds_challenge_indicator" translate="label" type="select" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Challenge Indicator</label>
             <comment><![CDATA[Select the 3DSv2 Challenge weight]]></comment>
             <tooltip><![CDATA[Hint: The value has weight and might impact the decision whether a challenge will be required for the transaction or not.]]></tooltip>
@@ -202,7 +208,7 @@ GNU General Public License for more details.
                 <field id="threeds_allowed">1</field>
             </depends>
         </field>
-        <field id="sca_exemption" translate="label" type="select" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sca_exemption" translate="label" type="select" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>SCA Exemption</label>
             <comment><![CDATA[Exemption for the Strong Customer Authentication]]></comment>
             <config_path>payment/emerchantpay_checkout/sca_exemption</config_path>
@@ -212,7 +218,7 @@ GNU General Public License for more details.
                 <field id="active">1</field>
             </depends>
         </field>
-        <field id="sca_exemption_amount" translate="label" type="text" sortOrder="22" showInDefault="1" showInWebsite="1" showInStore="0">
+        <field id="sca_exemption_amount" translate="label" type="text" sortOrder="23" showInDefault="1" showInWebsite="1" showInStore="0">
             <label>Exemption Amount</label>
             <comment><![CDATA[Exemption Amount determinate if the SCA Exemption should be included in the request to the Gateway]]></comment>
             <config_path>payment/emerchantpay_checkout/sca_exemption_amount</config_path>

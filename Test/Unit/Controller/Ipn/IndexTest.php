@@ -22,8 +22,10 @@ namespace EMerchantPay\Genesis\Test\Unit\Controller\Ipn;
 use EMerchantPay\Genesis\Controller\Ipn\Index as IndexController;
 use EMerchantPay\Genesis\Model\Ipn\CheckoutIpn;
 use EMerchantPay\Genesis\Test\Unit\Controller\AbstractControllerTest;
+use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\Webapi\Response;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
 
 /**
  * Test Notifications
@@ -105,6 +107,30 @@ class IndexTest extends AbstractControllerTest
             ->willReturnSelf();
 
         $this->getControllerInstance()->execute();
+    }
+
+    public function testValidateForCsrf()
+    {
+        $loggerMock = $this->createMock(LoggerInterface::class);
+        $object = new IndexController($this->getContextMock(), $loggerMock);
+
+        $this->assertEquals(true, $object->validateForCsrf($this->getHttpRequestMock()));
+    }
+
+    public function testCreateCsrfValidationException()
+    {
+        $loggerMock = $this->createMock(LoggerInterface::class);
+        $object = new IndexController($this->getContextMock(), $loggerMock);
+
+        $this->assertEquals(null, $object->createCsrfValidationException($this->getHttprequestMock()));
+    }
+
+    public function testSkipCsrfInterface()
+    {
+        $loggerMock = $this->createMock(LoggerInterface::class);
+        $object = new IndexController($this->getContextMock(), $loggerMock);
+
+        $this->assertInstanceOf(CsrfAwareActionInterface::class, $object);
     }
 
     /**

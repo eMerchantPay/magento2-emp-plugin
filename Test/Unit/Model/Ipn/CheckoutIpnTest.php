@@ -26,9 +26,10 @@ use Genesis\Api\Constants\Transaction\States;
 use Genesis\Api\Constants\Transaction\Types;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Sales\Model\Order;
 use PHPUnit\Framework\MockObject\MockObject;
 use stdClass;
-use Magento\Sales\Api\OrderRepositoryInterface;
+use EMerchantPay\Genesis\Model\Service\MultiCurrencyProcessingService;
 
 /**
  * Test Checkout notification
@@ -73,8 +74,13 @@ class CheckoutIpnTest extends AbstractIpnTest
         $this->setPostParams();
 
         parent::setUp();
-    }
 
+        $this->multiCurrencyProcessingServiceMock = $this->createMock(MultiCurrencyProcessingService::class);
+
+        $this->multiCurrencyProcessingServiceMock->method('getWpfAmount')
+            ->with($this->isInstanceOf(OrderInterface::class))
+            ->willReturn(self::RECONCILIATION_AMOUNT);
+    }
     /**
      * Set IPN POST params and customer's password for the gateway
      */
@@ -173,6 +179,15 @@ class CheckoutIpnTest extends AbstractIpnTest
             ->getMockForAbstractClass();
 
         $orderMock = $this->createMock(OrderInterface::class);
+
+        $orderMock->method('getBaseGrandTotal')
+            ->willReturn(self::RECONCILIATION_AMOUNT);
+
+        $orderMock->method('getTotalDue')
+            ->willReturn(self::RECONCILIATION_AMOUNT);
+
+        $paymentMock->method('getOrder')->willReturn($orderMock);
+
         $paymentMock->method('getOrder')->willReturn($orderMock);
 
         $paymentMock->expects(self::once())

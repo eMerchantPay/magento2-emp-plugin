@@ -34,6 +34,7 @@ GNU General Public License for more details.
                 <threeds_challenge_indicator>no_preference</threeds_challenge_indicator>
                 <sca_exemption>low_risk</sca_exemption>
                 <sca_exemption_amount>100</sca_exemption_amount>
+                <multi_currency_processing>0</multi_currency_processing>
             </emerchantpay_checkout>
         </payment>
     </default>

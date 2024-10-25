@@ -21,16 +21,17 @@ namespace EMerchantPay\Genesis\Model\Ipn;
 
 use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Model\Method\Checkout;
+use EMerchantPay\Genesis\Model\Service\MultiCurrencyProcessingService;
 use Exception;
 use Genesis\Api\Constants\Transaction\States;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
-use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
-use Magento\Sales\Model\OrderFactory;
 use Psr\Log\LoggerInterface;
 use stdClass;
 
@@ -47,6 +48,11 @@ class CheckoutIpn extends AbstractIpn
     protected $orderRepository;
 
     /**
+     * @var MultiCurrencyProcessingService
+     */
+    protected $multiCurrencyProcessingService;
+
+    /**
      * @param Context                               $context
      * @param OrderFactory                          $orderFactory
      * @param OrderSender                           $orderSender
@@ -55,6 +61,7 @@ class CheckoutIpn extends AbstractIpn
      * @param Data                                  $moduleHelper
      * @param OrderRepositoryInterface              $orderRepository
      * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
+     * @param MultiCurrencyProcessingService        $multiCurrencyProcessingService
      * @param array                                 $data
      *
      * @throws NoSuchEntityException
@@ -68,6 +75,7 @@ class CheckoutIpn extends AbstractIpn
         Data                                  $moduleHelper,
         OrderRepositoryInterface              $orderRepository,
         OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
+        MultiCurrencyProcessingService        $multiCurrencyProcessingService,
         array                                 $data = []
     ) {
         parent::__construct(
@@ -81,7 +89,9 @@ class CheckoutIpn extends AbstractIpn
             $data
         );
 
-        $this->orderRepository = $orderRepository;
+        $this->orderRepository                = $orderRepository;
+        $this->multiCurrencyProcessingService = $multiCurrencyProcessingService;
+        $this->multiCurrencyProcessingService->setMethodCode($this->getPaymentMethodCode());
     }
 
     /**
@@ -196,18 +206,15 @@ class CheckoutIpn extends AbstractIpn
     ) {
         $transactionType = $payment_transaction->transaction_type;
 
-        if ($this->getModuleHelper()->getShouldCreateAuthNotification($transactionType)) {
-            $payment->registerAuthorizationNotification(
-                $payment_transaction->amount
-            );
+        $amount = $this->multiCurrencyProcessingService->getWpfAmount($payment->getOrder());
 
-            return;
-        }
-
-        if ($this->getModuleHelper()->getShouldCreateCaptureNotification($transactionType)) {
-            $payment->registerCaptureNotification(
-                $payment_transaction->amount
-            );
+        switch (true) {
+            case $this->getModuleHelper()->getShouldCreateAuthNotification($transactionType):
+                $payment->registerAuthorizationNotification($amount);
+                break;
+            case $this->getModuleHelper()->getShouldCreateCaptureNotification($transactionType):
+                $payment->registerCaptureNotification($amount);
+                break;
         }
     }
 }

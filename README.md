@@ -10,7 +10,7 @@ This is a Payment Module for Magento 2, that gives you the ability to process pa
 Requirements
 ------------
 
-* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p1__)
+* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p3__)
 * [GenesisPHP v2.0.2](https://github.com/GenesisGateway/genesis_php/releases/tag/2.0.2) - (Integrated in Module)
 
 Installation (composer)

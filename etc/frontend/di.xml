@@ -8,7 +8,4 @@
             </argument>
         </arguments>
     </virtualType>
-    <type name="Magento\Framework\App\Request\CsrfValidator">
-        <plugin name="csrf_validator_skip" type="EMerchantPay\Genesis\Plugin\CsrfValidatorSkip" />
-    </type>
 </config>

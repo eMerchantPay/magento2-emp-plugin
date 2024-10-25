@@ -289,7 +289,7 @@ trait OnlinePaymentMethod
             'reference_id'   =>
                 $authTransaction->getTxnId(),
             'currency'       =>
-                $order->getBaseCurrencyCode(),
+                $order->getOrderCurrencyCode(),
             'amount'         =>
                 $amount,
             'usage'          =>
@@ -377,7 +377,7 @@ trait OnlinePaymentMethod
             'reference_id'   =>
                 $captureTransaction->getTxnId(),
             'currency'       =>
-                $order->getBaseCurrencyCode(),
+                $order->getOrderCurrencyCode(),
             'amount'         =>
                 $amount,
             'usage'          =>
@@ -524,6 +524,7 @@ trait OnlinePaymentMethod
         }
 
         try {
+            $amount = $this->convertAmount($amount, $order);
             $this->doRefund($payment, $amount, $captureTransaction);
         } catch (Exception $e) {
             $this->getLogger()->error(

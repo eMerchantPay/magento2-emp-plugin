@@ -213,14 +213,14 @@ trait OnlinePaymentMethod
         if (in_array(
             $transactionClass,
             [
-                Types::getCaptureTransactionClass(Types::KLARNA_AUTHORIZE),
-                Types::getRefundTransactionClass(Types::KLARNA_CAPTURE)
+                Types::getCaptureTransactionClass(Types::INVOICE),
+                Types::getRefundTransactionClass(Types::INVOICE_CAPTURE)
             ]
         )) {
             $genesis
                 ->request()
                 ->setItems(
-                    $this->getModuleHelper()->getKlarnaCustomParamItems($payment->getOrder())
+                    $this->getModuleHelper()->getInvoiceCustomParamItems($payment->getOrder())
                 );
         }
 

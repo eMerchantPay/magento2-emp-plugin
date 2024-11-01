@@ -25,6 +25,7 @@ use EMerchantPay\Genesis\Model\Config as ModelConfig;
 use EMerchantPay\Genesis\Model\ConfigFactory;
 use EMerchantPay\Genesis\Model\Method\Checkout as MethodCheckout;
 use Exception;
+use Genesis\Api\Constants\Financial\Alternative\Transaction\ItemTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\ApplePay\PaymentTypes as ApplePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Mobile\GooglePay\PaymentTypes as GooglePaymentTypes;
 use Genesis\Api\Constants\Transaction\Parameters\Wallets\PayPal\PaymentTypes as PayPalPaymentTypes;
@@ -32,8 +33,8 @@ use Genesis\Api\Constants\Transaction\States;
 use Genesis\Api\Constants\Transaction\Types as GenesisTransactionTypes;
 use Genesis\Api\Constants\i18n;
 use Genesis\Api\Notification;
-use Genesis\Api\Request\Financial\Alternatives\Klarna\Item;
-use Genesis\Api\Request\Financial\Alternatives\Klarna\Items;
+use Genesis\Api\Request\Financial\Alternatives\Transaction\Item as InvoiceItem;
+use Genesis\Api\Request\Financial\Alternatives\Transaction\Items as InvoiceItems;
 use Genesis\Api\Response;
 use Genesis\Config as GenesisConfig;
 use Genesis\Exceptions\ErrorParameter;
@@ -1301,65 +1302,65 @@ class Data extends AbstractHelper
     }
 
     /**
-     * Return Klarna custom parameter items
+     * Return Invoice custom parameter items
      *
      * @param MagentoOrder $order
      *
-     * @return Items
+     * @return InvoiceItems
      *
      * @throws ErrorParameter
+     * @throws InvalidArgument
      */
-    public function getKlarnaCustomParamItems($order)
+    public function getInvoiceCustomParamItems($order)
     {
-        $items     = new Items($order->getOrderCurrencyCode());
+        $invoiceItems = new InvoiceItems();
+        $invoiceItems->setCurrency($order->getOrderCurrencyCode());
+
         $itemsList = $this->getItemListArray($order);
         foreach ($itemsList as $item) {
-            $klarnaItem = new Item(
-                $item['name'],
-                $item['type'],
-                $item['qty'],
-                $item['price']
-            );
-            $items->addItem($klarnaItem);
+            $invoiceItem = new InvoiceItem();
+            $invoiceItem->setName($item['name']);
+            $invoiceItem->setItemType($item['type']);
+            $invoiceItem->setQuantity($item['qty']);
+            $invoiceItem->setUnitPrice($item['price']);
+
+            $invoiceItems->addItem($invoiceItem);
         }
 
         $taxes = floatval($order->getTaxAmount());
         if ($taxes) {
-            $items->addItem(
-                new Item(
-                    'Taxes',
-                    Item::ITEM_TYPE_SURCHARGE,
-                    1,
-                    $taxes
-                )
-            );
+            $invoiceItem = new InvoiceItem();
+            $invoiceItem->setName('Taxes');
+            $invoiceItem->setItemType(ItemTypes::SURCHARGE);
+            $invoiceItem->setQuantity(1);
+            $invoiceItem->setUnitPrice($taxes);
+
+            $invoiceItems->addItem($invoiceItem);
         }
 
         $discount = floatval($order->getDiscountAmount());
         if ($discount) {
-            $items->addItem(
-                new Item(
-                    'Discount',
-                    Item::ITEM_TYPE_DISCOUNT,
-                    1,
-                    -$discount
-                )
-            );
+            $invoiceItem = new InvoiceItem();
+            $invoiceItem->setName('Discount');
+            $invoiceItem->setItemType(ItemTypes::DISCOUNT);
+            $invoiceItem->setQuantity(1);
+            $invoiceItem->setUnitPrice(-$discount);
+
+            $invoiceItems->addItem($invoiceItem);
         }
 
         $shipping_cost = floatval($order->getShippingAmount());
         if ($shipping_cost) {
-            $items->addItem(
-                new Item(
-                    'Shipping Costs',
-                    Item::ITEM_TYPE_SHIPPING_FEE,
-                    1,
-                    $shipping_cost
-                )
-            );
+            $invoiceItem = new InvoiceItem();
+            $invoiceItem->setName('Shipping Costs');
+            $invoiceItem->setItemType(ItemTypes::SHIPPING_FEE);
+            $invoiceItem->setQuantity(1);
+            $invoiceItem->setUnitPrice($shipping_cost);
+
+            $invoiceItems->addItem($invoiceItem);
         }
 
-        return $items;
+        return $invoiceItems;
     }
 
     /**
@@ -1374,24 +1375,36 @@ class Data extends AbstractHelper
         $productResult = [];
 
         foreach ($order->getAllItems() as $item) {
-            /** @var $item Mage_Sales_Model_Quote_Item */
-            $product = $item->getProduct();
+            // Skip parent items of configurable products
+            if ($item->getProductType() == 'configurable') {
+                continue;
+            }
 
-            $type = $item->getIsVirtual() ?
-                Item::ITEM_TYPE_DIGITAL :
-                Item::ITEM_TYPE_PHYSICAL;
+            // Determine if the item has a parent item (e.g., child of configurable)
+            $parentItem = $item->getParentItem();
+
+            // Initialize variables
+            $price    = $item->getPrice();
+            $quantity = $item->getQtyOrdered();
+            $product  = $item->getProduct();
+            $type     = $item->getIsVirtual() ? ItemTypes::DIGITAL : ItemTypes::PHYSICAL;
+
+            // If item is a child of configurable product, get price and quantity from parent
+            if ($parentItem && $parentItem->getProductType() == 'configurable') {
+                $price    = $parentItem->getPrice();
+                $quantity = $parentItem->getQtyOrdered();
+            }
+
+            // Collect product details
+            $sku  = $product->getSku();
+            $name = $product->getName();
 
             $productResult[] = [
-                'sku'  =>
-                    $product->getSku(),
-                'name' =>
-                    $product->getName(),
-                'qty'  =>
-                    $item->getData('qty_ordered'),
-                'price' =>
-                    $item->getPrice(),
-                'type' =>
-                    $type
+                'sku'   => $sku,
+                'name'  => $name,
+                'qty'   => $quantity,
+                'price' => $price,
+                'type'  => $type
             ];
         }
 

@@ -150,7 +150,6 @@ abstract class Payment extends Fieldset
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    // @codingStandardsIgnoreStart
     protected function _getExtraJs($element)
     {
         $script = "require(['jquery', 'prototype'], function(jQuery){
@@ -161,5 +160,4 @@ abstract class Payment extends Fieldset
 
         return $this->_jsHelper->getScript($script);
     }
-    // @codingStandardsIgnoreEnd
 }

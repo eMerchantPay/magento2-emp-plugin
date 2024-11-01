@@ -108,6 +108,11 @@ abstract class AbstractIpnTest extends AbstractTestCase
     protected $configHelperMock;
 
     /**
+     * @var MultiCurrencyProcessingService|MockObject
+     */
+    protected $multiCurrencyProcessingServiceMock;
+
+    /**
      * Gets IPN model class name
      *
      * @return string
@@ -502,14 +507,14 @@ abstract class AbstractIpnTest extends AbstractTestCase
             ->willReturn(271.97);
 
         $constructorParams = [
-            'context'           => $this->contextMock,
-            'orderFactory'      => $this->orderFactoryMock,
-            'orderSender'       => $this->orderSenderMock,
-            'creditmemoSender'  => $this->creditmemoSenderMock,
-            'logger'            => $this->loggerMock,
-            'moduleHelper'      => $this->dataHelperMock,
+            'context'                        => $this->contextMock,
+            'orderFactory'                   => $this->orderFactoryMock,
+            'orderSender'                    => $this->orderSenderMock,
+            'creditmemoSender'               => $this->creditmemoSenderMock,
+            'logger'                         => $this->loggerMock,
+            'moduleHelper'                   => $this->dataHelperMock,
             'multiCurrencyProcessingService' => $this->multiCurrencyProcessingServiceMock,
-            'data'              => $this->postParams
+            'data'                           => $this->postParams
         ];
 
         return $constructorParams;

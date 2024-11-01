@@ -41,10 +41,8 @@ class Init extends Template implements RendererInterface
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    // @codingStandardsIgnoreStart
     public function render(AbstractElement $element)
     {
         return $this->toHtml();
     }
-    // @codingStandardsIgnoreEnd
 }

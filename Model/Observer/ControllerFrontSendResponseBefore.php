@@ -90,6 +90,7 @@ class ControllerFrontSendResponseBefore implements ObserverInterface
             }
         // @codingStandardsIgnoreStart
         } catch (Exception $e) {
+            // phpcs:ignore Magento2.CodeAnalysis.EmptyBlock.DetectedCatch
             /**
              * Just hide any exception (if occurs) when trying to override exception message
              */

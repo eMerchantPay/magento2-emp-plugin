@@ -11,7 +11,7 @@ Requirements
 ------------
 
 * Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p3__)
-* [GenesisPHP v2.0.2](https://github.com/GenesisGateway/genesis_php/releases/tag/2.0.2) - (Integrated in Module)
+* [GenesisPHP v2.0.3](https://github.com/GenesisGateway/genesis_php/releases/tag/2.0.3) - (Integrated in Module)
 
 Installation (composer)
 ---------------------
@@ -47,7 +47,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:2.0.2@stable
+    $ composer require genesisgateway/genesis_php:2.0.3@stable
     ```
 
 * Enable Payment Module 
@@ -122,7 +122,6 @@ Supported Transactions
     * __InstaDebit__
     * __Intersolve__
     * __Itau__
-    * __Klarna__
     * __Multibanco__
     * __MyBank__
     * __Naranja__

@@ -269,6 +269,7 @@ class Checkout extends Base
      * @param array   $data
      *
      * @throws ErrorParameter
+     * @throws InvalidArgument
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
@@ -293,8 +294,8 @@ class Checkout extends Base
                         'customer_account_id' => $this->getModuleHelper()->getCurrentUserIdHash()
                     ];
                     break;
-                case GenesisTransactionTypes::KLARNA_AUTHORIZE:
-                    $itemsObject = $this->getModuleHelper()->getKlarnaCustomParamItems($data['order']['orderObject']);
+                case GenesisTransactionTypes::INVOICE:
+                    $itemsObject = $this->getModuleHelper()->getInvoiceCustomParamItems($data['order']['orderObject']);
                     $parameters = $itemsObject->toArray();
                     break;
                 case GenesisTransactionTypes::TRUSTLY_SALE:
@@ -567,8 +568,11 @@ class Checkout extends Base
     {
         try {
             // @codingStandardsIgnoreStart
+            // phpcs:disable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
             $genesis = new Genesis('NonFinancial\Consumers\Retrieve');
             // @codingStandardsIgnoreEnd
+            // phpcs:enable Magento2.PHP.LiteralNamespaces.LiteralClassUsage
+
             $genesis->request()->setEmail($email);
 
             $genesis->execute();

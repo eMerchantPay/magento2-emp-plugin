@@ -18,10 +18,12 @@
  */
 
 // phpcs:disable
+// phpcs:disable Magento2.Security.Superglobal.SuperglobalUsageWarning
 if (is_array($_SERVER) && array_key_exists('PLUGIN_ENV', $_SERVER) && $_SERVER['PLUGIN_ENV'] == 'linter') {
     return;
 }
 // phpcs:enable
+// phpcs:enable Magento2.Security.Superglobal.SuperglobalUsageWarning
 
 \Magento\Framework\Component\ComponentRegistrar::register(
     \Magento\Framework\Component\ComponentRegistrar::MODULE,

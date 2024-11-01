@@ -24,6 +24,7 @@ use EMerchantPay\Genesis\Model\Method\Checkout as MethodCheckout;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 
@@ -80,6 +81,8 @@ class SendMailOnOrderPaymentSuccess implements ObserverInterface
      * @param Observer $observer
      *
      * @return void
+     *
+     * @throws LocalizedException
      */
     public function execute(Observer $observer)
     {

@@ -106,11 +106,6 @@ class DataTest extends AbstractTestCase
     protected $transactionRepositoryMock;
 
     /**
-     * @var EMerchantPayDataHelper
-     */
-    protected $dataInstance;
-
-    /**
      * @var (PaymentData&MockObject)|MockObject
      */
     protected $paymentDataMock;
@@ -129,6 +124,16 @@ class DataTest extends AbstractTestCase
      * @var (FrontendConfig&MockObject)|MockObject
      */
     protected $configMock;
+
+    /**
+     * @var OrderRepositoryInterface|MockObject
+     */
+    protected $orderRepositoryMock;
+
+    /**
+     * @var ObjectManagerInterface|MockObjectiframetest
+     */
+    protected $objectManagerMock;
 
     /**
      * @return Transaction|MockObject

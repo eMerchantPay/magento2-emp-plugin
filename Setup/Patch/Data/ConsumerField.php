@@ -32,17 +32,42 @@ use Magento\Framework\Setup\Patch\DataPatchInterface;
  */
 class ConsumerField implements DataPatchInterface
 {
-    const CUSTOM_FIELD_CONSUMER_ID = 'consumer_id';
+    private const CUSTOM_FIELD_CONSUMER_ID = 'consumer_id';
 
     /**
      * @var ModuleDataSetupInterface
      */
     private $moduleDataSetup;
+
+    /**
+     * @var EavSetupFactory
+     */
     private $eavSetupFactory;
+
+    /**
+     * @var Config
+     */
     private $eavConfig;
+
+    /**
+     * @var CustomerSetupFactory
+     */
     private $customerSetupFactory;
+
+    /**
+     * @var AttributeSetFactory
+     */
     private $attributeSetFactory;
 
+    /**
+     * ConsumerField constructor.
+     *
+     * @param ModuleDataSetupInterface $moduleDataSetup
+     * @param EavSetupFactory          $eavSetupFactory
+     * @param Config                   $config
+     * @param CustomerSetupFactory     $customerSetupFactory
+     * @param AttributeSetFactory      $attributeSetFactory
+     */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
         EavSetupFactory          $eavSetupFactory,

@@ -54,6 +54,31 @@ class IframeTest extends AbstractControllerTest
     protected $urlBuilderMock;
 
     /**
+     * @var HttpRequest
+     */
+    protected $requestMock;
+
+    /**
+     * @var HttpResponse
+     */
+    protected $responseMock;
+
+    /**
+     * @var RedirectFactory
+     */
+    protected $redirectFactoryMock;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManagerMock;
+
+    /**
+     * @var IframeControllerk
+     */
+    protected $iframeController;
+
+    /**
      * @covers IframeController::execute
      */
     public function testExecuteFailWhenLastRealOrderIdIsNull()

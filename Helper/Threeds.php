@@ -243,9 +243,12 @@ class Threeds extends AbstractHelper
      */
     public function fetchShippingAddressDateFirstUsed($order)
     {
+        if ($order->getShippingAddress() === null) {
+            return null;
+        }
+
         $customerId        = $order->getCustomerId();
         $shippingAddressId = $order->getShippingAddress()->getCustomerAddressId();
-
         $shippingAddresses = $this->getOrdersWithShippingAddress($customerId, $shippingAddressId);
 
         return $shippingAddresses->setPageSize(1)->getFirstItem()->getCreatedAt();
@@ -257,6 +260,8 @@ class Threeds extends AbstractHelper
      * @param Order $order
      *
      * @return mixed
+     *
+     * @throws \DateInvalidOperationException
      */
     public function fetchTransactionActivityLast24Hours($order)
     {
@@ -278,6 +283,8 @@ class Threeds extends AbstractHelper
      * @param Order $order
      *
      * @return mixed
+     *
+     * @throws \DateInvalidOperationException
      */
     public function fetchTransactionActivityPreviousYear($order)
     {
@@ -298,6 +305,8 @@ class Threeds extends AbstractHelper
      * @param Order $order
      *
      * @return int
+     *
+     * @throws \DateInvalidOperationException
      */
     public function fetchPurchasedCountLastHalfYear($order)
     {

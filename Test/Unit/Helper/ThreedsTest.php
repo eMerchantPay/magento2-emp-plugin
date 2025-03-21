@@ -179,6 +179,22 @@ class ThreedsTest extends AbstractTestCase
     }
 
     /**
+     * @covers Threeds::fetchShippingAddressDateFirstUsed()
+     */
+    public function testFetchShippingAddressDateFirstUsedReturnsNullWhenNoShippingAddress()
+    {
+        $orderMockWithoutShipping = $this->getMockBuilder(Order::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getShippingAddress'])
+            ->getMock();
+        $orderMockWithoutShipping->method('getShippingAddress')->willReturn(null);
+
+        $this->assertNull(
+            $this->threedsHelper->fetchShippingAddressDateFirstUsed($orderMockWithoutShipping)
+        );
+    }
+
+    /**
      * @covers Threeds::fetchTransactionActivityLast24Hours()
      */
     public function testFetchTransactionActivityLast24Hours()

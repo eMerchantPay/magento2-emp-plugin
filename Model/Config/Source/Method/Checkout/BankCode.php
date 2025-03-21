@@ -37,7 +37,7 @@ class BankCode implements OptionSourceInterface
         Banks::BCT => 'Bancontact',
         Banks::BLK => 'BLIK',
         Banks::SE  => 'SPEI',
-        Banks::PID => 'LatiPay',
+        Banks::PID => 'PayID',
     ];
 
     /**

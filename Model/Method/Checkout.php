@@ -890,13 +890,15 @@ class Checkout extends Base
                 $isPasswordChanged ? $customer->getUpdatedAt() : null
             );
 
-            $firstUsedShippingAddressTime = $this->getThreedsHelper()->fetchShippingAddressDateFirstUsed($order);
-            $request->setThreedsV2CardHolderAccountShippingAddressDateFirstUsed(
-                $firstUsedShippingAddressTime
-            );
-            $request->setThreedsV2CardHolderAccountShippingAddressUsageIndicator(
-                $this->getThreedsHelper()->fetchShippingAddressUsageIndicator($firstUsedShippingAddressTime)
-            );
+            if ($hasPhysicalProducts) {
+                $firstUsedShippingAddressTime = $this->getThreedsHelper()->fetchShippingAddressDateFirstUsed($order);
+                $request->setThreedsV2CardHolderAccountShippingAddressDateFirstUsed(
+                    $firstUsedShippingAddressTime
+                );
+                $request->setThreedsV2CardHolderAccountShippingAddressUsageIndicator(
+                    $this->getThreedsHelper()->fetchShippingAddressUsageIndicator($firstUsedShippingAddressTime)
+                );
+            }
 
             $request->setThreedsV2CardHolderAccountTransactionsActivityLast24Hours(
                 $this->getThreedsHelper()->fetchTransactionActivityLast24Hours($order)

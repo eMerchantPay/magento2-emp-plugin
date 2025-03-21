@@ -10,8 +10,8 @@ This is a Payment Module for Magento 2, that gives you the ability to process pa
 Requirements
 ------------
 
-* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p3__)
-* [GenesisPHP v2.0.3](https://github.com/GenesisGateway/genesis_php/releases/tag/2.0.3) - (Integrated in Module)
+* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p4__)
+* [GenesisPHP v2.1.2](https://github.com/GenesisGateway/genesis_php/releases/tag/2.1.2) - (Integrated in Module)
 
 Installation (composer)
 ---------------------
@@ -47,7 +47,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:2.0.3@stable
+    $ composer require genesisgateway/genesis_php:2.1.2@stable
     ```
 
 * Enable Payment Module 
@@ -133,7 +133,7 @@ Supported Transactions
         * __Bancontact (BCT)__
         * __BLIK (BLK)__
         * __SPEI (SE)__
-        * __LatiPay (PID)__
+        * __PayID (PID)__
     * __OXXO__
     * __P24__
     * __Pago Facil__

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2018 emerchantpay Ltd.
+ * Copyright (C) 2025 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018 emerchantpay Ltd.
+ * @copyright   2025 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -93,8 +93,8 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
         ScopeConfigInterface            $scopeConfig,
         Logger                          $loggerHelper,
         OrderPaymentRepositoryInterface $paymentRepository,
-        AbstractResource                $resource = null,
-        AbstractDb                      $resourceCollection = null,
+        AbstractResource|null           $resource = null,
+        AbstractDb|null                 $resourceCollection = null,
         array                           $data = []
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
@@ -316,7 +316,7 @@ abstract class Base extends AbstractModel implements MethodInterface, PaymentMet
      *
      * @throws LocalizedException
      */
-    public function isAvailable(CartInterface $quote = null)
+    public function isAvailable(CartInterface|null $quote = null)
     {
         if (!$this->isActive($quote ? $quote->getStoreId() : null)) {
             return false;

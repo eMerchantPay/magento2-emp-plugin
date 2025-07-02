@@ -10,8 +10,8 @@ This is a Payment Module for Magento 2, that gives you the ability to process pa
 Requirements
 ------------
 
-* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.7-p4__)
-* [GenesisPHP v2.1.2](https://github.com/GenesisGateway/genesis_php/releases/tag/2.1.2) - (Integrated in Module)
+* Magento 2 CE, EE, ECE or higher (Tested up to __2.4.8-p1__)
+* [GenesisPHP v2.1.5](https://github.com/GenesisGateway/genesis_php/releases/tag/2.1.5) - (Integrated in Module)
 
 Installation (composer)
 ---------------------
@@ -47,7 +47,7 @@ Installation (manual)
 * Install GenesisGateway Client Library
     
     ```sh
-    $ composer require genesisgateway/genesis_php:2.1.2@stable
+    $ composer require genesisgateway/genesis_php:2.1.5@stable
     ```
 
 * Enable Payment Module 

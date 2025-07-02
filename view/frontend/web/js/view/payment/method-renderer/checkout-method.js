@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2024 emerchantpay Ltd.
+ * Copyright (C) 2018-2025 emerchantpay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * @author      emerchantpay
- * @copyright   2018-2024 emerchantpay Ltd.
+ * @copyright   2018-2025 emerchantpay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -85,9 +85,16 @@ define(
             },
 
             afterPlaceOrder: function () {
+                let self = this;
                 if (this.isIframeProcessingEnabled()) {
-                    const iframe = this.empCreateIframeElement();
-                    iframe.src = url.build('emerchantpay/checkout/index');
+                    let iframe_src = '';
+                    $.getJSON(url.build('emerchantpay/checkout/redirecturl'), function (response) {
+                        if (response.redirectUrl) {
+                            iframe_src = response.redirectUrl;
+                        }
+                        const iframe = self.empCreateIframeElement();
+                        iframe.src = iframe_src;
+                    });
                 } else {
                     window.location.replace(url.build('emerchantpay/checkout/index'));
                 }
@@ -103,6 +110,7 @@ define(
                 iframe.className = 'emp-threeds-iframe';
 
                 iframe.setAttribute('name', 'emp-threeds-iframe');
+                iframe.setAttribute('allow', 'payment');
                 header.innerHTML = '<h3>' + $t('The payment is being processed<br><span>Please, wait</span>') + '</h3>';
                 iframe.onload    = function () {
                     header.style.display = 'none';

@@ -22,7 +22,7 @@ namespace EMerchantPay\Genesis\Model\Method;
 use EMerchantPay\Genesis\Helper\Data;
 use EMerchantPay\Genesis\Logger\Logger;
 use EMerchantPay\Genesis\Model\Service\MultiCurrencyProcessingService;
-use EMerchantpay\Genesis\Helper\Threeds;
+use EMerchantPay\Genesis\Helper\Threeds;
 use Exception;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\CardHolderAccount\PasswordChangeIndicators;
 use Genesis\Api\Constants\Transaction\Parameters\Threeds\V2\MerchantRisk\DeliveryTimeframes;

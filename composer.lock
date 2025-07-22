@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f34a49550dcf189a2bf9791bdad72e21",
+    "content-hash": "ae6ecb2042268544421cacbc85d309d6",
     "packages": [
         {
             "name": "genesisgateway/genesis_php",
-            "version": "2.1.5",
+            "version": "2.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/GenesisGateway/genesis_php.git",
-                "reference": "92471887a89f1deb8970ebb4e17b6ac6c466b2b0"
+                "reference": "6d39d9cfe1d1fda1dec790ea6de09dfaf0cd8b19"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/92471887a89f1deb8970ebb4e17b6ac6c466b2b0",
-                "reference": "92471887a89f1deb8970ebb4e17b6ac6c466b2b0",
+                "url": "https://api.github.com/repos/GenesisGateway/genesis_php/zipball/6d39d9cfe1d1fda1dec790ea6de09dfaf0cd8b19",
+                "reference": "6d39d9cfe1d1fda1dec790ea6de09dfaf0cd8b19",
                 "shasum": ""
             },
             "require": {
@@ -156,9 +156,9 @@
             ],
             "support": {
                 "issues": "https://github.com/GenesisGateway/genesis_php/issues",
-                "source": "https://github.com/GenesisGateway/genesis_php/tree/2.1.5"
+                "source": "https://github.com/GenesisGateway/genesis_php/tree/2.1.6"
             },
-            "time": "2025-05-30T15:36:49+00:00"
+            "time": "2025-06-27T08:39:44+00:00"
         }
     ],
     "packages-dev": [
@@ -1682,7 +1682,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*|8.3.*"
+        "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*|8.3.*|8.4.*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.6.0"

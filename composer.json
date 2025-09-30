@@ -2,7 +2,7 @@
     "name": "emerchantpay/magento2-emp-plugin",
     "description": "emerchantpay Payment Gateway for Magento 2",
     "type": "magento2-module",
-    "version": "1.4.3",
+    "version": "1.4.4",
     "license": [
         "GPL-2.0"
     ],
@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "7.0.2|7.0.4|~7.0.6|7.1.*|7.2.*|7.3.*|7.4.*|8.0.*|8.1.*|8.2.*|8.3.*|8.4.*",
-        "genesisgateway/genesis_php": "2.1.6"
+        "genesisgateway/genesis_php": "2.2.0"
     },
     "keywords": [
         "emerchantpay",
@@ -48,7 +48,6 @@
         "aura",
         "boleto",
         "baloto",
-        "banco_do_brasil",
         "bancontact",
         "bitpay",
         "blacklist",
@@ -104,10 +103,8 @@
         "preauthorization_partial",
         "przelewy24",
         "reconcile",
-        "redpagos",
         "reports",
         "safetypay",
-        "santander",
         "sca",
         "sct_payout",
         "sdd",
@@ -121,7 +118,6 @@
         "trustly_sale",
         "trustpay",
         "webmoney",
-        "webpay",
         "wechat",
         "wpf",
         "upi",
